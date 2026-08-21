@@ -92,10 +92,10 @@ class DangerSigns {
 
   List<String> get activeDangerSignLabels {
     List<String> list = [];
-    if (unableToDrinkOrFeed) list.add('Unable to drink/feed');
-    if (vomitsEverything) list.add('Vomits everything');
-    if (convulsions) list.add('Convulsions during illness');
-    if (lethargicOrUnconscious) list.add('Lethargic or unconscious');
+    if (unableToDrinkOrFeed) list.add('Unable to drink or feed');
+    if (vomitsEverything) list.add('Vomiting Everything');
+    if (convulsions) list.add('Convulsions');
+    if (lethargicOrUnconscious) list.add('Lethargy/Unresponsiveness');
     if (chestIndrawing) list.add('Severe chest indrawing');
     if (stridorInCalmChild) list.add('Stridor in calm child');
     if (severePallor) list.add('Severe palmar pallor');
@@ -124,7 +124,7 @@ class TriageResult {
     this.syncStatus = SyncStatus.offlineQueued,
   });
 
-  String get rationale => reasons.isNotEmpty ? reasons.join('; ') : 'Vitals within normal limits';
+  String get rationale => reasons.isNotEmpty ? reasons.join('; ') : 'Vitals within normal limits for age';
   List<String> get actionSteps => [recommendation, ...reasons];
   String get doctorAudioScript => ttsScript;
 
@@ -139,7 +139,19 @@ class TriageResult {
     }
   }
 
-  /// Evaluate WHO IMCI deterministic rules for pediatric/community triage
+  String get whatsappUrl {
+    final encodedText = Uri.encodeComponent(
+      '*EMERGENCY TELE-TRIAGE REFERRAL*\n\n'
+      '*Severity:* $severityLabel\n'
+      '*Diagnosis:* $title\n'
+      '*Urgency:* $recommendation\n'
+      '*Primary Findings:* $rationale\n'
+      '*Action Plan:* ${actionSteps.join(", ")}'
+    );
+    return 'https://api.whatsapp.com/send?text=$encodedText';
+  }
+
+  /// Evaluate Person B's WHO IMCI Rule-Based Decision Model
   static TriageResult evaluate({
     required Patient patient,
     required Vitals vitals,
@@ -148,13 +160,13 @@ class TriageResult {
     List<String> reasons = [];
     TriageSeverity severity = TriageSeverity.green;
 
-    // Check General Danger Signs (WHO IMCI Red Criteria)
+    // 1. General Danger Signs (WHO IMCI Red Criteria - Person B Model)
     if (dangerSigns.hasAnyDangerSign) {
       severity = TriageSeverity.red;
       reasons.addAll(dangerSigns.activeDangerSignLabels);
     }
 
-    // Check Respiratory Rate (Fast breathing cutoffs based on WHO IMCI age bands)
+    // 2. Fast Breathing Assessment (Person B Age-Adjusted Thresholds)
     bool isFastBreathing = false;
     if (patient.ageMonths < 2) {
       if (vitals.respiratoryRate >= 60) isFastBreathing = true;
@@ -173,7 +185,7 @@ class TriageResult {
       }
     }
 
-    // Oxygen Saturation check
+    // 3. Oxygen Saturation check
     if (vitals.spo2 < 90) {
       severity = TriageSeverity.red;
       reasons.add('Severe Hypoxia (SpO2: ${vitals.spo2}%)');
@@ -184,30 +196,36 @@ class TriageResult {
       }
     }
 
-    // High Fever check
-    if (vitals.temperatureF >= 102.5) {
-      reasons.add('High Fever (${vitals.temperatureF.toStringAsFixed(1)}°F)');
+    // 4. High Fever check
+    if (vitals.temperatureF >= 102.5 || vitals.feverDays > 7) {
+      reasons.add('High/Prolonged Fever (${vitals.temperatureF.toStringAsFixed(1)}°F, ${vitals.feverDays}d)');
       if (severity != TriageSeverity.red) {
         severity = TriageSeverity.yellow;
       }
     }
 
-    // Categorization text & TTS/SMS formats
+    // Person B Clinical Diagnosis & Action Decision Trees
     String title;
     String recommendation;
 
     if (severity == TriageSeverity.red) {
-      title = 'URGENT MEDICAL REFERRAL REQUIRED';
+      title = 'SEVERE PNEUMONIA / VERY SEVERE DISEASE';
       recommendation =
-          'Immediately transport patient to nearest CHC/District Hospital. Administer first dose of pre-referral treatment if trained.';
+          'URGENT HOSPITAL REFERRAL: Give first dose of appropriate oral antibiotic before transfer. Keep child warm during transport. Refer IMMEDIATELY to nearest hospital / First Referral Unit (FRU).';
     } else if (severity == TriageSeverity.yellow) {
-      title = 'PHC CONSULTATION ADVISED';
-      recommendation =
-          'Refer to Primary Health Centre (PHC) within 24 hours. Advise caregiver on home care and watch for danger signs.';
+      if (vitals.feverDays > 7) {
+        title = 'FEVER - POSSIBLE MALARIA / TYPHOID';
+        recommendation =
+            'REFER TO PHC FOR BLOOD TEST: Perform RDT test for Malaria if available. Give Paracetamol for high fever (≥38.5°C). Refer to PHC for evaluation.';
+      } else {
+        title = 'PNEUMONIA (Fast Breathing)';
+        recommendation =
+            'REFER TO PHC WITHIN 24 HOURS: Give oral Amoxicillin for 5 days. Soothe throat and relieve cough with safe remedy. Advise mother when to return immediately if signs worsen.';
+      }
     } else {
-      title = 'ROUTINE HOME MANAGEMENT';
+      title = 'NO PNEUMONIA / MILD ILLNESS';
       recommendation =
-          'Continue home care, fluid intake, and nutritional support. Re-assess in 2 days or if symptoms worsen.';
+          'HOME CARE: Give extra fluid (ORS solution & Zinc supplement if diarrhea present). Continue feeding child. Soothe throat with home remedy. Advise mother when to return if signs worsen.';
       if (reasons.isEmpty) {
         reasons.add('Vitals within normal limits for age');
       }
@@ -215,17 +233,16 @@ class TriageResult {
 
     String allFindings = reasons.isNotEmpty ? reasons.join('. ') : 'Vitals within normal limits for age';
 
-    // 10-Second Doctor Audio Summary Script (TTS format - Full Classified Symptoms)
+    // 10-Second Doctor Audio Summary Script (Person B Canonical Format)
     String ttsScript =
-        '${severity.name.toUpperCase()} alert for patient ${patient.name}, age ${patient.ageDisplay}. '
-        'Diagnosis and classified findings: $allFindings. '
-        'Vitals: Temperature ${vitals.temperatureF.toStringAsFixed(1)} degrees Fahrenheit, Respiratory rate ${vitals.respiratoryRate} breaths per minute, Oxygen saturation ${vitals.spo2} percent. '
-        'Recommended Action: $recommendation';
+        '${severity.name.toUpperCase()} Alert for patient ${patient.id} (${patient.name}, ${patient.ageDisplay}). '
+        'Diagnosis: $title. Findings: $allFindings. '
+        'Vitals: Temp ${vitals.temperatureF.toStringAsFixed(1)}F, RR ${vitals.respiratoryRate}, SpO2 ${vitals.spo2} percent. '
+        'Action: $recommendation';
 
-    // 140-character emergency SMS snippet
+    // 140-character emergency SMS snippet (Person B Snippet Format)
     String smsSnippet =
-        'ALERT[${severity.name.toUpperCase()}]: Ptn ${patient.id} (${patient.name}, ${patient.ageDisplay}). '
-        'Danger: $allFindings. RR:${vitals.respiratoryRate}, SpO2:${vitals.spo2}%. Action: $recommendation';
+        '[${severity.name.toUpperCase()}] ${patient.id} | Age:${patient.ageDisplay} | $allFindings | RR:${vitals.respiratoryRate} | Action:$recommendation';
     if (smsSnippet.length > 140) {
       smsSnippet = '${smsSnippet.substring(0, 137)}...';
     }
