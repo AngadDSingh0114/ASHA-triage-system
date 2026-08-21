@@ -69,9 +69,26 @@
                 <h2 class="text-lg font-bold text-slate-800 flex items-center">
                     <i class="fa-solid fa-microphone text-indigo-600 mr-2"></i> Voice Transcript Input
                 </h2>
-                <button id="micBtn" onclick="toggleSpeech()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow flex items-center text-sm transition">
-                    <i class="fa-solid fa-microphone mr-2"></i> Start Speaking
-                </button>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <select id="langSelect" onchange="setMicLang()" class="text-sm border border-slate-300 rounded-lg px-2 py-2 text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <option value="hi-IN">Hindi / Hinglish</option>
+                        <option value="en-IN">English</option>
+                        <option value="ta-IN">Tamil</option>
+                        <option value="te-IN">Telugu</option>
+                        <option value="bn-IN">Bengali</option>
+                        <option value="mr-IN">Marathi</option>
+                        <option value="kn-IN">Kannada</option>
+                        <option value="ml-IN">Malayalam</option>
+                        <option value="gu-IN">Gujarati</option>
+                        <option value="pa-IN">Punjabi</option>
+                        <option value="or-IN">Odia</option>
+                        <option value="ur-IN">Urdu</option>
+                    </select>
+                    <button id="micBtn" onclick="toggleSpeech()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow flex items-center text-sm transition">
+                        <i class="fa-solid fa-microphone mr-2"></i> Start Speaking
+                    </button>
+                </div>
+                <p id="micStatus" class="text-xs text-slate-500 mt-2">Mic idle. Use Chrome/Edge over http://localhost (not file://) for speech input.</p>
             </div>
 
             <!-- Optional Patient Details -->
@@ -195,13 +212,17 @@
     <!-- Client-side Extractor, Rules, and Offline Sync Logic -->
     <script>
         const THESAURUS = {
-            "fever": ["bukhar", "bukar", "taap", "fever", "garam body", "garam hai"],
-            "chest_indrawing": ["chhati dhasna", "chest drawing", "chest indrawing", "chhati phoolna", "saans lene me dikkat", "stridor", "wheeze"],
-            "diarrhea": ["dast", "loose motion", "pakhana", "diarrhea", "dull stool"],
-            "vomiting": ["ulti", "vomit", "vomiting"],
-            "convulsions": ["jhatke", "seizure", "mirgi", "fit", "aenthang"],
-            "lethargy": ["behoosh", "sota rehta hai", "unresponsive", "lethargic", "susti"]
+            "fever": ["bisilu","bukar","bukhar","fever","garam","garam body","garam hai","high temperature","jara","jor","juar","jvar","jvara","jvaram","jwar","jwara","jwaram","jwor","kaaychal","pani","panni","taap","taav","tapan","tav","temperature","veppam","veyivaram"],
+            "chest_indrawing": ["buk dhonba","buk doba","buka dubano","chaati dobavu","chaati lopala","chaati padipovadam","chest drawing","chest indrawing","chest retraction","chhati bugne","chhati dabna","chhati dhabna","chhati dhasiba","chhati dhasna","chhati dhasne","chhati dobi","chhati duba","chhati phoolna","edai ullizhuthal","eddala posagipovadam","ede olagade","ede olage","marbu ullizhuthal","nench ullilekk","nenchu ullilekku","retractions","saah vich dushwari","saans lene me dikkat","saans lene mein dikkat","saans mein dikkat","shareera olagade","shwas ghetana anantar","shwas ma rai dikkt","shwas re kasht","stridor","uravil olichu","wheeze"],
+            "diarrhea": ["athisaaram","atisar","atisara","bhedi","dast","dast lagna","dhakya","dhava","diarrhea","dule dast","hoya","jaladhosham","jhada","jhalya","kozhuppokku","loose motion","loose stools","neeru mala","neeru poka","oshodh","paani jaisa dast","pakhana","peenipokku","ponod","soda","vayarupokku","vayitruppokku","virechanalu","watery stool"],
+            "vomiting": ["baanta","bankhi","banta","boma","bombi","bomni","chardhi","kadhi","kai","odata","okkam","ol","olkhi","olna","olo","ozhippu","puking","qaee","throwing up","ulti","ulti aa rahi hai","vaanthi","vaanti","vamathu","vanti","venti","vizhuppu","vomit","vomiting"],
+            "vomiting_everything": ["anthaa vaanti","anthaa venti","badhu ol","bau ol","cannot keep anything down","ella vamathu","ellam chardhi","ellam vaanthi","elli vaanti","emi thinagalenu","ennu thinabardu","everything comes back up","kai shakay nathi","kha nahi raha","khancha yet nahi","kichhi khaiparheni","kichu khete pare na","kuch nahi kha raha","kujh nahi kha sakda","onnum vizha mateengra","onnuthinum kazhikkilla","sab bombi","sab kuch ulti","sab kujh ulti","sab ulti","sabu bankhi","sabu banta","sagla ulti","saglya goshti ulti","sapdura edukkala","sob bombi","throwing up everything","ulti ho rahi hai sab","vomiting everything"],
+            "convulsions": ["aakade","aekare","aenthang","akadi","baat","convulsions","dardane","daura","daure","dhara","dore","fit","fits","jhatke","khenchan","khichuni","mirgi","mirigi","mirugam","mirugi","mokkala","mooka","mrigi","pidippu","piduvatamu","pittam","potu","seizure","selete","spasam","spasms","valippu"],
+            "lethargy": ["bedhuda","behoosh","behosh","behoshi","behosi","benaan","besudh","bodharahithyam","chelivillada","chetana levu","chetanahin","ezharu ledu","ezhumbamattu","ezhunilkkilla","hosh nahi","jaag nahi raha","jaagta nathi","jadate","jag nahi raha","jagalla","jagatch nahi","jagena","lethargic","lethargy","manasilla","mayakkam","mookam","not waking","ochchhonna","sella unarchi","songhopto","sota rehta hai","sust","susti","unarcha","unarchi","unconscious","unresponsive","weak and dull"]
         };
+        const MONTH_WORDS = ["mahine","mahina","month","months","masam","masalu","maasam","maadham","maadam","matham","matha","maheen","tingal","maas"];
+        const DAY_WORDS = ["din","day","days","naal","naalu","roju","divasam","divas","dina","divasangal"];
+        const YEAR_WORDS = ["saal","year","years","yr","yrs","varusham","varush","samvatsaram","bachhar","varsha","varsh","barsh"];
 
         let currentTTS = "";
         let currentExtractedData = {};
@@ -333,18 +354,19 @@
         }
 
         // --- Parser & IMCI Logic ---
+        function _alt(words) { return "(?:" + words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).sort((a,b)=>b.length-a.length).join("|") + ")"; }
         function parseAndEvaluate() {
             const transcript = document.getElementById("transcriptInput").value.toLowerCase();
             if (!transcript.trim()) return;
 
             let age_months = null;
-            const monthMatch = transcript.match(/(\d+)\s*(-|\s)?\s*(mahine|mahina|month|months|m)\b/);
-            const yearMatch = transcript.match(/(\d+(?:\.\d+)?)\s*(-|\s)?\s*(saal|year|years|yr)\b/);
+            const monthMatch = transcript.match(new RegExp("(\\d+)\\s*(-|\\s)?\\s*" + _alt(MONTH_WORDS) + "\\b"));
+            const yearMatch = transcript.match(new RegExp("(\\d+(?:\\.\\d+)?)\\s*(-|\\s)?\\s*" + _alt(YEAR_WORDS) + "\\b"));
             if (monthMatch) age_months = parseInt(monthMatch[1]);
             else if (yearMatch) age_months = Math.round(parseFloat(yearMatch[1]) * 12);
 
             let respiratory_rate = null;
-            const rrMatch = transcript.match(/(\d+)\s*(?:saans\s*rate|saans\/min|breaths\s*per\s*minute|\/min|saans|breaths)\b/) || transcript.match(/(?:rr|rate|saans)\s*(?:of|is|:)?\s*(\d+)/);
+            const rrMatch = transcript.match(/(\d+)\s*(?:saans\s*rate|saans\/min|breaths\s*per\s*minute|\/min|saans|breaths|shwas)\b/) || transcript.match(/(?:rr|rate|saans|shwas)\s*(?:of|is|:)?\s*(\d+)/);
             if (rrMatch) respiratory_rate = parseInt(rrMatch[1] || rrMatch[2]);
 
             const symptoms = [];
@@ -353,7 +375,7 @@
             }
 
             let fever_days = 0;
-            const dayMatch = transcript.match(/(\d+)\s*(?:din|day|days)/);
+            const dayMatch = transcript.match(new RegExp("(\\d+)\\s*" + _alt(DAY_WORDS)));
             if (symptoms.includes("fever") && dayMatch) fever_days = parseInt(dayMatch[1]);
 
             currentExtractedData = {
@@ -455,7 +477,7 @@
                 window.speechSynthesis.cancel();
                 const msg = new SpeechSynthesisUtterance(currentTTS);
                 msg.rate = 0.95;
-                msg.lang = 'en-IN';
+                msg.lang = document.getElementById("langSelect").value;
                 window.speechSynthesis.speak(msg);
             } else {
                 alert("Audio Brief: " + currentTTS);
@@ -464,12 +486,13 @@
 
         // Speech Recognition Setup
         let recognition = null;
+        const micStatus = document.getElementById("micStatus");
         if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
             const SpeechReg = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechReg();
             recognition.continuous = false;
             recognition.interimResults = true;
-            recognition.lang = 'hi-IN';
+            recognition.lang = document.getElementById("langSelect").value;
 
             recognition.onresult = (event) => {
                 let transcript = '';
@@ -478,6 +501,11 @@
                 }
                 document.getElementById("transcriptInput").value = transcript;
                 parseAndEvaluate();
+                micStatus.innerText = "Heard: " + transcript;
+            };
+
+            recognition.onerror = (event) => {
+                micStatus.innerText = "Mic error (" + event.error + "). Allow mic permission and use http://localhost in Chrome/Edge.";
             };
 
             recognition.onend = () => {
@@ -485,17 +513,25 @@
                 document.getElementById("micBtn").classList.add("bg-indigo-600");
                 document.getElementById("micBtn").innerHTML = '<i class="fa-solid fa-microphone mr-2"></i> Start Speaking';
             };
+        } else {
+            micStatus.innerText = "Speech recognition NOT available here. Use Chrome/Edge served over http://localhost (not file://). You can still type or use presets.";
+        }
+
+        function setMicLang() {
+            if (recognition) recognition.lang = document.getElementById("langSelect").value;
         }
 
         function toggleSpeech() {
             if (!recognition) {
-                alert("Speech recognition API not supported in this browser window. You can type or click the quick presets!");
+                alert("Speech recognition API not supported in this browser. Open via http://localhost in Chrome/Edge, or just type the transcript.");
                 return;
             }
             document.getElementById("micBtn").classList.remove("bg-indigo-600");
             document.getElementById("micBtn").classList.add("bg-red-600");
             document.getElementById("micBtn").innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Listening...';
-            recognition.start();
+            micStatus.innerText = "Listening in " + document.getElementById("langSelect").value + "...";
+            try { recognition.start(); }
+            catch (e) { recognition.onend(); }
         }
 
         // Initialize default view

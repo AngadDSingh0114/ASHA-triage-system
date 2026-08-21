@@ -50,7 +50,7 @@ class WebTTSEmbedder:
     """
 
     @staticmethod
-    def get_browser_tts_js(script_text: str) -> str:
+    def get_browser_tts_js(script_text: str, lang: str = "en-IN") -> str:
         escaped_script = script_text.replace("'", "\\'")
         return f"""
         function playReferralAudio() {{
@@ -59,7 +59,7 @@ class WebTTSEmbedder:
                 var msg = new SpeechSynthesisUtterance('{escaped_script}');
                 msg.rate = 0.95;
                 msg.pitch = 1.0;
-                msg.lang = 'en-IN';
+                msg.lang = '{lang}';
                 window.speechSynthesis.speak(msg);
             }} else {{
                 alert('TTS Audio playback: {escaped_script}');

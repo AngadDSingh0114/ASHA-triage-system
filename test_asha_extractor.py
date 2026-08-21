@@ -1,9 +1,9 @@
 """
-Unit Tests for ASHA Transcript Parser & Referral Note Generator
+Unit Tests for ASHA Transcript Parser & Referral Note Generator (multilingual)
 """
 
 import unittest
-from asha_extractor import parse_asha_transcript, generate_referral_note
+from asha_extractor import parse_asha_transcript, generate_referral_note, detect_language
 
 
 class TestASHAExtractor(unittest.TestCase):
@@ -68,6 +68,54 @@ class TestASHAExtractor(unittest.TestCase):
         self.assertFalse(fields["has_chest_indrawing"])
         self.assertFalse(fields["has_convulsions"])
         self.assertEqual(len(fields["symptoms"]), 0)
+
+    # ------------------------------------------------------------------
+    # Multilingual coverage
+    # ------------------------------------------------------------------
+    def test_6_tamil_fever_fast_breathing(self):
+        transcript = "8 maadham kuzhanthai, 3 naal kaaychal, 55 uyir kaa"  # age/fever + RR
+        res = parse_asha_transcript(transcript)
+        self.assertEqual(res["language"], "ta")
+        self.assertIn("fever", res["extracted_fields"]["symptoms"])
+
+    def test_7_telugu_chest_indrawing(self):
+        transcript = "chaati padipovadam undi, 4 roju nunchi jvaram"
+        res = parse_asha_transcript(transcript)
+        self.assertIn("chest_indrawing", res["extracted_fields"]["symptoms"])
+        self.assertIn("fever", res["extracted_fields"]["symptoms"])
+
+    def test_8_bengali_convulsions_lethargy(self):
+        transcript = "khichuni hocche ar chele ta ochchhonna"
+        res = parse_asha_transcript(transcript)
+        self.assertIn("convulsions", res["extracted_fields"]["symptoms"])
+        self.assertIn("lethargy", res["extracted_fields"]["symptoms"])
+
+    def test_9_marathi_diarrhea_vomiting(self):
+        transcript = "atisar ani ulti 2 divas pasun"
+        res = parse_asha_transcript(transcript)
+        self.assertIn("diarrhea", res["extracted_fields"]["symptoms"])
+        self.assertIn("vomiting", res["extracted_fields"]["symptoms"])
+
+    def test_10_kannada_language_detection(self):
+        transcript = "bane jvara mattu vanti ide"
+        self.assertEqual(detect_language(transcript), "kn")
+
+    def test_11_malayalam_detection(self):
+        transcript = "kuttikk panni matram chardhi onnu"
+        self.assertEqual(detect_language(transcript), "ml")
+
+    def test_12_multilingual_age_in_years(self):
+        transcript = "2 varusham child ku bukhar 4 days"
+        res = parse_asha_transcript(transcript)
+        self.assertEqual(res["extracted_fields"]["age_months"], 24)
+        self.assertEqual(res["extracted_fields"]["fever_days"], 4)
+
+    def test_13_hindi_localized_referral_note(self):
+        transcript = "8 mahine ka bachha, 3 din se bukhar aur 55 saans rate"
+        res = parse_asha_transcript(transcript)
+        note = generate_referral_note(res, "YELLOW_PHC", lang="hi")
+        self.assertIn("निमोनिया", note)
+        self.assertIn("PHC", note)
 
 
 if __name__ == "__main__":
