@@ -44,3 +44,4 @@ CREATE TABLE IF NOT EXISTS triage_assessments (
 CREATE INDEX IF NOT EXISTS idx_sync_status ON triage_assessments(sync_status);
 CREATE INDEX IF NOT EXISTS idx_triage_color ON triage_assessments(triage_color);
 CREATE INDEX IF NOT EXISTS idx_patient_lookup ON triage_assessments(patient_id);
+
