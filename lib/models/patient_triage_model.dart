@@ -213,19 +213,19 @@ class TriageResult {
       }
     }
 
-    String primaryReason = reasons.isNotEmpty ? reasons.first : 'Normal vitals';
+    String allFindings = reasons.isNotEmpty ? reasons.join('. ') : 'Vitals within normal limits for age';
 
-    // 10-Second Doctor Audio Summary Script (TTS format)
+    // 10-Second Doctor Audio Summary Script (TTS format - Full Classified Symptoms)
     String ttsScript =
-        '${severity.name.toUpperCase()} alert for patient ${patient.name}, ${patient.ageDisplay}. '
-        'Illness onset: ${patient.illnessOnset}. Primary finding: $primaryReason. Vitals: Temp ${vitals.temperatureF.toStringAsFixed(1)} Fahrenheit, '
-        'RR ${vitals.respiratoryRate}, SpO2 ${vitals.spo2} percent. '
-        'Action: $recommendation';
+        '${severity.name.toUpperCase()} alert for patient ${patient.name}, age ${patient.ageDisplay}. '
+        'Diagnosis and classified findings: $allFindings. '
+        'Vitals: Temperature ${vitals.temperatureF.toStringAsFixed(1)} degrees Fahrenheit, Respiratory rate ${vitals.respiratoryRate} breaths per minute, Oxygen saturation ${vitals.spo2} percent. '
+        'Recommended Action: $recommendation';
 
     // 140-character emergency SMS snippet
     String smsSnippet =
         'ALERT[${severity.name.toUpperCase()}]: Ptn ${patient.id} (${patient.name}, ${patient.ageDisplay}). '
-        'Danger: $primaryReason. RR:${vitals.respiratoryRate}, SpO2:${vitals.spo2}%. Action: $recommendation';
+        'Danger: $allFindings. RR:${vitals.respiratoryRate}, SpO2:${vitals.spo2}%. Action: $recommendation';
     if (smsSnippet.length > 140) {
       smsSnippet = '${smsSnippet.substring(0, 137)}...';
     }

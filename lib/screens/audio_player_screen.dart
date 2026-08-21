@@ -24,7 +24,6 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
   late FlutterTts _flutterTts;
   bool _isPlaying = false;
   int _secondsPlayed = 0;
-  final int _totalDurationSeconds = 10;
   Timer? _playbackTimer;
 
   @override
@@ -111,6 +110,12 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
     } else {
       _startPlayback();
     }
+  }
+
+  int get _totalDurationSeconds {
+    int words = widget.triageResult.ttsScript.split(' ').length;
+    int seconds = (words / 2.5).ceil();
+    return seconds < 10 ? 10 : seconds;
   }
 
   void _startPlayback() async {
