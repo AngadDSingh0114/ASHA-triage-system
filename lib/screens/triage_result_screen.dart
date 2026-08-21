@@ -37,6 +37,7 @@ class TriageResultScreen extends StatelessWidget {
     }
 
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,7 +88,9 @@ class TriageResultScreen extends StatelessWidget {
 
           // Clinical Rationale Title
           Text(
-            AppTranslations.getText('rationale_title', currentLanguage),
+            AppTranslations.getText('rationale_title', currentLanguage) == 'rationale_title'
+                ? 'Clinical Rationale'
+                : AppTranslations.getText('rationale_title', currentLanguage),
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
@@ -127,9 +130,11 @@ class TriageResultScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
 
-          // Action Recommendation
+          // Action Recommendation Title
           Text(
-            AppTranslations.getText('recommendation_title', currentLanguage),
+            AppTranslations.getText('recommendation_title', currentLanguage) == 'recommendation_title'
+                ? 'Recommended Care Plan'
+                : AppTranslations.getText('recommendation_title', currentLanguage),
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
@@ -152,18 +157,20 @@ class TriageResultScreen extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
-          // Forward Action Buttons (Large Rural Ergonomics)
+          // Action Buttons with Smooth Zero-Lag Navigation
           Row(
             children: [
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: onGoToAudio,
                   icon: const Icon(Icons.graphic_eq),
-                  label: Text(
-                    AppTranslations.getText('listen_tts_btn', currentLanguage),
+                  label: const Text(
+                    'Audio Brief',
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size.fromHeight(52),
+                    side: const BorderSide(color: Color(0xFF0D47A1), width: 1.5),
                   ),
                 ),
               ),
@@ -172,8 +179,9 @@ class TriageResultScreen extends StatelessWidget {
                 child: ElevatedButton.icon(
                   onPressed: onGoToDispatch,
                   icon: const Icon(Icons.send),
-                  label: Text(
-                    AppTranslations.getText('dispatch_alert_btn', currentLanguage),
+                  label: const Text(
+                    'Send Dispatch',
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size.fromHeight(52),
