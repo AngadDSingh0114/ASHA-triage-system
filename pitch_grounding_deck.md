@@ -105,3 +105,4 @@
    * *Answer:* NFHS-5 (National Family Health Survey 2019–21) and HMIS standard reports showing rural Under-5 Mortality at 35.2/1,000 and pneumonia causing 14.3% of deaths.
 3. **Why not just call an LLM API in the cloud?**
    * *Answer:* 42.7% of rural health sub-centres face intermittent or zero connectivity. Furthermore, clinical safety requires deterministic, auditable decision trees with zero latency and zero hallucination risk on ₹6,000 Android devices.
+
