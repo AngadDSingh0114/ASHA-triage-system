@@ -25,7 +25,10 @@
     "not_able_to_drink_or_breastfeed": false,
     "vomits_everything": false,
     "convulsions": false,
-    "lethargic_or_unconscious": false
+    "lethargic_or_unconscious": false,
+
+    "ear_pain_or_discharge": false,
+    "mastoid_swelling": false
   },
   "triage_result": {
     "flag": "yellow",
