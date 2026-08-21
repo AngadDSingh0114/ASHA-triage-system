@@ -174,6 +174,19 @@ class DatabaseHelper {
     );
   }
 
+  Future<List<Map<String, dynamic>>> getPendingAssessmentsWithPatientData() async {
+    final db = await instance.database;
+    return await db.rawQuery('''
+      SELECT 
+        a.*,
+        p.full_name, p.age_months, p.gender, p.guardian_name, p.village_name
+      FROM triage_assessments a
+      JOIN patients p ON a.patient_id = p.patient_id
+      WHERE a.sync_status = 'PENDING'
+      ORDER BY a.assessed_at DESC
+    ''');
+  }
+
   Future<int> getPendingSyncCount() async {
     final db = await instance.database;
     final result = await db.rawQuery(
