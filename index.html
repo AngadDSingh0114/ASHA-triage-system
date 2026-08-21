@@ -31,6 +31,11 @@
                     <i class="fa-solid fa-wifi mr-1.5"></i> <span id="networkStatusText">Online (Auto-Sync)</span>
                 </button>
 
+                <!-- Doctor Profile Button -->
+                <button onclick="openDoctorModal()" class="bg-indigo-800 hover:bg-indigo-700 text-amber-300 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center border border-indigo-700">
+                    <i class="fa-solid fa-user-doctor mr-1.5"></i> Doctor Details
+                </button>
+
                 <!-- Link to PHC Dashboard -->
                 <a href="/phc_dashboard.html" class="bg-amber-400 hover:bg-amber-300 text-indigo-950 px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center shadow">
                     <i class="fa-solid fa-hospital-user mr-1.5"></i> PHC Doctor View
@@ -38,6 +43,20 @@
             </div>
         </div>
     </header>
+
+    <!-- Appointed On-Duty Doctor Quick Banner -->
+    <div class="bg-indigo-950 text-indigo-200 px-4 py-2 text-xs border-b border-indigo-800">
+        <div class="max-w-4xl mx-auto flex flex-wrap justify-between items-center gap-2">
+            <div class="flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span><strong>Appointed PHC Doctor:</strong> <span id="bannerDocName" class="text-white font-semibold">Dr. Anjali Deshmukh, MD</span> (<span id="bannerDocPhc" class="text-indigo-300">Khed PHC</span>)</span>
+            </div>
+            <div class="flex items-center space-x-3">
+                <span>WhatsApp: <strong id="bannerDocPhone" class="text-emerald-400 font-mono">+91 98765 43210</strong></span>
+                <button onclick="openDoctorModal()" class="underline text-amber-300 hover:text-amber-200">Edit</button>
+            </div>
+        </div>
+    </div>
 
     <main class="max-w-4xl mx-auto p-4 space-y-6">
 
@@ -57,6 +76,9 @@
             </div>
 
             <div class="flex items-center space-x-2">
+                <button onclick="openSqliteQueueModal()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-700 flex items-center">
+                    <i class="fa-solid fa-database mr-1.5 text-amber-400"></i> View SQLite Queue
+                </button>
                 <button onclick="syncLocalQueueNow()" id="syncBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center">
                     <i class="fa-solid fa-cloud-arrow-up mr-1.5"></i> Sync Now
                 </button>
@@ -859,6 +881,20 @@
 
             const waText = encodeURIComponent(`*EMERGENCY TELE-TRIAGE REFERRAL*\n\n*Patient:* ${document.getElementById("inputPatientName").value}\n*Severity:* ${level}\n*Diagnosis:* ${diag}\n*Vitals:* Age ${age_months || 'N/A'}m, RR ${respiratory_rate || 'N/A'}\n*Danger Sign:* ${dangerText}\n*Action:* ${urg}`);
             document.getElementById("whatsappBtn").href = `https://api.whatsapp.com/send?text=${waText}`;
+            // If RED high-severity alert detected, trigger emergency modal automatically
+            if (level === "RED") {
+                showRedEmergencyModal({
+                    patientName: document.getElementById("inputPatientName").value || "Pediatric Patient",
+                    ageMonths: age_months,
+                    dangerSign: dangerText,
+                    respiratoryRate: respiratory_rate,
+                    feverDays: fever_days,
+                    diagnosis: diag,
+                    urgency: urg,
+                    sms: sms,
+                    tts: currentTTS
+                });
+            }
         }
 
         function setPreset(txt, name) {
@@ -879,6 +915,132 @@
             } else {
                 alert("Audio Brief: " + currentTTS);
             }
+        }
+
+        // --- Doctor Profile Registry Logic ---
+        let currentDoctor = {
+            doctor_id: "DOC-PUNE-01",
+            full_name: "Dr. Anjali Deshmukh, MD (Pediatrics)",
+            phone_number: "+919876543210",
+            whatsapp_number: "919876543210",
+            phc_name: "Khed Sub-District Primary Health Centre",
+            district: "Pune Rural"
+        };
+
+        async function fetchDoctorProfile() {
+            try {
+                const res = await fetch('/api/doctor');
+                const data = await res.json();
+                if (data.success && data.doctor) {
+                    currentDoctor = data.doctor;
+                    updateDoctorUI();
+                }
+            } catch (e) {
+                // Fallback to local storage if offline
+                const saved = localStorage.getItem("asha_appointed_doctor");
+                if (saved) currentDoctor = JSON.parse(saved);
+                updateDoctorUI();
+            }
+        }
+
+        function updateDoctorUI() {
+            document.getElementById("bannerDocName").innerText = currentDoctor.full_name;
+            document.getElementById("bannerDocPhc").innerText = currentDoctor.phc_name;
+            document.getElementById("bannerDocPhone").innerText = currentDoctor.phone_number;
+            localStorage.setItem("asha_appointed_doctor", JSON.stringify(currentDoctor));
+        }
+
+        function openDoctorModal() {
+            document.getElementById("editDocName").value = currentDoctor.full_name;
+            document.getElementById("editDocPhone").value = currentDoctor.phone_number;
+            document.getElementById("editDocPhc").value = currentDoctor.phc_name;
+            document.getElementById("editDocDistrict").value = currentDoctor.district || "Pune Rural";
+            document.getElementById("doctorConfigModal").classList.remove("hidden");
+        }
+
+        function closeDoctorModal() {
+            document.getElementById("doctorConfigModal").classList.add("hidden");
+        }
+
+        async function saveDoctorModal() {
+            currentDoctor.full_name = document.getElementById("editDocName").value;
+            currentDoctor.phone_number = document.getElementById("editDocPhone").value;
+            currentDoctor.whatsapp_number = currentDoctor.phone_number.replace(/\D/g, '');
+            currentDoctor.phc_name = document.getElementById("editDocPhc").value;
+            currentDoctor.district = document.getElementById("editDocDistrict").value;
+
+            updateDoctorUI();
+            closeDoctorModal();
+
+            try {
+                await fetch('/api/doctor', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(currentDoctor)
+                });
+            } catch (e) {
+                console.log("Saved doctor locally (offline)");
+            }
+            alert("Appointed PHC Doctor Details Updated Successfully!");
+        }
+
+        // --- Automated RED Emergency Dispatch Modal Logic ---
+        let lastRedEmergencyData = null;
+
+        function showRedEmergencyModal(data) {
+            lastRedEmergencyData = data;
+            document.getElementById("redModalPatient").innerText = `${data.patientName} (${data.ageMonths ? data.ageMonths + 'm' : 'Age N/A'})`;
+            document.getElementById("redModalDanger").innerText = data.dangerSign;
+            document.getElementById("redModalDiagnosis").innerText = data.diagnosis;
+            document.getElementById("redModalDocName").innerText = currentDoctor.full_name;
+            document.getElementById("redModalDocPhc").innerText = currentDoctor.phc_name;
+            document.getElementById("redModalDocPhone").innerText = currentDoctor.phone_number;
+            document.getElementById("redModalSmsSnippet").innerText = data.sms;
+
+            // WhatsApp link targeting doctor's phone
+            const waPhone = currentDoctor.whatsapp_number || "919876543210";
+            const waBody = encodeURIComponent(`*🚨 EMERGENCY RED TELE-TRIAGE ALERT*\n\n*To:* ${currentDoctor.full_name}\n*PHC:* ${currentDoctor.phc_name}\n\n*Patient:* ${data.patientName} (${data.ageMonths || 'N/A'} months)\n*Severity:* RED - HOSPITAL/FRU TRANSFER\n*Danger Sign:* ${data.dangerSign}\n*Diagnosis:* ${data.diagnosis}\n*Vitals:* RR ${data.respiratoryRate || 'N/A'}, Fever ${data.feverDays || 0}d\n\n*Urgent Action Required:* ${data.urgency}\n\n_Sent via ASHA Offline Tele-Triage Companion_`);
+            document.getElementById("redModalWhatsappBtn").href = `https://wa.me/${waPhone}?text=${waBody}`;
+
+            // Direct GSM SMS Link
+            document.getElementById("redModalSmsBtn").href = `sms:${currentDoctor.phone_number}?body=${encodeURIComponent(data.sms)}`;
+
+            document.getElementById("redEmergencyModal").classList.remove("hidden");
+        }
+
+        function closeRedEmergencyModal() {
+            document.getElementById("redEmergencyModal").classList.add("hidden");
+        }
+
+        function acknowledgeAndSaveRedCase() {
+            saveCurrentAssessmentLocally();
+            closeRedEmergencyModal();
+        }
+
+        // --- SQLite Queue Viewer Modal Logic ---
+        function openSqliteQueueModal() {
+            const outbox = getOutboxRecords();
+            const container = document.getElementById("sqliteQueueRows");
+            document.getElementById("sqliteQueueCount").innerText = `${outbox.length} Records Pending`;
+
+            if (outbox.length === 0) {
+                container.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400 text-xs italic">On-device SQLite queue is empty. All records synced.</td></tr>`;
+            } else {
+                container.innerHTML = outbox.map((item, i) => `
+                    <tr class="border-b text-xs hover:bg-slate-50 font-mono">
+                        <td class="p-2 font-bold">${i+1}</td>
+                        <td class="p-2">${item.patient.full_name} (${item.patient.age_months}m)</td>
+                        <td class="p-2"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${item.assessment.triage_color === 'RED' ? 'bg-rose-100 text-rose-800' : (item.assessment.triage_color === 'YELLOW' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800')}">${item.assessment.triage_color}</span></td>
+                        <td class="p-2 text-slate-600">${item.assessment.diagnosis}</td>
+                        <td class="p-2 text-rose-600 font-bold">PENDING</td>
+                    </tr>
+                `).join('');
+            }
+            document.getElementById("sqliteQueueModal").classList.remove("hidden");
+        }
+
+        function closeSqliteQueueModal() {
+            document.getElementById("sqliteQueueModal").classList.add("hidden");
         }
 
         // Speech Recognition Setup
@@ -931,9 +1093,156 @@
             catch (e) { recognition.onend(); }
         }
 
-        // Initialize default view
+        // Initialize default view & doctor profile
+        fetchDoctorProfile();
         updateOutboxBadge();
         setPreset('8 mahine ka bachha, 3 din se bukhar aur 55 saans rate', 'Aarav Shinde');
     </script>
+
+    <!-- 1. AUTOMATED RED EMERGENCY DISPATCH MODAL -->
+    <div id="redEmergencyModal" class="fixed inset-0 bg-slate-950/80 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full border-4 border-rose-600 overflow-hidden animate-bounce-short">
+            <!-- Header -->
+            <div class="bg-rose-600 text-white p-4 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-triangle-exclamation text-2xl animate-pulse"></i>
+                    <div>
+                        <h3 class="font-black text-lg leading-tight tracking-wide">🚨 CRITICAL RED ALERT DETECTED</h3>
+                        <p class="text-xs text-rose-100">Immediate Hospital Transfer & Direct Doctor Dispatch Required</p>
+                    </div>
+                </div>
+                <button onclick="closeRedEmergencyModal()" class="text-rose-200 hover:text-white text-lg font-bold">&times;</button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-5 space-y-4 text-sm">
+                <!-- Patient Summary -->
+                <div class="bg-rose-50 p-3.5 rounded-xl border border-rose-200">
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="text-xs text-rose-800 font-bold uppercase">Patient:</span>
+                        <span id="redModalPatient" class="font-black text-slate-900 text-base">Aarav Shinde (8m)</span>
+                    </div>
+                    <div class="flex justify-between items-start mb-1 text-xs">
+                        <span class="text-slate-600">Danger Sign:</span>
+                        <span id="redModalDanger" class="font-bold text-rose-700">Convulsions & Lethargy</span>
+                    </div>
+                    <div class="flex justify-between items-start text-xs">
+                        <span class="text-slate-600">IMCI Diagnosis:</span>
+                        <span id="redModalDiagnosis" class="font-bold text-slate-800">Severe Disease / Hospital Transfer</span>
+                    </div>
+                </div>
+
+                <!-- Appointed Doctor Box -->
+                <div class="bg-slate-900 text-slate-200 p-3.5 rounded-xl text-xs space-y-1">
+                    <div class="text-amber-400 font-bold flex items-center justify-between mb-1">
+                        <span><i class="fa-solid fa-user-doctor mr-1"></i> Appointed PHC Doctor:</span>
+                        <span class="text-[10px] bg-emerald-700 text-white px-1.5 py-0.2 rounded">ON DUTY</span>
+                    </div>
+                    <p id="redModalDocName" class="font-bold text-white text-sm">Dr. Anjali Deshmukh, MD</p>
+                    <p id="redModalDocPhc" class="text-slate-400">Khed Sub-District Primary Health Centre</p>
+                    <p class="text-emerald-400 font-mono font-bold">WhatsApp / Direct: <span id="redModalDocPhone">+91 98765 43210</span></p>
+                </div>
+
+                <!-- 140-Char SMS Snippet -->
+                <div>
+                    <span class="text-slate-500 text-[11px] block mb-1 font-semibold">140-Char Compact Emergency SMS Dispatch:</span>
+                    <div id="redModalSmsSnippet" class="bg-slate-100 p-2.5 rounded-lg border font-mono text-xs text-slate-800">
+                        [RED] P-102 | Age:14m | Convulsions | Action:URGENT HOSPITAL REFERRAL
+                    </div>
+                </div>
+
+                <!-- Action Buttons Grid -->
+                <div class="space-y-2 pt-2">
+                    <a id="redModalWhatsappBtn" href="#" target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center shadow-lg transition text-sm">
+                        <i class="fa-brands fa-whatsapp text-xl mr-2"></i> 1-Tap WhatsApp Alert to Appointed Doctor
+                    </a>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <a id="redModalSmsBtn" href="#" class="bg-sky-600 hover:bg-sky-700 text-white font-bold py-2.5 px-3 rounded-lg flex items-center justify-center text-xs shadow transition">
+                            <i class="fa-solid fa-comment-sms mr-1.5"></i> Send Direct GSM SMS
+                        </a>
+                        <button onclick="playTTSAudio()" class="bg-slate-800 hover:bg-slate-900 text-amber-300 font-bold py-2.5 px-3 rounded-lg flex items-center justify-center text-xs shadow transition">
+                            <i class="fa-solid fa-volume-high mr-1.5"></i> Play 10s Audio Brief
+                        </button>
+                    </div>
+
+                    <button onclick="acknowledgeAndSaveRedCase()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-lg text-xs shadow transition flex items-center justify-center">
+                        <i class="fa-solid fa-floppy-disk mr-1.5"></i> Save & Queue in Local SQLite Database
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. DOCTOR CONFIGURATION MODAL -->
+    <div id="doctorConfigModal" class="fixed inset-0 bg-slate-950/70 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+            <div class="bg-indigo-900 text-white p-4 flex justify-between items-center">
+                <h3 class="font-bold text-base flex items-center">
+                    <i class="fa-solid fa-user-doctor mr-2 text-amber-400"></i> Appointed PHC Doctor Details
+                </h3>
+                <button onclick="closeDoctorModal()" class="text-slate-300 hover:text-white">&times;</button>
+            </div>
+            <div class="p-5 space-y-3 text-xs">
+                <div>
+                    <label class="font-bold text-slate-700 block mb-1">Doctor Full Name & Designation:</label>
+                    <input id="editDocName" type="text" class="w-full p-2 border rounded-lg" value="Dr. Anjali Deshmukh, MD (Pediatrics)">
+                </div>
+                <div>
+                    <label class="font-bold text-slate-700 block mb-1">Doctor WhatsApp / Mobile Phone:</label>
+                    <input id="editDocPhone" type="text" class="w-full p-2 border rounded-lg font-mono" value="+919876543210">
+                </div>
+                <div>
+                    <label class="font-bold text-slate-700 block mb-1">Assigned Primary Health Centre (PHC):</label>
+                    <input id="editDocPhc" type="text" class="w-full p-2 border rounded-lg" value="Khed Sub-District Primary Health Centre">
+                </div>
+                <div>
+                    <label class="font-bold text-slate-700 block mb-1">District / Sub-District:</label>
+                    <input id="editDocDistrict" type="text" class="w-full p-2 border rounded-lg" value="Pune Rural">
+                </div>
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button onclick="closeDoctorModal()" class="px-3 py-2 bg-slate-100 text-slate-700 font-bold rounded-lg">Cancel</button>
+                    <button onclick="saveDoctorModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow">Save Details</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. ON-DEVICE SQLITE QUEUE VIEWER MODAL -->
+    <div id="sqliteQueueModal" class="fixed inset-0 bg-slate-950/70 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden">
+            <div class="bg-slate-900 text-white p-4 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-database text-amber-400 text-lg"></i>
+                    <div>
+                        <h3 class="font-bold text-base">On-Device SQLite Database Outbox</h3>
+                        <p class="text-[11px] text-slate-400">Physical file: local_triage.db • Table: triage_assessments</p>
+                    </div>
+                </div>
+                <span id="sqliteQueueCount" class="bg-indigo-700 text-white text-xs px-2.5 py-1 rounded-full font-mono font-bold">0 Pending</span>
+            </div>
+            <div class="p-4 max-h-96 overflow-y-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100 text-[11px] text-slate-600 uppercase font-bold border-b">
+                            <th class="p-2">#</th>
+                            <th class="p-2">Patient</th>
+                            <th class="p-2">Triage</th>
+                            <th class="p-2">Diagnosis</th>
+                            <th class="p-2">Sync Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sqliteQueueRows">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="p-3 bg-slate-50 border-t flex justify-between items-center text-xs">
+                <span class="text-slate-500 text-[11px]">Durable offline storage enabled. Data survives app reboot.</span>
+                <button onclick="closeSqliteQueueModal()" class="px-4 py-1.5 bg-slate-900 text-white font-bold rounded-lg">Close</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

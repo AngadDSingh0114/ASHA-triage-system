@@ -155,6 +155,18 @@ class CentralDBManager:
             );
             """)
             c.execute("""
+            CREATE TABLE IF NOT EXISTS doctors (
+                doctor_id TEXT PRIMARY KEY,
+                full_name TEXT NOT NULL,
+                phone_number TEXT NOT NULL,
+                whatsapp_number TEXT NOT NULL,
+                phc_name TEXT NOT NULL,
+                district TEXT NOT NULL,
+                is_on_duty BOOLEAN DEFAULT 1,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            );
+            """)
+            c.execute("""
             CREATE TABLE IF NOT EXISTS triage_records (
                 assessment_id TEXT PRIMARY KEY,
                 patient_id TEXT NOT NULL,
@@ -184,7 +196,78 @@ class CentralDBManager:
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_rec_color ON triage_records(triage_color);")
             c.execute("CREATE INDEX IF NOT EXISTS idx_rec_ack ON triage_records(doctor_acknowledged);")
+
+            # Seed default appointed PHC doctor if table empty
+            c.execute("SELECT COUNT(*) as cnt FROM doctors")
+            if c.fetchone()["cnt"] == 0:
+                c.execute("""
+                INSERT INTO doctors (doctor_id, full_name, phone_number, whatsapp_number, phc_name, district, is_on_duty)
+                VALUES ('DOC-PUNE-01', 'Dr. Anjali Deshmukh, MD (Pediatrics)', '+919876543210', '919876543210', 'Khed Sub-District Primary Health Centre', 'Pune Rural', 1);
+                """)
             conn.commit()
+
+    def get_doctor_profile(self) -> Dict[str, Any]:
+        with self.get_conn() as conn:
+            c = conn.cursor()
+            c.execute("SELECT * FROM doctors WHERE is_on_duty = 1 LIMIT 1")
+            row = c.fetchone()
+            if row:
+                return dict(row)
+            return {
+                "doctor_id": "DOC-PUNE-01",
+                "full_name": "Dr. Anjali Deshmukh, MD (Pediatrics)",
+                "phone_number": "+919876543210",
+                "whatsapp_number": "919876543210",
+                "phc_name": "Khed Sub-District Primary Health Centre",
+                "district": "Pune Rural",
+                "is_on_duty": 1
+            }
+
+    def update_doctor_profile(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        with self.get_conn() as conn:
+            c = conn.cursor()
+            doc_id = data.get("doctor_id", "DOC-PUNE-01")
+            c.execute("""
+            INSERT INTO doctors (doctor_id, full_name, phone_number, whatsapp_number, phc_name, district, is_on_duty, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
+            ON CONFLICT(doctor_id) DO UPDATE SET
+                full_name=excluded.full_name,
+                phone_number=excluded.phone_number,
+                whatsapp_number=excluded.whatsapp_number,
+                phc_name=excluded.phc_name,
+                district=excluded.district,
+                updated_at=CURRENT_TIMESTAMP;
+            """, (
+                doc_id,
+                data.get("full_name", "Dr. Anjali Deshmukh"),
+                data.get("phone_number", "+919876543210"),
+                data.get("whatsapp_number", "919876543210").replace("+", "").replace(" ", "").replace("-", ""),
+                data.get("phc_name", "Khed PHC"),
+                data.get("district", "Pune Rural")
+            ))
+            conn.commit()
+        return self.get_doctor_profile()
+
+    def get_db_explorer_data(self) -> Dict[str, Any]:
+        """Returns schemas and live table rows for the visual SQLite explorer."""
+        with self.get_conn() as conn:
+            c = conn.cursor()
+            c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%';")
+            tables = [r["name"] for r in c.fetchall()]
+            
+            result = {}
+            for t in tables:
+                c.execute(f"PRAGMA table_info({t});")
+                cols = [dict(col) for col in c.fetchall()]
+                c.execute(f"SELECT * FROM {t} ORDER BY rowid DESC LIMIT 50;")
+                rows = [dict(row) for row in c.fetchall()]
+                result[t] = {
+                    "columns": cols,
+                    "row_count": len(rows),
+                    "rows": rows
+                }
+            return result
+
 
     def ingest_batch(self, payload: Dict[str, Any]) -> List[str]:
         asha_id = payload.get("asha_id", "ASHA-UNKNOWN")
@@ -363,6 +446,12 @@ class TriageRequestHandler(http.server.SimpleHTTPRequestHandler):
         elif path == "/api/stats":
             stats = central_db.get_stats()
             self._send_json(200, {"success": True, "stats": stats})
+        elif path == "/api/doctor":
+            doc = central_db.get_doctor_profile()
+            self._send_json(200, {"success": True, "doctor": doc})
+        elif path == "/api/db/explorer":
+            data = central_db.get_db_explorer_data()
+            self._send_json(200, {"success": True, "database": "phc_central.db", "tables": data})
         elif path == "/api/grounding-stats":
             self._send_json(200, {"success": True, "grounding": GROUNDING_STATS})
         elif path == "/api/health":
@@ -386,6 +475,16 @@ class TriageRequestHandler(http.server.SimpleHTTPRequestHandler):
                     "synced_ids": synced_ids,
                     "server_time": datetime.utcnow().isoformat() + "Z"
                 })
+            except Exception as e:
+                self._send_json(400, {"success": False, "error": str(e)})
+
+        elif path == "/api/doctor":
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length)
+            try:
+                data = json.loads(body.decode('utf-8'))
+                doc = central_db.update_doctor_profile(data)
+                self._send_json(200, {"success": True, "doctor": doc})
             except Exception as e:
                 self._send_json(400, {"success": False, "error": str(e)})
 
