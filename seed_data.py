@@ -115,3 +115,4 @@ if __name__ == "__main__":
     from local_db import LocalTriageDB
     db = LocalTriageDB("local_triage.db")
     seed_local_db(db)
+

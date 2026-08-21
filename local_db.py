@@ -221,3 +221,4 @@ class LocalTriageDB:
             ORDER BY t.assessed_at DESC
             """)
             return [dict(row) for row in cursor.fetchall()]
+
