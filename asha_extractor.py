@@ -132,3 +132,37 @@ def parse_asha_transcript(transcript: str) -> Dict[str, Any]:
         },
         "extraction_confidence": confidence,
     }
+
+
+def generate_referral_note(extracted_data: Dict[str, Any], triage_level: str) -> str:
+    """
+    Generates a deterministic clinical referral note for PHC doctors based on extracted slots and triage level.
+    """
+    fields = extracted_data.get("extracted_fields", {})
+    age_m = fields.get("age_months")
+    rr = fields.get("respiratory_rate")
+    has_chest_indrawing = fields.get("has_chest_indrawing", False)
+    has_convulsions = fields.get("has_convulsions", False)
+    has_lethargy = fields.get("has_lethargy", False)
+    symptoms = fields.get("symptoms", [])
+
+    age_str = f"{age_m}-month-old" if age_m is not None else "Child"
+
+    if "RED" in triage_level.upper():
+        danger_signs = []
+        if has_convulsions:
+            danger_signs.append("convulsions")
+        if has_lethargy:
+            danger_signs.append("lethargy/unresponsiveness")
+        if not danger_signs:
+            danger_signs = ["severe respiratory distress / chest indrawing"]
+        return f"RED ALERT: {age_str} presenting with Severe illness / Danger signs present ({', '.join(danger_signs)}). Refer IMMEDIATELY to hospital/FRU."
+
+    elif "YELLOW" in triage_level.upper():
+        reason = "fast breathing" if (rr and rr >= 50) else "chest indrawing" if has_chest_indrawing else "persistent fever/symptoms"
+        rr_detail = f" (RR {rr}/min)" if rr else ""
+        return f"YELLOW ALERT: {age_str} with Suspected pneumonia / illness due to {reason}{rr_detail}. Refer to PHC within 24 hours."
+
+    else:
+        return f"GREEN: {age_str} with mild illness ({', '.join(symptoms) if symptoms else 'no acute danger signs'}). Home care recommended."
+

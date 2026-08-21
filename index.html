@@ -21,18 +21,47 @@
                 <i class="fa-solid fa-user-nurse text-2xl text-amber-400"></i>
                 <div>
                     <h1 class="font-bold text-lg leading-tight">ASHA Tele-Triage Companion</h1>
-                    <p class="text-xs text-indigo-200">WHO IMCI Protocol • 100% Offline Capable</p>
+                    <p class="text-xs text-indigo-200">WHO IMCI Protocol • Offline-First + Auto-Sync</p>
                 </div>
             </div>
-            <div class="flex items-center space-x-2">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500 text-white">
-                    <i class="fa-solid fa-wifi-slash mr-1"></i> Offline Mode
-                </span>
+            
+            <div class="flex items-center space-x-3">
+                <!-- Connectivity Simulation Switch (Airplane Mode) -->
+                <button id="networkToggleBtn" onclick="toggleNetworkMode()" class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold transition shadow-sm bg-emerald-500 text-white hover:bg-emerald-600">
+                    <i class="fa-solid fa-wifi mr-1.5"></i> <span id="networkStatusText">Online (Auto-Sync)</span>
+                </button>
+
+                <!-- Link to PHC Dashboard -->
+                <a href="/phc_dashboard.html" class="bg-amber-400 hover:bg-amber-300 text-indigo-950 px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center shadow">
+                    <i class="fa-solid fa-hospital-user mr-1.5"></i> PHC Doctor View
+                </a>
             </div>
         </div>
     </header>
 
     <main class="max-w-4xl mx-auto p-4 space-y-6">
+
+        <!-- Offline Queue Status Bar -->
+        <section class="bg-slate-900 text-white rounded-xl shadow-md p-4 flex flex-wrap justify-between items-center gap-3 border border-slate-800">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-800 text-amber-400 p-2.5 rounded-lg">
+                    <i class="fa-solid fa-inbox text-lg"></i>
+                </div>
+                <div>
+                    <h2 class="text-sm font-bold flex items-center">
+                        Local DB & Sync Outbox Queue 
+                        <span id="queueBadge" class="ml-2 bg-indigo-600 text-white text-xs px-2 py-0.5 rounded-full font-mono font-bold">0 Pending</span>
+                    </h2>
+                    <p class="text-xs text-slate-400">Records save to on-device SQLite / local storage in field and sync when online.</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <button onclick="syncLocalQueueNow()" id="syncBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center">
+                    <i class="fa-solid fa-cloud-arrow-up mr-1.5"></i> Sync Now
+                </button>
+            </div>
+        </section>
 
         <!-- Voice & Transcript Input Section (Person C) -->
         <section class="bg-white rounded-xl shadow-md p-5 border border-slate-200">
@@ -45,15 +74,22 @@
                 </button>
             </div>
 
+            <!-- Optional Patient Details -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3 text-xs">
+                <input id="inputPatientName" type="text" value="Aarav Sharma" class="p-2 border border-slate-300 rounded-lg" placeholder="Child Name">
+                <input id="inputGuardian" type="text" value="Sunita Sharma" class="p-2 border border-slate-300 rounded-lg" placeholder="Guardian Name">
+                <input id="inputVillage" type="text" value="Khed Shivapur" class="p-2 border border-slate-300 rounded-lg" placeholder="Village Name">
+            </div>
+
             <textarea id="transcriptInput" rows="3" class="w-full p-3 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-base" placeholder="Speak or type transcript in Hindi, Hinglish, or English (e.g. '8 mahine ka bachha, 3 din se bukhar aur 55 saans rate')"></textarea>
 
             <!-- Quick Demo Transcripts -->
             <div class="mt-3 flex flex-wrap gap-2 text-xs">
                 <span class="font-semibold text-slate-500 py-1">Quick Presets:</span>
-                <button onclick="setPreset('8 mahine ka bachha, 3 din se bukhar aur 55 saans rate')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-md">Fast Breathing (Pneumonia)</button>
-                <button onclick="setPreset('jhatke aa rahe hain aur behoosh hai')" class="bg-rose-50 hover:bg-rose-100 text-rose-800 px-2.5 py-1 rounded-md">Convulsions (Red Danger Sign)</button>
-                <button onclick="setPreset('8 month child with fever for 2 days and chest indrawing')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 px-2.5 py-1 rounded-md">Chest Indrawing (English)</button>
-                <button onclick="setPreset('dast aur ulti ho rahi hai 2 din se')" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-md">Diarrhea & Vomiting</button>
+                <button onclick="setPreset('8 mahine ka bachha, 3 din se bukhar aur 55 saans rate', 'Aarav Shinde')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 px-2.5 py-1 rounded-md font-semibold">Fast Breathing (Pneumonia - Yellow)</button>
+                <button onclick="setPreset('jhatke aa rahe hain aur behoosh hai', 'Ananya Patil')" class="bg-rose-50 hover:bg-rose-100 text-rose-800 px-2.5 py-1 rounded-md font-semibold">Convulsions (Danger Sign - Red)</button>
+                <button onclick="setPreset('8 month child with fever for 2 days and chest indrawing', 'Kabir Jadhav')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 px-2.5 py-1 rounded-md font-semibold">Chest Indrawing (English)</button>
+                <button onclick="setPreset('dast aur ulti ho rahi hai 2 din se', 'Rohan More')" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-md font-semibold">Diarrhea (Home Care - Green)</button>
             </div>
         </section>
 
@@ -114,14 +150,20 @@
                     </div>
                 </div>
 
-                <!-- Person C 10-Second TTS & WhatsApp Dispatch Buttons -->
-                <div class="mt-4 pt-4 border-t border-slate-100 flex flex-col sm:flex-row gap-2">
-                    <button onclick="playTTSAudio()" class="flex-1 bg-indigo-900 hover:bg-indigo-800 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center justify-center">
-                        <i class="fa-solid fa-volume-high mr-2 text-amber-400"></i> Play 10s Audio Brief
+                <!-- Action Controls: Save Locally & Dispatch -->
+                <div class="mt-4 pt-4 border-t border-slate-100 space-y-2">
+                    <button onclick="saveCurrentAssessmentLocally()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2.5 rounded-lg text-xs font-bold flex items-center justify-center shadow transition">
+                        <i class="fa-solid fa-floppy-disk mr-2"></i> Save Assessment to Local Database
                     </button>
-                    <a id="whatsappBtn" href="#" target="_blank" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center justify-center">
-                        <i class="fa-brands fa-whatsapp mr-2 text-lg"></i> Share to PHC Doctor
-                    </a>
+
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <button onclick="playTTSAudio()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center justify-center">
+                            <i class="fa-solid fa-volume-high mr-2 text-amber-400"></i> 10s Audio Brief
+                        </button>
+                        <a id="whatsappBtn" href="#" target="_blank" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center justify-center">
+                            <i class="fa-brands fa-whatsapp mr-2 text-lg"></i> Send WhatsApp
+                        </a>
+                    </div>
                 </div>
             </section>
 
@@ -150,7 +192,7 @@
 
     </main>
 
-    <!-- Client-side Extractor & Rules Logic -->
+    <!-- Client-side Extractor, Rules, and Offline Sync Logic -->
     <script>
         const THESAURUS = {
             "fever": ["bukhar", "bukar", "taap", "fever", "garam body", "garam hai"],
@@ -162,12 +204,139 @@
         };
 
         let currentTTS = "";
+        let currentExtractedData = {};
+        let currentTriageResult = {};
+        let isOnline = true;
 
+        // --- Offline Outbox Queue (localStorage DB simulation) ---
+        const OUTBOX_KEY = "asha_tele_triage_outbox";
+
+        function getOutboxRecords() {
+            try {
+                return JSON.parse(localStorage.getItem(OUTBOX_KEY) || "[]");
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveOutboxRecords(records) {
+            localStorage.setItem(OUTBOX_KEY, JSON.stringify(records));
+            updateOutboxBadge();
+        }
+
+        function updateOutboxBadge() {
+            const list = getOutboxRecords();
+            const badge = document.getElementById("queueBadge");
+            if (badge) {
+                badge.innerText = `${list.length} Pending`;
+                badge.className = list.length > 0 
+                    ? "ml-2 bg-rose-600 text-white text-xs px-2 py-0.5 rounded-full font-mono font-bold animate-pulse"
+                    : "ml-2 bg-indigo-600 text-white text-xs px-2 py-0.5 rounded-full font-mono font-bold";
+            }
+        }
+
+        function toggleNetworkMode() {
+            isOnline = !isOnline;
+            const btn = document.getElementById("networkToggleBtn");
+            const txt = document.getElementById("networkStatusText");
+
+            if (isOnline) {
+                btn.className = "inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold transition shadow-sm bg-emerald-500 text-white hover:bg-emerald-600";
+                btn.innerHTML = `<i class="fa-solid fa-wifi mr-1.5"></i> <span id="networkStatusText">Online (Auto-Sync)</span>`;
+                // Trigger auto sync on reconnect
+                syncLocalQueueNow();
+            } else {
+                btn.className = "inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold transition shadow-sm bg-rose-600 text-white hover:bg-rose-700 animate-pulse";
+                btn.innerHTML = `<i class="fa-solid fa-plane mr-1.5"></i> <span id="networkStatusText">Airplane Mode (Offline)</span>`;
+            }
+        }
+
+        function saveCurrentAssessmentLocally() {
+            const patientName = document.getElementById("inputPatientName").value || "Patient";
+            const guardianName = document.getElementById("inputGuardian").value || "Guardian";
+            const villageName = document.getElementById("inputVillage").value || "Village";
+            const patientId = "P-" + Math.floor(100 + Math.random() * 900);
+            const assessmentId = "ASS-" + Date.now();
+
+            const record = {
+                patient: {
+                    patient_id: patientId,
+                    full_name: patientName,
+                    age_months: currentExtractedData.age_months || 12,
+                    gender: "M",
+                    guardian_name: guardianName,
+                    village_name: villageName
+                },
+                assessment: {
+                    assessment_id: assessmentId,
+                    asha_id: "ASHA-MH-PUNE-012",
+                    temperature_c: currentExtractedData.temperature_c || 38.0,
+                    respiratory_rate: currentExtractedData.respiratory_rate || 45,
+                    fever_days: currentExtractedData.fever_days || 0,
+                    symptoms: currentExtractedData.symptoms || [],
+                    has_chest_indrawing: !!currentExtractedData.has_chest_indrawing,
+                    has_convulsions: !!currentExtractedData.has_convulsions,
+                    has_vomiting_everything: !!currentExtractedData.has_vomiting_everything,
+                    has_lethargy: !!currentExtractedData.has_lethargy,
+                    triage_color: currentTriageResult.triage_level || "GREEN",
+                    diagnosis: currentTriageResult.diagnosis || "Mild Illness",
+                    urgency: currentTriageResult.urgency || "Home Care",
+                    primary_danger: currentTriageResult.primary_danger || "None",
+                    actions: currentTriageResult.actions || [],
+                    referral_note: currentTTS || "Referral Note",
+                    assessed_at: new Date().toISOString()
+                }
+            };
+
+            const outbox = getOutboxRecords();
+            outbox.push(record);
+            saveOutboxRecords(outbox);
+
+            alert(`Saved locally in on-device database!\nPatient: ${patientName} (${record.assessment.triage_color} Alert)\nPending Sync Queue Count: ${outbox.length}`);
+
+            if (isOnline) {
+                syncLocalQueueNow();
+            }
+        }
+
+        async function syncLocalQueueNow() {
+            if (!isOnline) {
+                alert("Device is in Airplane Mode. Turn Online to push records to PHC.");
+                return;
+            }
+
+            const outbox = getOutboxRecords();
+            if (outbox.length === 0) {
+                return;
+            }
+
+            const payload = {
+                asha_id: "ASHA-MH-PUNE-012",
+                sync_timestamp: new Date().toISOString(),
+                records: outbox
+            };
+
+            try {
+                const res = await fetch("/api/sync/batch", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    saveOutboxRecords([]);
+                    console.log("Successfully synced records to PHC server:", data);
+                }
+            } catch (err) {
+                console.warn("Could not connect to central server, staying in offline queue:", err);
+            }
+        }
+
+        // --- Parser & IMCI Logic ---
         function parseAndEvaluate() {
             const transcript = document.getElementById("transcriptInput").value.toLowerCase();
             if (!transcript.trim()) return;
 
-            // 1. Extraction Logic
             let age_months = null;
             const monthMatch = transcript.match(/(\d+)\s*(-|\s)?\s*(mahine|mahina|month|months|m)\b/);
             const yearMatch = transcript.match(/(\d+(?:\.\d+)?)\s*(-|\s)?\s*(saal|year|years|yr)\b/);
@@ -187,6 +356,18 @@
             const dayMatch = transcript.match(/(\d+)\s*(?:din|day|days)/);
             if (symptoms.includes("fever") && dayMatch) fever_days = parseInt(dayMatch[1]);
 
+            currentExtractedData = {
+                age_months,
+                respiratory_rate,
+                fever_days,
+                symptoms,
+                has_chest_indrawing: symptoms.includes("chest_indrawing"),
+                has_convulsions: symptoms.includes("convulsions"),
+                has_vomiting_everything: symptoms.includes("vomiting"),
+                has_lethargy: symptoms.includes("lethargy"),
+                temperature_c: fever_days > 0 ? 38.8 : 37.0
+            };
+
             // Update UI Slots
             document.getElementById("slotAge").innerText = age_months ? `${age_months} months` : "Not specified";
             document.getElementById("slotRR").innerText = respiratory_rate ? `${respiratory_rate} / min` : "Not measured";
@@ -198,7 +379,7 @@
             const confidence = Math.min(100, Math.round(((age_months ? 1 : 0) + (respiratory_rate ? 1 : 0) + (fever_days ? 1 : 0) + (symptoms.length ? 2 : 1)) / 5 * 100));
             document.getElementById("slotConfidence").innerText = `${confidence}%`;
 
-            // 2. WHO IMCI Rule Engine Logic
+            // WHO IMCI Rules Logic
             const has_chest_indrawing = symptoms.includes("chest_indrawing");
             const has_convulsions = symptoms.includes("convulsions");
             const has_lethargy = symptoms.includes("lethargy");
@@ -232,6 +413,14 @@
                 actions = ["Give ORS solution & Zinc for 14 days", "Continue feeding child"];
             }
 
+            currentTriageResult = {
+                triage_level: level,
+                diagnosis: diag,
+                urgency: urg,
+                primary_danger: dangerText,
+                actions: actions
+            };
+
             // Render Triage Card
             const badge = document.getElementById("triageBadge");
             badge.className = `px-3 py-1 rounded-full text-xs font-extrabold badge-${level.toLowerCase()}`;
@@ -243,18 +432,19 @@
 
             // Outputs
             const ageStr = age_months ? `${age_months}-month-old` : "child";
-            currentTTS = `${level} Alert. Patient P-101, ${ageStr} with ${dangerText}. Diagnosis: ${diag}. Action: ${urg}.`;
+            currentTTS = `${level} Alert. Patient, ${ageStr} with ${dangerText}. Diagnosis: ${diag}. Action: ${urg}.`;
             document.getElementById("outTTS").innerText = currentTTS;
 
             const sms = `[${level}] P-101 | Age:${age_months || 'N/A'}m | ${dangerText} | RR:${respiratory_rate || 'N/A'} | Action:${urg.substring(0,20)}`;
             document.getElementById("outSMS").innerText = sms;
 
-            const waText = encodeURIComponent(`*EMERGENCY TELE-TRIAGE REFERRAL*\n\n*Patient ID:* P-101\n*Severity:* ${level}\n*Diagnosis:* ${diag}\n*Vitals:* Age ${age_months || 'N/A'}m, RR ${respiratory_rate || 'N/A'}\n*Danger Sign:* ${dangerText}\n*Action:* ${urg}`);
+            const waText = encodeURIComponent(`*EMERGENCY TELE-TRIAGE REFERRAL*\n\n*Patient:* ${document.getElementById("inputPatientName").value}\n*Severity:* ${level}\n*Diagnosis:* ${diag}\n*Vitals:* Age ${age_months || 'N/A'}m, RR ${respiratory_rate || 'N/A'}\n*Danger Sign:* ${dangerText}\n*Action:* ${urg}`);
             document.getElementById("whatsappBtn").href = `https://api.whatsapp.com/send?text=${waText}`;
         }
 
-        function setPreset(txt) {
+        function setPreset(txt, name) {
             document.getElementById("transcriptInput").value = txt;
+            if (name) document.getElementById("inputPatientName").value = name;
             parseAndEvaluate();
         }
 
@@ -309,7 +499,8 @@
         }
 
         // Initialize default view
-        setPreset('8 mahine ka bachha, 3 din se bukhar aur 55 saans rate');
+        updateOutboxBadge();
+        setPreset('8 mahine ka bachha, 3 din se bukhar aur 55 saans rate', 'Aarav Shinde');
     </script>
 </body>
 </html>

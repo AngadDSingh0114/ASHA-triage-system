@@ -1,19 +1,18 @@
 # ASHA Tele-Triage System (WHO IMCI Protocol)
 
-> **Offline-first AI Tele-Triage Companion for ASHA / PHC Healthcare Workers in Rural India**  
-> Speech-to-Text & Symptom Entity Extraction Engine, WHO IMCI Rules Classifier, 10-Second TTS Audio Synthesizer, and Emergency WhatsApp/SMS Referral Dispatch.
+> **Offline-First AI-Assisted Tele-Triage Companion for ASHA / PHC Healthcare Workers in Rural India**  
+> Speech-to-Text & Symptom Entity Extraction Engine, WHO IMCI Rules Classifier, Local SQLite & Outbox Sync Queue, 10-Second TTS Audio Brief, and Real-Time PHC Doctor Ingestion Dashboard.
 
 ---
 
-## 🌟 Overview
+## 🌟 Architecture & Team Split
 
-In rural primary healthcare, frontline ASHA workers need fast, deterministic, offline triage tools to assess pediatric illness under WHO IMCI (Integrated Management of Childhood Illness) guidelines.
-
-This project delivers **Person C's Speech-to-Text & Symptom Extraction Layer** integrated with **Person B's WHO IMCI Rules Engine**, providing:
-1. **Multilingual Speech Recognition & Rule-Based Entity Extractor**: Parses raw Hindi, Hinglish, and English speech transcripts into structured clinical JSON data.
-2. **Deterministic WHO IMCI Rules Engine**: Evaluates age-banded respiratory thresholds and general danger signs to assign triage levels (**RED - Hospital Referral**, **YELLOW - PHC Clinic**, **GREEN - Home Care**).
-3. **10-Second TTS Audio Summary Synthesizer**: Generates synthesized audio briefs for PHC doctors to listen instantly on mobile.
-4. **1-Tap WhatsApp & SMS Emergency Dispatch**: Pre-formats compact 140-character emergency SMS text and deep-linked WhatsApp messages.
+| Role | Module | Key Responsibilities |
+| :--- | :--- | :--- |
+| **Person A** | Mobile App / UI | Offline form fallback, result cards, offline indicators. |
+| **Person B** | On-Device Decision Engine | WHO IMCI rules logic, age-banded respiratory thresholds, danger signs. |
+| **Person C** | STT & NLP Extractor | Hindi/Hinglish thesaurus, vitals slot filling, 10s audio script synthesis. |
+| **Person D** | **Backend / Sync + Data** | **Local SQLite schema, opportunistic sync-on-reconnect queue, live PHC doctor console, and NFHS-5/HMIS data grounding.** |
 
 ---
 
@@ -21,64 +20,58 @@ This project delivers **Person C's Speech-to-Text & Symptom Extraction Layer** i
 
 ```text
 .
-├── asha_extractor.py       # Entity Extractor & Regional Hindi/Hinglish Thesaurus
-├── imci_rules_engine.py    # WHO IMCI Decision-Tree Rules Engine & Formatters
-├── tts_synthesizer.py      # On-Device Text-to-Speech (TTS) Synthesizer
-├── index.html              # Standalone Offline Interactive ASHA Dashboard UI
+├── local_schema.sql        # SQLite DDL Schema for on-device & server databases
+├── local_db.py             # Local SQLite DAO & Offline Sync Outbox Manager (Person D)
+├── server.py               # Zero-Dependency Central Ingestion API & Static Web Server (Person D)
+├── seed_data.py            # NFHS-5/HMIS Health Stats & Realistic IMCI Benchmark Cases (Person D)
+├── phc_dashboard.html      # Live PHC Doctor Tele-Triage Ingestion Console (Person D)
+├── index.html              # ASHA Field Companion App with Offline Queue & Airplane Toggle
+├── asha_extractor.py       # Speech/NLP Entity Extraction & Regional Hindi Thesaurus (Person C)
+├── imci_rules_engine.py    # WHO IMCI Decision-Tree Rules Engine & Formatters (Person B)
+├── tts_synthesizer.py      # On-Device Text-to-Speech (TTS) Audio Synthesizer
+├── test_sync_backend.py    # Unit Tests for Backend, Sync Engine & Database (Person D)
 ├── test_asha_extractor.py  # Unit Tests for Entity Extractor
-├── test_imci_rules.py     # Unit Tests for Rules Engine & Full Pipeline
-└── README.md               # Documentation
+├── test_imci_rules.py      # Unit Tests for Rules Engine & Full Pipeline
+└── README.md               # Master Documentation
 ```
 
 ---
 
 ## 🚀 Quick Start & Usage
 
-### 1. Run Interactive Dashboard (Offline Web UI)
-Open `index.html` in any web browser:
+### 1. Start the Central Backend & Dashboards
+Run the zero-dependency Python server:
 ```bash
-# Double-click index.html or open via browser
+python server.py
 ```
-Features:
-- Live Speech-to-Text microphone input (`hi-IN` Hindi / Hinglish).
-- Real-time vitals slot-filling & extraction confidence score.
-- Color-coded WHO IMCI triage card with specific clinical protocol guidelines.
-- 1-Click 10-second audio summary player.
-- 1-Tap WhatsApp referral sharing button.
+This serves:
+* 📱 **ASHA Field Companion App:** `http://localhost:8000/index.html`
+* 🩺 **PHC Doctor Live Dashboard:** `http://localhost:8000/phc_dashboard.html`
 
-### 2. Run Python Core & Automated Tests
-Execute the unit test suite across clinical test cases:
+### 2. Run All Automated Unit Tests
 ```bash
-python -m unittest test_imci_rules.py
+python -m unittest discover
 ```
-
-### 3. Example Code Usage
-```python
-from asha_extractor import parse_asha_transcript
-from imci_rules_engine import evaluate_imci_rules
-
-transcript = "8 mahine ka bachha, 3 din se bukhar aur 55 saans rate"
-
-# 1. Parse Entity Slots
-extracted = parse_asha_transcript(transcript)
-
-# 2. Evaluate WHO IMCI Triage Rules
-result = evaluate_imci_rules(extracted, patient_id="P-101")
-
-print("Triage Level:", result["triage_level"])  # YELLOW
-print("Diagnosis:", result["diagnosis"])        # PNEUMONIA (Fast Breathing)
-print("10s TTS Script:", result["tts_script"])  # YELLOW Alert. P-101...
-```
+*Runs all 14 unit tests across NLP extraction, IMCI rules engine, local SQLite outbox, and backend sync.*
 
 ---
 
-## 🧪 Verified Test Scenarios
+## 🔁 "Airplane Mode" Sync-on-Reconnect Demo Flow
 
-- **Test 1 (Full Hinglish)**: `"8 mahine ka bachha, 3 din se bukhar aur 55 saans rate"` -> Pneumonia (Fast Breathing: RR 55) -> `YELLOW`
-- **Test 2 (English Speech)**: `"8 month child with fever for 2 days and chest indrawing"` -> Pneumonia (Chest Indrawing) -> `YELLOW`
-- **Test 3 (Partial Input)**: `"dast aur ulti ho rahi hai 2 din se"` -> Gastroenteritis -> `GREEN` (Home Care ORS)
-- **Test 4 (Severe Danger Sign)**: `"jhatke aa rahe hain aur behoosh hai"` -> Severe Disease (Convulsions & Lethargy) -> `RED` (Urgent Referral)
-- **Test 5 (Noise Edge Case)**: Random noise / unexpected words handled gracefully with default null fallbacks.
+1. **Open ASHA App (`/index.html`)**: Click the top right badge to switch to **"Airplane Mode (Offline)"**.
+2. **Perform Offline Triage**: Select a preset (e.g. *Convulsions - RED* or *Fast Breathing - YELLOW*) and click **"Save Assessment to Local Database"**.
+3. **Inspect Queue**: Notice the queue badge increments (`1 Pending`), securely stored on the local device without network.
+4. **Restore Connectivity**: Click the badge to toggle **"Online (Auto-Sync)"**.
+5. **Instant Ingestion**: The outbox flushes to the central backend via `POST /api/sync/batch`.
+6. **Open PHC Doctor Dashboard (`/phc_dashboard.html`)**: The doctor console updates in real time with the inbound priority alert, clinical vitals, and 10s audio brief.
+
+---
+
+## 📊 Clinical Grounding (NFHS-5 & MoHFW)
+
+* **Under-5 Mortality Rate (U5MR):** 35.2 per 1,000 live births (NFHS-5). Over 68% of preventable child deaths in rural India stem from delayed diagnosis of acute pneumonia and diarrhea.
+* **WHO IMCI Protocol Justification:** Deterministic decision trees with age-specific cutoffs (<2m: $\ge$60 bpm, 2-11m: $\ge$50 bpm, 12-59m: $\ge$40 bpm) provide high-sensitivity safety for non-clinical frontline workers.
+* **Offline Requirement:** 42.7% of rural health sub-centres face intermittent cellular coverage, making cloud-dependent triage systems unsafe.
 
 ---
 
