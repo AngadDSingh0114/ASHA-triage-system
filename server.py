@@ -14,6 +14,11 @@ import urllib.parse
 from datetime import datetime
 from typing import Dict, Any, List
 
+try:
+    from asha_extractor import parse_asha_transcript
+except ImportError:
+    parse_asha_transcript = None
+
 PORT = 8000
 DB_FILE = "phc_central.db"
 
@@ -463,7 +468,22 @@ class TriageRequestHandler(http.server.SimpleHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
 
-        if path == "/api/sync/batch":
+        if path == "/api/parse":
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length)
+            try:
+                data = json.loads(body.decode('utf-8'))
+                transcript = data.get("transcript", "")
+                patient_id = data.get("patient_id", "P-101")
+                if parse_asha_transcript is not None:
+                    result = parse_asha_transcript(transcript, patient_id=patient_id)
+                    self._send_json(200, {"success": True, "data": result})
+                else:
+                    self._send_json(500, {"success": False, "error": "Extractor module not loaded"})
+            except Exception as e:
+                self._send_json(400, {"success": False, "error": str(e)})
+
+        elif path == "/api/sync/batch":
             content_length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(content_length)
             try:

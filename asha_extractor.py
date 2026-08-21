@@ -13,6 +13,11 @@ output regardless of script. Native-speaker review is recommended before deploym
 import re
 from typing import Dict, Any, List, Optional
 
+try:
+    from imci_rules_engine import evaluate_imci_rules
+except ImportError:
+    evaluate_imci_rules = None
+
 
 # ---------------------------------------------------------------------------
 # Language registry
@@ -832,7 +837,7 @@ def parse_asha_transcript(transcript: str) -> Dict[str, Any]:
 
     confidence = round(min(1.0, filled_slots / 5.0), 2)
 
-    return {
+    res = {
         "raw_transcript": transcript,
         "language": language,
         "extracted_fields": {
@@ -848,6 +853,15 @@ def parse_asha_transcript(transcript: str) -> Dict[str, Any]:
         },
         "extraction_confidence": confidence,
     }
+
+    # Integrate NLP Model with Rule-Based Engine:
+    # Pass extracted fields to the WHO IMCI decision engine to produce diagnosis & recommendations
+    if evaluate_imci_rules is not None:
+        triage_eval = evaluate_imci_rules(res, language=language)
+        res["triage_result"] = triage_eval
+        res["clinical_triage"] = triage_eval
+
+    return res
 
 
 # ---------------------------------------------------------------------------
