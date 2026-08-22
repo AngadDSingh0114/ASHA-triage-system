@@ -1,4 +1,5 @@
 import 'dart:math';
+import '../models/patient_triage_model.dart';
 
 class ExtractedFields {
   final int? ageMonths;
@@ -233,6 +234,32 @@ class AshaNlpExtractor {
         hasLethargy: hasLethargy,
       ),
       extractionConfidence: confidence,
+    );
+  }
+
+  /// Parses transcript via NLP and automatically evaluates WHO IMCI clinical triage rules
+  static TriageResult parseAndEvaluate(String transcript, Patient patient) {
+    final nlpResult = parseTranscript(transcript);
+    final ef = nlpResult.extractedFields;
+
+    final vitals = Vitals(
+      temperatureF: ef.temperatureF ?? (ef.feverDays > 0 ? 101.8 : 98.6),
+      respiratoryRate: ef.respiratoryRate ?? 24,
+      feverDays: ef.feverDays,
+    );
+
+    final dangerSigns = DangerSigns(
+      unableToDrinkOrFeed: ef.symptoms.contains('unable_to_drink'),
+      vomitsEverything: ef.hasVomitingEverything,
+      convulsions: ef.hasConvulsions,
+      lethargicOrUnconscious: ef.hasLethargy,
+      chestIndrawing: ef.hasChestIndrawing,
+    );
+
+    return TriageResult.evaluate(
+      patient: patient,
+      vitals: vitals,
+      dangerSigns: dangerSigns,
     );
   }
 }
