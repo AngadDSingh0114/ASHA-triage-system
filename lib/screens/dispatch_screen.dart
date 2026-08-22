@@ -104,7 +104,7 @@ class _DispatchScreenState extends State<DispatchScreen> {
 
               Expanded(
                 child: FutureBuilder<List<Map<String, dynamic>>>(
-                  future: DatabaseHelper.instance.getPendingAssessments(),
+                  future: DatabaseHelper.instance.getAllTriageAssessments(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
@@ -113,7 +113,7 @@ class _DispatchScreenState extends State<DispatchScreen> {
                     if (rows.isEmpty) {
                       return const Center(
                         child: Text(
-                          'No records pending sync in SQLite DB (All synced to PHC Server).',
+                          'No assessment records found in SQLite DB.',
                           style: TextStyle(color: Colors.grey),
                         ),
                       );
@@ -127,6 +127,8 @@ class _DispatchScreenState extends State<DispatchScreen> {
                         final color = colorStr == 'RED'
                             ? Colors.red
                             : (colorStr == 'YELLOW' ? Colors.amber.shade800 : Colors.green);
+                        final syncStatus = row['sync_status'] as String? ?? 'PENDING';
+                        final isSynced = syncStatus == 'SYNCED';
 
                         return Card(
                           margin: const EdgeInsets.only(bottom: 12),
@@ -165,7 +167,7 @@ class _DispatchScreenState extends State<DispatchScreen> {
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
-                                  'Patient ID: ${row['patient_id']} • ASHA ID: ${row['asha_id']}',
+                                  'Patient ID: ${row['patient_id']} (${row['full_name'] ?? 'Child'}) • ASHA ID: ${row['asha_id']}',
                                   style: const TextStyle(fontSize: 12, color: Colors.black87),
                                 ),
                                 const SizedBox(height: 4),
@@ -181,14 +183,18 @@ class _DispatchScreenState extends State<DispatchScreen> {
                                 const SizedBox(height: 6),
                                 Row(
                                   children: [
-                                    const Icon(Icons.sync_problem, size: 14, color: Colors.orange),
+                                    Icon(
+                                      isSynced ? Icons.check_circle : Icons.sync_problem,
+                                      size: 14,
+                                      color: isSynced ? Colors.green : Colors.orange,
+                                    ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      'Sync Status: ${row['sync_status']}',
-                                      style: const TextStyle(
+                                      'Sync Status: $syncStatus',
+                                      style: TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.orange,
+                                        color: isSynced ? Colors.green : Colors.orange,
                                       ),
                                     ),
                                     const Spacer(),

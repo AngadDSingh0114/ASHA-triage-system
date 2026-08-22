@@ -175,6 +175,19 @@ class DatabaseHelper {
     );
   }
 
+  /// Fetch all stored local assessments (both PENDING and SYNCED)
+  Future<List<Map<String, dynamic>>> getAllTriageAssessments() async {
+    final db = await instance.database;
+    return await db.rawQuery('''
+      SELECT 
+        a.*,
+        p.full_name, p.age_months, p.gender, p.guardian_name, p.village_name, p.patient_phone
+      FROM triage_assessments a
+      LEFT JOIN patients p ON a.patient_id = p.patient_id
+      ORDER BY a.assessed_at DESC
+    ''');
+  }
+
   Future<List<Map<String, dynamic>>> getPendingAssessmentsWithPatientData() async {
     final db = await instance.database;
     return await db.rawQuery('''
