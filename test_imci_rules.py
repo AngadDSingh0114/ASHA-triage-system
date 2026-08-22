@@ -53,12 +53,14 @@ class TestTeleTriagePipeline(unittest.TestCase):
         self.assertIn("SEVERE PNEUMONIA", result["diagnosis"])
 
     def test_green_mild_diarrhea(self):
+        # Transcript has diarrhea only — no fever keyword, so fever_days stays 0.
+        # No dehydration signs => engine correctly returns GREEN / NO_DEHYDRATION.
         transcript = "dast ho rahi hai 2 din se, bachha normal hai"
         data = parse_asha_transcript(transcript)
         result = evaluate_imci_rules(data, patient_id="P-004")
 
-        self.assertEqual(result["triage_level"], "YELLOW")
-        self.assertIn("FEVER", result["diagnosis"])
+        self.assertEqual(result["triage_level"], "GREEN")
+        self.assertIn("NO DEHYDRATION", result["diagnosis"])
         self.assertTrue(len(result["actions"]) > 0)
 
     def test_red_young_infant_catch_all(self):

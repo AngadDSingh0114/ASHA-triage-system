@@ -942,8 +942,9 @@ def parse_asha_transcript(transcript: str, patient_id: str = "P-101") -> Dict[st
     has_breathing_difficulty = "breathing" in detected_symptoms
 
     # --- 4. FEVER DURATION EXTRACTION ---
+    # Spec: triggered only when a fever class keyword is present.
     fever_days: int = 0
-    if has_fever or re.search(_DAY_ALT + r"\b", text_lower):
+    if has_fever:
         fever_day_match = re.search(
             r"(\d+)\s*" + _DAY_ALT + r"\s*(?:se)?(?:\s*(?:bukhar|jwar|fever|jvaram|kaaychal|panni))?",
             text_lower,
