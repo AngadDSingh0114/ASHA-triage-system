@@ -220,6 +220,9 @@ class TriageResult {
     required Patient patient,
     required Vitals vitals,
     required DangerSigns dangerSigns,
+    int diarrhoeaDays = 0,
+    bool hasDiarrhoeaSymptom = false,
+    bool hasBloodInStoolSymptom = false,
   }) {
     // Build TriageInput-shaped structures
     Map<String, dynamic> symptoms = {};
@@ -232,6 +235,9 @@ class TriageResult {
     if (dangerSigns.stiffNeck) symptoms['stiff_neck'] = true;
     if (dangerSigns.mastoidSwelling) symptoms['mastoid_swelling'] = true;
     if (dangerSigns.earPainOrDischarge) symptoms['ear_pain_or_discharge'] = true;
+    if (hasDiarrhoeaSymptom) symptoms['diarrhoea'] = true;
+    if (hasBloodInStoolSymptom) symptoms['blood_in_stool'] = true;
+    symptoms['diarrhoea_days'] = diarrhoeaDays;
 
     // Run classifiers
     List<ConditionResult> conditions = [];
