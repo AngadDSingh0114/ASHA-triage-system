@@ -426,6 +426,10 @@ CLINICAL_BENCHMARK_SCENARIOS: List[Dict[str, Any]] = [
     }
 ]
 
+# Alias for backwards compatibility
+DEMO_PATIENT_SCENARIOS = CLINICAL_BENCHMARK_SCENARIOS
+
+
 def format_patient_callback_sms(record: Dict[str, Any], doctor_info: Optional[Dict[str, Any]] = None) -> str:
     """Generates standard GSM SMS text for the patient/guardian (concise, <= 160 chars)."""
     p_name = record.get("full_name") or record.get("patient", {}).get("full_name", "Patient")
@@ -450,7 +454,6 @@ def format_patient_callback_whatsapp(record: Dict[str, Any], doctor_info: Option
     color = record.get("triage_color") or record.get("assessment", {}).get("triage_color", "GREEN")
     diag = record.get("diagnosis") or record.get("assessment", {}).get("diagnosis", "Clinical Assessment")
     urgency = record.get("urgency") or record.get("assessment", {}).get("urgency", "Home Care")
-    note = record.get("referral_note") or record.get("assessment", {}).get("referral_note", "Follow home care guidelines.")
     actions = record.get("actions") or record.get("assessment", {}).get("actions", [])
     
     doc = doctor_info or {
@@ -495,9 +498,6 @@ def format_patient_callback_whatsapp(record: Dict[str, Any], doctor_info: Option
     return "\n".join(msg)
 
 
-DEMO_PATIENT_SCENARIOS = CLINICAL_BENCHMARK_SCENARIOS
-
-
 def generate_benchmark_sync_payloads() -> List[Dict[str, Any]]:
     """
     Evaluates each scenario dynamically using Person B's official imci_rules_engine
@@ -515,6 +515,7 @@ def generate_benchmark_sync_payloads() -> List[Dict[str, Any]]:
         
         # Execute Person B's official rule engine
         triage = evaluate_imci_rules(extracted_data, patient_id=p_id, language=lang)
+        
         assessed_time = (base_time + timedelta(minutes=idx * 12)).isoformat() + "Z"
         
         record = {

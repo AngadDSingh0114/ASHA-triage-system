@@ -432,6 +432,14 @@ class CentralDBManager:
             conn.commit()
             return c.rowcount > 0
 
+    def clear_all_data(self) -> Dict[str, Any]:
+        with self.get_conn() as conn:
+            c = conn.cursor()
+            c.execute("DELETE FROM triage_records;")
+            c.execute("DELETE FROM patients;")
+            conn.commit()
+        return {"triage_records_deleted": True, "patients_deleted": True}
+
     def get_stats(self) -> Dict[str, Any]:
         with self.get_conn() as conn:
             c = conn.cursor()
@@ -650,6 +658,14 @@ class TriageRequestHandler(http.server.SimpleHTTPRequestHandler):
                 "assessment_id": assessment_id, 
                 "report": report,
                 "delivered_at": datetime.utcnow().isoformat() + "Z"
+            })
+
+        elif path in ["/api/db/clear", "/api/clear"]:
+            central_db.clear_all_data()
+            redis_gateway.invalidate_cache()
+            self._send_json(200, {
+                "success": True,
+                "message": "All triage records and patient data cleared from central database."
             })
 
         elif path.startswith("/api/records/") and path.endswith("/acknowledge"):
@@ -871,12 +887,6 @@ def run_server(port: int = PORT):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(current_dir)
     SilentTCPServer.allow_reuse_address = True
-    
-    # Pre-seed if database empty
-    stats = central_db.get_stats()
-    if stats["total_triaged"] == 0:
-        for item in DEMO_PATIENT_SCENARIOS:
-            central_db.ingest_batch({"asha_id": "ASHA-MH-PUNE-012", "records": [item]})
 
     print("=" * 60, flush=True)
     print("[SERVER] ASHA / PHC Tele-Triage Central Backend Server", flush=True)
