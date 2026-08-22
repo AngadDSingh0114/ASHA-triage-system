@@ -454,6 +454,8 @@ def adapt_to_engine_input(extracted_fields: Dict[str, Any], temperature_f: Optio
         temp_c = round((temperature_f - 32.0) * (5.0 / 9.0), 1)
     elif extracted_fields.get("temperature_c") is not None:
         temp_c = extracted_fields["temperature_c"]
+    elif extracted_fields.get("temperature_f") is not None:
+        temp_c = round((extracted_fields["temperature_f"] - 32.0) * (5.0 / 9.0), 1)
 
     symptoms_list = extracted_fields.get("symptoms", []) or []
 

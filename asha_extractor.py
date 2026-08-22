@@ -1030,51 +1030,7 @@ def parse_asha_transcript(transcript: str, patient_id: str = "P-101") -> Dict[st
 # Adapter: NLP extracted fields -> TriageInput-shaped dict for the engine
 # ---------------------------------------------------------------------------
 
-def adapt_to_engine_input(extracted_fields: Dict[str, Any], temperature_f: Optional[float] = None) -> Dict[str, Any]:
-    temp_c = None
-    if temperature_f is not None:
-        temp_c = round((temperature_f - 32.0) * (5.0 / 9.0), 1)
-    elif extracted_fields.get("temperature_c") is not None:
-        temp_c = extracted_fields["temperature_c"]
-    elif extracted_fields.get("temperature_f") is not None:
-        temp_c = round((extracted_fields["temperature_f"] - 32.0) * (5.0 / 9.0), 1)
-
-    symptoms_list = extracted_fields.get("symptoms", []) or []
-
-    def _has(key: str) -> bool:
-        return key in symptoms_list
-
-    diarrhoea_days = extracted_fields.get("diarrhoea_days") or (extracted_fields.get("fever_days") if _has("diarrhea") else 0)
-
-    return {
-        "patient": {
-            "age_months": extracted_fields.get("age_months") or 0,
-        },
-        "vitals": {
-            "resp_rate_bpm": extracted_fields.get("respiratory_rate"),
-            "temp_c": temp_c,
-        },
-        "symptoms": {
-            "cough_or_difficulty_breathing": _has("cough") or _has("breathing") or _has("chest_indrawing"),
-            "chest_indrawing": extracted_fields.get("has_chest_indrawing", False),
-            "stridor_calm_child": False,
-            "diarrhoea": _has("diarrhea"),
-            "diarrhoea_days": diarrhoea_days,
-            "blood_in_stool": extracted_fields.get("has_blood_in_stool", False),
-            "restless_irritable": extracted_fields.get("has_restless_irritable", False),
-            "sunken_eyes": extracted_fields.get("has_sunken_eyes", False),
-            "skin_pinch": "immediate",
-            "drinking": "normal",
-            "fever_days": extracted_fields.get("fever_days") or 0,
-            "stiff_neck": extracted_fields.get("has_stiff_neck", False),
-            "not_able_to_drink_or_breastfeed": extracted_fields.get("has_unable_to_drink", False),
-            "vomits_everything": extracted_fields.get("has_vomiting_everything", False),
-            "convulsions": extracted_fields.get("has_convulsions", False),
-            "lethargic_or_unconscious": extracted_fields.get("has_lethargy", False),
-            "ear_pain_or_discharge": extracted_fields.get("has_ear_pain", False),
-            "mastoid_swelling": extracted_fields.get("has_mastoid_swelling", False),
-        },
-    }
+from imci_rules_engine import adapt_to_engine_input
 _REFERRAL_TEMPLATES: Dict[str, Dict[str, str]] = {
     "YELLOW_PHC": {
         "en": "Suspected pneumonia. Refer to PHC within 24 hours.",
