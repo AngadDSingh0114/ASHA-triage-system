@@ -350,11 +350,10 @@ class TriageResult {
       } else {
         conditions.add(ConditionResult(
           name: 'fever',
-          classification: 'FEVER',
-          severity: TriageSeverity.yellow,
-          reasonTrace: ['fever, no danger sign, no stiff neck, <7 days'],
+          classification: 'FEVER_LOW_RISK',
+          severity: TriageSeverity.green,
+          reasonTrace: ['fever <7 days, no stiff neck, no general danger sign'],
         ));
-        if (flag != 'red') flag = 'yellow';
       }
       trace.add('fever: temp ${tempC.toStringAsFixed(1)}C, $feverDays days -> ${conditions.last.classification} (${conditions.last.severity.name})');
     }
@@ -422,6 +421,13 @@ class TriageResult {
         dangerSignsList.add('young infant (<2mo) with positive symptom');
         trace.add('young infant (<2mo) with positive symptom -> RED');
         if (flag != 'red') flag = 'red';
+      }
+    }
+
+    // Determine worst flag from all evaluated conditions (Worst Flag Wins)
+    for (var c in conditions) {
+      if (FLAG_RANK[c.severity.name.toLowerCase()]! > FLAG_RANK[flag]!) {
+        flag = c.severity.name.toLowerCase();
       }
     }
 
