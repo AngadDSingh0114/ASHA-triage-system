@@ -22,8 +22,12 @@ class Patient {
     required this.village,
     required this.guardianName,
     this.illnessOnset = 'Started 2 days ago',
-    this.phone = '',
-  });
+    String phone = '',
+    String? patientPhone,
+  }) : phone = (patientPhone != null && patientPhone.isNotEmpty) ? patientPhone : phone;
+
+  String get patientPhone => phone;
+  set patientPhone(String val) => phone = val;
 
   String get ageDisplay {
     if (birthdate != null) {

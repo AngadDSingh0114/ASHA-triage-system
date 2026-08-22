@@ -331,7 +331,7 @@ class DatabaseHelper {
       'followups',
       {
         'status': status,
-        if (completedAt != null) 'completed_at': completedAt,
+        'completed_at': completedAt,
       },
       where: 'followup_id = ?',
       whereArgs: [followupId],

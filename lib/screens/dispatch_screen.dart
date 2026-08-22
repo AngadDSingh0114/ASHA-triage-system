@@ -518,10 +518,10 @@ class _DispatchScreenState extends State<DispatchScreen> {
                               style: const TextStyle(fontSize: 11, color: Colors.grey),
                             ),
                             trailing: IconButton(
-                              icon: const Icon(Icons.calendar_plus, size: 18, color: Color(0xFF0D47A1)),
+                              icon: const Icon(Icons.calendar_month, size: 18, color: Color(0xFF0D47A1)),
                               onPressed: () => _showScheduleFollowupDialog(context, patientId: row['patient_id']),
                             ),
-                          )).toList(),
+                          )),
                         ],
                       );
                     },
@@ -625,7 +625,7 @@ class _DispatchScreenState extends State<DispatchScreen> {
                 final followup = {
                   'followup_id': 'FUP-${DateTime.now().millisecondsSinceEpoch}',
                   'patient_id': patientId ?? 'P-${DateTime.now().millisecondsSinceEpoch}',
-                  'assessment_id': widget.triageResult.patientId ?? '',
+                  'assessment_id': 'TRG-${patientId ?? 'P-101'}',
                   'follow_up_date': selectedDate!.toIso8601String(),
                   'follow_up_notes': notesController.text,
                   'status': 'SCHEDULED',
@@ -647,3 +647,4 @@ class _DispatchScreenState extends State<DispatchScreen> {
       ),
     );
   }
+}
