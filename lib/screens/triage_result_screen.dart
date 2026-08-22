@@ -61,15 +61,18 @@ class TriageResultScreen extends StatelessWidget {
               children: [
                 Icon(badgeIcon, size: 60, color: Colors.white),
                 const SizedBox(height: 12),
-                Text(
-                  AppTranslations.localizeDiagnosis(triageResult.severityLabel, currentLanguage),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.8,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    AppTranslations.localizeDiagnosis(triageResult.severityLabel, currentLanguage),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.8,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -80,6 +83,7 @@ class TriageResultScreen extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                   ),
                   textAlign: TextAlign.center,
+                  softWrap: true,
                 ),
               ],
             ),
@@ -103,20 +107,25 @@ class TriageResultScreen extends StatelessWidget {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 6.0),
                     child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(
-                          Icons.circle,
-                          size: 10,
-                          color: Color(0xFF0D47A1),
+                        const Padding(
+                          padding: EdgeInsets.only(top: 5),
+                          child: Icon(
+                            Icons.circle,
+                            size: 8,
+                            color: Color(0xFF0D47A1),
+                          ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
                             AppTranslations.localizeReason(reason, currentLanguage),
                             style: const TextStyle(
-                              fontSize: 15,
+                              fontSize: 14,
                               fontWeight: FontWeight.w600,
                             ),
+                            softWrap: true,
                           ),
                         ),
                       ],
@@ -143,11 +152,12 @@ class TriageResultScreen extends StatelessWidget {
               child: Text(
                 AppTranslations.localizeUrgency(triageResult.recommendation, currentLanguage),
                 style: const TextStyle(
-                  fontSize: 15,
+                  fontSize: 14,
                   height: 1.5,
                   fontWeight: FontWeight.w600,
                   color: Colors.black87,
                 ),
+                softWrap: true,
               ),
             ),
           ),
@@ -160,9 +170,12 @@ class TriageResultScreen extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: onGoToAudio,
                   icon: const Icon(Icons.graphic_eq),
-                  label: Text(
-                    AppTranslations.getText('listen_tts_btn', currentLanguage),
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  label: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      AppTranslations.getText('listen_tts_btn', currentLanguage),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size.fromHeight(52),
@@ -175,9 +188,12 @@ class TriageResultScreen extends StatelessWidget {
                 child: ElevatedButton.icon(
                   onPressed: onGoToDispatch,
                   icon: const Icon(Icons.send),
-                  label: Text(
-                    AppTranslations.getText('dispatch_alert_btn', currentLanguage),
-                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  label: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      AppTranslations.getText('dispatch_alert_btn', currentLanguage),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size.fromHeight(52),

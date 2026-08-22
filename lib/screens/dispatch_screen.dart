@@ -285,10 +285,13 @@ class _DispatchScreenState extends State<DispatchScreen> {
                                 child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                               )
                             : const Icon(Icons.cloud_upload),
-                        label: Text(
-                          _isSyncing
-                              ? 'Syncing...'
-                              : AppTranslations.getText('sync_btn_label', widget.currentLanguage),
+                        label: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            _isSyncing
+                                ? 'Syncing...'
+                                : AppTranslations.getText('sync_btn_label', widget.currentLanguage),
+                          ),
                         ),
                         style: ElevatedButton.styleFrom(
                           minimumSize: const Size.fromHeight(48),
@@ -303,9 +306,12 @@ class _DispatchScreenState extends State<DispatchScreen> {
                       OutlinedButton.icon(
                         onPressed: () => _showInAppDbInspector(context),
                         icon: const Icon(Icons.manage_search, size: 18),
-                        label: Text(
-                          AppTranslations.getText('view_db_records_label', widget.currentLanguage),
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                        label: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            AppTranslations.getText('view_db_records_label', widget.currentLanguage),
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                          ),
                         ),
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size.fromHeight(38),

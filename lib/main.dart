@@ -261,52 +261,70 @@ class _AshaHomeScreenState extends State<AshaHomeScreen> {
             });
           },
         ),
+        titleSpacing: 4,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              AppTranslations.getText('app_title', currentLanguage),
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                AppTranslations.getText('app_title', currentLanguage),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
             ),
             Text(
               AppTranslations.getText('app_subtitle', currentLanguage),
-              style: const TextStyle(fontSize: 11, color: Colors.white70),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 10, color: Colors.white70),
             ),
           ],
         ),
         actions: [
           // Language Switcher Button (EN / HI / MR)
-          TextButton.icon(
-            onPressed: _showLanguageDialog,
-            icon: const Icon(Icons.language, color: Colors.white, size: 18),
-            label: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.white24,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                langBadge,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
+          InkWell(
+            onTap: _showLanguageDialog,
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.language, color: Colors.white, size: 16),
+                  const SizedBox(width: 3),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      langBadge,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
           // Dynamic Network Connectivity Status Badge (ONLINE MODE vs OFFLINE MODE)
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
-            margin: const EdgeInsets.only(right: 12, left: 4),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            margin: const EdgeInsets.only(right: 8, left: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
             decoration: BoxDecoration(
               color: _isOnline ? Colors.green.shade600 : Colors.amber.shade800,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
                   color: (_isOnline ? Colors.green : Colors.amber).withValues(alpha: 0.4),
-                  blurRadius: 6,
+                  blurRadius: 4,
                 ),
               ],
             ),
@@ -315,19 +333,19 @@ class _AshaHomeScreenState extends State<AshaHomeScreen> {
               children: [
                 Icon(
                   _isOnline ? Icons.wifi : Icons.wifi_off,
-                  size: 12,
+                  size: 11,
                   color: Colors.white,
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 3),
                 Text(
                   _isOnline
                       ? 'ONLINE'
                       : AppTranslations.getText('offline_mode', currentLanguage),
                   style: const TextStyle(
-                    fontSize: 10,
+                    fontSize: 9,
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
+                    letterSpacing: 0.3,
                   ),
                 ),
               ],
