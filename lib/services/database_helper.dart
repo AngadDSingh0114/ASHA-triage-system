@@ -21,8 +21,15 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          try {
+            await db.execute('ALTER TABLE patients ADD COLUMN patient_phone TEXT;');
+          } catch (_) {}
+        }
+      },
     );
   }
 
@@ -101,20 +108,43 @@ class DatabaseHelper {
         ? 'F'
         : (patient.gender.toUpperCase().startsWith('M') ? 'M' : 'O');
 
-    await db.insert(
-      'patients',
-      {
-        'patient_id': patient.id,
-        'full_name': patient.name,
-        'age_months': patient.ageMonths,
-        'gender': genderCode,
-        'guardian_name': patient.guardianName,
-        'village_name': patient.village,
-        'patient_phone': patient.phone,
-        'created_at': DateTime.now().toIso8601String(),
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    final phoneVal = patient.patientPhone.isNotEmpty ? patient.patientPhone : patient.phone;
+    final patientData = <String, dynamic>{
+      'patient_id': patient.id,
+      'full_name': patient.name,
+      'age_months': patient.ageMonths,
+      'gender': genderCode,
+      'guardian_name': patient.guardianName,
+      'village_name': patient.village,
+      'patient_phone': phoneVal,
+      'created_at': DateTime.now().toIso8601String(),
+    };
+
+    try {
+      await db.insert(
+        'patients',
+        patientData,
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } catch (e) {
+      if (e.toString().contains('patient_phone')) {
+        try {
+          await db.execute('ALTER TABLE patients ADD COLUMN patient_phone TEXT;');
+          await db.insert(
+            'patients',
+            patientData,
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        } catch (_) {
+          patientData.remove('patient_phone');
+          await db.insert(
+            'patients',
+            patientData,
+            conflictAlgorithm: ConflictAlgorithm.replace,
+          );
+        }
+      }
+    }
   }
 
   // --- Triage Assessments CRUD Operations ---
