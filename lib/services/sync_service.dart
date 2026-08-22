@@ -28,6 +28,18 @@ class SyncService {
     return 'http://10.0.2.2:8000';
   }
 
+  /// Check if network connection to backend server or internet is active
+  Future<bool> checkOnlineStatus() async {
+    try {
+      final response = await http
+          .get(Uri.parse('$baseUrl/api/records'))
+          .timeout(const Duration(seconds: 3));
+      return response.statusCode == 200;
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Sync all local PENDING records to Person D's server.py backend
   Future<SyncResult> syncPendingRecords({String? customBaseUrl}) async {
     try {
