@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import '../l10n/app_translations.dart';
 import '../models/patient_triage_model.dart';
 
@@ -20,6 +21,7 @@ class AudioPlayerScreen extends StatefulWidget {
 }
 
 class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
+  final FlutterTts _flutterTts = FlutterTts();
   bool _isPlaying = false;
   int _secondsPlayed = 0;
   Timer? _playbackTimer;
@@ -27,12 +29,57 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
   @override
   void initState() {
     super.initState();
+    _initTts();
+  }
+
+  void _initTts() {
+    _flutterTts.setCompletionHandler(() {
+      if (mounted) {
+        _stopPlayback();
+      }
+    });
+    _flutterTts.setErrorHandler((msg) {
+      if (mounted) {
+        _stopPlayback();
+      }
+    });
   }
 
   @override
   void dispose() {
     _playbackTimer?.cancel();
+    _flutterTts.stop();
     super.dispose();
+  }
+
+  String get _languageLocale {
+    switch (widget.currentLanguage) {
+      case AppLanguage.hindi:
+      case AppLanguage.hinglish:
+        return 'hi-IN';
+      case AppLanguage.marathi:
+        return 'mr-IN';
+      case AppLanguage.tamil:
+        return 'ta-IN';
+      case AppLanguage.telugu:
+        return 'te-IN';
+      case AppLanguage.bengali:
+        return 'bn-IN';
+      case AppLanguage.gujarati:
+        return 'gu-IN';
+      case AppLanguage.kannada:
+        return 'kn-IN';
+      case AppLanguage.malayalam:
+        return 'ml-IN';
+      case AppLanguage.punjabi:
+        return 'pa-IN';
+      case AppLanguage.odia:
+        return 'or-IN';
+      case AppLanguage.urdu:
+        return 'ur-IN';
+      case AppLanguage.english:
+        return 'en-IN';
+    }
   }
 
   void _togglePlayback() {
@@ -49,13 +96,20 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
     return seconds < 10 ? 10 : seconds;
   }
 
-  void _startPlayback() {
+  void _startPlayback() async {
     setState(() {
       _isPlaying = true;
       if (_secondsPlayed >= _totalDurationSeconds) {
         _secondsPlayed = 0;
       }
     });
+
+    try {
+      await _flutterTts.setLanguage(_languageLocale);
+      await _flutterTts.setSpeechRate(0.45);
+      await _flutterTts.setPitch(1.0);
+      await _flutterTts.speak(widget.triageResult.ttsScript);
+    } catch (_) {}
 
     _playbackTimer?.cancel();
     _playbackTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -70,8 +124,11 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
     });
   }
 
-  void _stopPlayback() {
+  void _stopPlayback() async {
     _playbackTimer?.cancel();
+    try {
+      await _flutterTts.stop();
+    } catch (_) {}
     if (mounted) {
       setState(() {
         _isPlaying = false;
