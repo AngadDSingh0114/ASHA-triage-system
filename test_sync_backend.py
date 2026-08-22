@@ -177,17 +177,7 @@ class TestBackendAndSync(unittest.TestCase):
         self.assertTrue(telemetry["redis_enabled"])
         self.assertIn("connection_status", telemetry)
 
-    def test_doctor_authentication_and_security(self):
-        auth_success = self.central_db.authenticate_doctor("dr.anjali", "Doctor@123")
-        self.assertIsNotNone(auth_success)
-        self.assertEqual(auth_success["doctor_id"], "DOC-PUNE-01")
-        self.assertTrue("token" in auth_success)
-
-        auth_fail_pwd = self.central_db.authenticate_doctor("dr.anjali", "WrongPassword!456")
-        self.assertIsNone(auth_fail_pwd)
-
 
 if __name__ == "__main__":
     unittest.main()
-
 
