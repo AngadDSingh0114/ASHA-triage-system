@@ -363,17 +363,26 @@ class _VitalsFormScreenState extends State<VitalsFormScreen> {
             children: [
               ActionChip(
                 avatar: const Icon(Icons.warning, color: Colors.red, size: 16),
-                label: Text(AppTranslations.getText('sample_red', widget.currentLanguage)),
+                label: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(AppTranslations.getText('sample_red', widget.currentLanguage)),
+                ),
                 onPressed: () => _loadPresetScenario(1),
               ),
               ActionChip(
                 avatar: const Icon(Icons.error_outline, color: Colors.amber, size: 16),
-                label: Text(AppTranslations.getText('sample_yellow', widget.currentLanguage)),
+                label: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(AppTranslations.getText('sample_yellow', widget.currentLanguage)),
+                ),
                 onPressed: () => _loadPresetScenario(2),
               ),
               ActionChip(
                 avatar: const Icon(Icons.check_circle, color: Colors.green, size: 16),
-                label: Text(AppTranslations.getText('sample_green', widget.currentLanguage)),
+                label: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(AppTranslations.getText('sample_green', widget.currentLanguage)),
+                ),
                 onPressed: () => _loadPresetScenario(3),
               ),
             ],
@@ -384,13 +393,20 @@ class _VitalsFormScreenState extends State<VitalsFormScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                AppTranslations.getText('transcription_box_title', widget.currentLanguage),
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              Expanded(
+                child: Text(
+                  AppTranslations.getText('transcription_box_title', widget.currentLanguage),
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                  softWrap: true,
+                ),
               ),
-              const Text(
-                'Editable / Voice Stream',
-                style: TextStyle(fontSize: 10, color: Colors.blue, fontWeight: FontWeight.bold),
+              const SizedBox(width: 8),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: const Text(
+                  'Editable / Voice Stream',
+                  style: TextStyle(fontSize: 10, color: Colors.blue, fontWeight: FontWeight.bold),
+                ),
               ),
             ],
           ),
