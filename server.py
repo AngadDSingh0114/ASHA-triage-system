@@ -965,18 +965,9 @@ if Flask is not None:
 
     @flask_app.route("/api/seed", methods=["POST"])
     def api_seed():
-        benchmark_records = generate_benchmark_sync_payloads()
-        batch_payload = {
-            "asha_id": "ASHA-MH-PUNE-012",
-            "records": benchmark_records
-        }
-        redis_gateway.push_ingestion_queue(batch_payload)
-        synced_ids = central_db.ingest_batch(batch_payload)
-        redis_gateway.invalidate_cache()
         return jsonify({
-            "success": True,
-            "count": len(synced_ids),
-            "message": f"Successfully seeded {len(synced_ids)} WHO IMCI clinical benchmark cases via Redis Ingestion Queue."
+            "success": False,
+            "message": "Seeding mock data is disabled. PHC Central Server operates strictly on real live data pushed from ASHA mobile app."
         })
 
     @flask_app.route("/api/records/<assessment_id>/acknowledge", methods=["POST"])
