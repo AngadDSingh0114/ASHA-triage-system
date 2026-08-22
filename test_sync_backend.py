@@ -151,8 +151,30 @@ class TestBackendAndSync(unittest.TestCase):
         self.assertTrue(telemetry["redis_enabled"])
         self.assertIn("connection_status", telemetry)
 
+    def test_doctor_authentication_and_security(self):
+        # 1. Successful authentication with default doctor credentials
+        auth_success = self.central_db.authenticate_doctor("dr.anjali", "Doctor@123")
+        self.assertIsNotNone(auth_success)
+        self.assertEqual(auth_success["doctor_id"], "DOC-PUNE-01")
+        self.assertEqual(auth_success["full_name"], "Dr. Anjali Deshmukh, MD (Pediatrics)")
+        self.assertTrue("token" in auth_success)
+
+        # 2. Failed authentication with invalid password
+        auth_fail_pwd = self.central_db.authenticate_doctor("dr.anjali", "WrongPassword!456")
+        self.assertIsNone(auth_fail_pwd)
+
+        # 3. Failed authentication with non-existent doctor
+        auth_fail_user = self.central_db.authenticate_doctor("fake.doctor", "Doctor@123")
+        self.assertIsNone(auth_fail_user)
+
+        # 4. Profile retrieval without exposing password hash
+        doc_profile = self.central_db.get_doctor_profile()
+        self.assertNotIn("password_hash", doc_profile)
+        self.assertEqual(doc_profile["doctor_id"], "DOC-PUNE-01")
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
 
