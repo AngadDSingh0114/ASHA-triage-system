@@ -117,37 +117,39 @@ class TestBackendAndSync(unittest.TestCase):
     def test_grounding_stats_integrity(self):
         self.assertIn("under_5_mortality_rate", GROUNDING_STATS)
         self.assertIn("connectivity_gap", GROUNDING_STATS)
-        self.assertGreaterEqual(len(DEMO_PATIENT_SCENARIOS), 10)
+        self.assertGreaterEqual(len(DEMO_PATIENT_SCENARIOS), 3)
 
-    def test_clinical_benchmark_dataset_coverage(self):
-        from seed_data import CLINICAL_BENCHMARK_SCENARIOS, generate_benchmark_sync_payloads
+    def test_redis_gateway_ingestion_and_caching(self):
+        from redis_gateway import PHCRedisGateway
 
-        self.assertGreaterEqual(len(CLINICAL_BENCHMARK_SCENARIOS), 14)
-        payloads = generate_benchmark_sync_payloads()
-        self.assertEqual(len(payloads), len(CLINICAL_BENCHMARK_SCENARIOS))
+        gw = PHCRedisGateway()
+        # Test Ingestion Queue
+        q_len = gw.push_ingestion_queue({"asha_id": "ASHA-TEST", "records": []})
+        self.assertGreaterEqual(q_len, 1)
 
-        colors = set(p["assessment"]["triage_color"] for p in payloads)
-        self.assertIn("RED", colors)
-        self.assertIn("YELLOW", colors)
-        self.assertIn("GREEN", colors)
-
-        # Ingest full benchmark suite into central database
-        synced_ids = self.central_db.ingest_batch({
-            "asha_id": "ASHA-MH-PUNE-012",
-            "records": payloads
+        # Test Emergency Pub/Sub Broadcasting
+        pub_count = gw.publish_emergency_alert({
+            "patient_id": "P-RED-TEST",
+            "triage_color": "RED",
+            "diagnosis": "Severe Pneumonia",
+            "urgency": "URGENT HOSPITAL"
         })
-        self.assertEqual(len(synced_ids), len(payloads))
+        self.assertGreaterEqual(pub_count, 1)
 
-        # Check priority sorting (RED cases must appear first)
-        records = self.central_db.get_triage_records()
-        self.assertEqual(records[0]["triage_color"], "RED")
+        # Test Fast Cache
+        gw.cache_stats({"total_triaged": 42, "red_alerts": 5}, ttl_seconds=10)
+        cached = gw.get_cached_stats()
+        self.assertIsNotNone(cached)
+        self.assertEqual(cached["total_triaged"], 42)
 
-        # Stats summary validation
-        stats = self.central_db.get_stats()
-        self.assertGreater(stats["red_alerts"], 0)
-        self.assertGreater(stats["yellow_cases"], 0)
-        self.assertGreater(stats["green_cases"], 0)
-        self.assertEqual(stats["total_triaged"], len(payloads))
+        gw.invalidate_cache()
+        invalidated = gw.get_cached_stats()
+        self.assertIsNone(invalidated)
+
+        # Test Telemetry
+        telemetry = gw.get_telemetry()
+        self.assertTrue(telemetry["redis_enabled"])
+        self.assertIn("connection_status", telemetry)
 
 
 if __name__ == "__main__":

@@ -40,6 +40,12 @@
                     <span>Sync Gateway: Connected</span>
                 </div>
 
+                <!-- Redis Status Pill -->
+                <div id="redisPill" class="flex items-center bg-rose-950 border border-rose-500 text-rose-200 px-3 py-1.5 rounded-full text-xs font-semibold">
+                    <i class="fa-solid fa-bolt mr-1.5 text-amber-300"></i>
+                    <span id="redisStatusText">Redis Queue Buffer: Ready</span>
+                </div>
+
                 <!-- SQLite DB Explorer Trigger -->
                 <button onclick="openDbExplorerModal()" class="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center shadow-sm">
                     <i class="fa-solid fa-database mr-1.5 text-amber-400"></i> SQLite DB Explorer
@@ -531,12 +537,35 @@
             }
         }
 
+        async function fetchRedisStatus() {
+            try {
+                const res = await fetch('/api/redis/status');
+                const data = await res.json();
+                if (data.success && data.redis_telemetry) {
+                    const tel = data.redis_telemetry;
+                    const pill = document.getElementById("redisPill");
+                    const text = document.getElementById("redisStatusText");
+                    if (tel.connection_status === "CONNECTED") {
+                        pill.className = "flex items-center bg-emerald-950 border border-emerald-500 text-emerald-300 px-3 py-1.5 rounded-full text-xs font-semibold";
+                        text.innerText = `Redis Daemon: Online (${tel.ingestion_queue_depth} Ingested)`;
+                    } else {
+                        pill.className = "flex items-center bg-indigo-950 border border-indigo-500 text-indigo-200 px-3 py-1.5 rounded-full text-xs font-semibold";
+                        text.innerText = `Redis Gateway: Active (${tel.emergency_alerts_broadcasted} Alerts)`;
+                    }
+                }
+            } catch (e) {
+                console.warn("Redis status fetch error:", e);
+            }
+        }
+
         fetchDoctorProfile();
         fetchStats();
         fetchRecords();
+        fetchRedisStatus();
         setInterval(() => {
             fetchStats();
             fetchRecords();
+            fetchRedisStatus();
         }, 3500);
     </script>
 

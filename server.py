@@ -321,6 +321,8 @@ class CentralDBManager:
             }
 
 
+from redis_gateway import redis_gateway
+
 central_db = CentralDBManager()
 
 
@@ -345,18 +347,30 @@ class TriageRequestHandler(http.server.SimpleHTTPRequestHandler):
             records = central_db.get_triage_records(color_filter=color)
             self._send_json(200, {"success": True, "count": len(records), "records": records})
         elif path == "/api/stats":
+            cached = redis_gateway.get_cached_stats()
+            if cached:
+                self._send_json(200, {"success": True, "source": "redis_cache", "stats": cached})
+                return
             stats = central_db.get_stats()
-            self._send_json(200, {"success": True, "stats": stats})
+            redis_gateway.cache_stats(stats)
+            self._send_json(200, {"success": True, "source": "central_db", "stats": stats})
         elif path == "/api/doctor":
             doc = central_db.get_doctor_profile()
             self._send_json(200, {"success": True, "doctor": doc})
         elif path == "/api/db/explorer":
             data = central_db.get_db_explorer_data()
             self._send_json(200, {"success": True, "database": "phc_central.db", "tables": data})
+        elif path == "/api/redis/status":
+            telemetry = redis_gateway.get_telemetry()
+            self._send_json(200, {"success": True, "redis_telemetry": telemetry})
         elif path == "/api/grounding-stats":
             self._send_json(200, {"success": True, "grounding": GROUNDING_STATS})
         elif path == "/api/health":
-            self._send_json(200, {"status": "online", "timestamp": datetime.utcnow().isoformat() + "Z"})
+            self._send_json(200, {
+                "status": "online", 
+                "redis_status": redis_gateway.get_telemetry()["connection_status"],
+                "timestamp": datetime.utcnow().isoformat() + "Z"
+            })
         else:
             super().do_GET()
 
@@ -384,11 +398,28 @@ class TriageRequestHandler(http.server.SimpleHTTPRequestHandler):
             body = self.rfile.read(content_length)
             try:
                 payload = json.loads(body.decode('utf-8'))
+                
+                # 1. Push sync payload to Redis high-throughput ingestion queue
+                q_depth = redis_gateway.push_ingestion_queue(payload)
+
+                # 2. Ingest to central persistent database
                 synced_ids = central_db.ingest_batch(payload)
+
+                # 3. Publish real-time emergency pub/sub alerts for RED/YELLOW cases
+                records = payload.get("records", [])
+                for r in records:
+                    t_color = r.get("assessment", {}).get("triage_color") or r.get("triage_color")
+                    if t_color in ["RED", "YELLOW"]:
+                        redis_gateway.publish_emergency_alert(r)
+
+                # 4. Invalidate stats cache
+                redis_gateway.invalidate_cache()
+
                 self._send_json(200, {
                     "success": True, 
                     "synced_count": len(synced_ids), 
                     "synced_ids": synced_ids,
+                    "redis_queue_depth": q_depth,
                     "server_time": datetime.utcnow().isoformat() + "Z"
                 })
             except Exception as e:
@@ -410,11 +441,14 @@ class TriageRequestHandler(http.server.SimpleHTTPRequestHandler):
                 "asha_id": "ASHA-MH-PUNE-012",
                 "records": benchmark_records
             }
+            redis_gateway.push_ingestion_queue(batch_payload)
             synced_ids = central_db.ingest_batch(batch_payload)
+            redis_gateway.invalidate_cache()
+
             self._send_json(200, {
                 "success": True, 
                 "count": len(synced_ids), 
-                "message": f"Successfully seeded {len(synced_ids)} WHO IMCI clinical benchmark cases."
+                "message": f"Successfully seeded {len(synced_ids)} WHO IMCI clinical benchmark cases via Redis Ingestion Queue."
             })
 
         elif path.startswith("/api/records/") and path.endswith("/acknowledge"):
@@ -430,6 +464,7 @@ class TriageRequestHandler(http.server.SimpleHTTPRequestHandler):
                 except Exception:
                     pass
             success = central_db.acknowledge_record(assessment_id, doctor_notes)
+            redis_gateway.invalidate_cache()
             self._send_json(200, {"success": success, "assessment_id": assessment_id})
         else:
             self._send_json(404, {"error": "Endpoint not found"})
