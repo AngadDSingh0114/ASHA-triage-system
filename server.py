@@ -527,6 +527,18 @@ class TriageRequestHandler(http.server.SimpleHTTPRequestHandler):
         else:
             self._send_json(404, {"error": "Endpoint not found"})
 
+    def copyfile(self, source, outputfile):
+        try:
+            super().copyfile(source, outputfile)
+        except (ConnectionAbortedError, ConnectionResetError, BrokenPipeError):
+            pass
+
+    def handle(self):
+        try:
+            super().handle()
+        except (ConnectionAbortedError, ConnectionResetError, BrokenPipeError):
+            pass
+
     def _send_json(self, status_code: int, data: Dict[str, Any]):
         try:
             response = json.dumps(data).encode('utf-8')
@@ -539,10 +551,18 @@ class TriageRequestHandler(http.server.SimpleHTTPRequestHandler):
             pass
 
 
+class SilentTCPServer(socketserver.TCPServer):
+    def handle_error(self, request, client_address):
+        exc_type, exc_val, exc_tb = sys.exc_info()
+        if exc_type in (ConnectionAbortedError, ConnectionResetError, BrokenPipeError):
+            return
+        super().handle_error(request, client_address)
+
+
 def run_server(port: int = PORT):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(current_dir)
-    socketserver.TCPServer.allow_reuse_address = True
+    SilentTCPServer.allow_reuse_address = True
     
     # Pre-seed if database empty
     stats = central_db.get_stats()
@@ -558,7 +578,7 @@ def run_server(port: int = PORT):
     print("=" * 60, flush=True)
     print("Press Ctrl+C to stop the server.", flush=True)
 
-    with socketserver.TCPServer(("", port), TriageRequestHandler) as httpd:
+    with SilentTCPServer(("", port), TriageRequestHandler) as httpd:
         try:
             httpd.serve_forever()
         except KeyboardInterrupt:
@@ -567,3 +587,4 @@ def run_server(port: int = PORT):
 
 if __name__ == "__main__":
     run_server()
+
