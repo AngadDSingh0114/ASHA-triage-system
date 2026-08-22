@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'database_helper.dart';
 
@@ -19,14 +18,10 @@ class SyncService {
   static final SyncService instance = SyncService._init();
   SyncService._init();
 
-  /// Determine the Person D central server base URL depending on platform
-  String get baseUrl {
-    if (kIsWeb) {
-      return 'http://localhost:8000';
-    }
-    // Laptop Wi-Fi IP for physical phone sync: http://172.16.29.169:8000
-    return 'http://172.16.29.169:8000';
-  }
+  String _activeServerUrl = 'http://172.16.29.169:8000';
+
+  /// Determine the Person D central server base URL
+  String get baseUrl => _activeServerUrl;
 
   /// Check if network connection to backend server or general internet is active
   Future<bool> checkOnlineStatus() async {
@@ -35,7 +30,10 @@ class SyncService {
       final response = await http
           .get(Uri.parse('http://172.16.29.169:8000/api/records'))
           .timeout(const Duration(seconds: 2));
-      if (response.statusCode == 200) return true;
+      if (response.statusCode == 200) {
+        _activeServerUrl = 'http://172.16.29.169:8000';
+        return true;
+      }
     } catch (_) {}
 
     // 2. Try Android emulator loopback endpoint
@@ -43,10 +41,24 @@ class SyncService {
       final response = await http
           .get(Uri.parse('http://10.0.2.2:8000/api/records'))
           .timeout(const Duration(seconds: 2));
-      if (response.statusCode == 200) return true;
+      if (response.statusCode == 200) {
+        _activeServerUrl = 'http://10.0.2.2:8000';
+        return true;
+      }
     } catch (_) {}
 
-    // 3. Fallback check for general internet connection on physical phones (Wi-Fi / 4G / 5G)
+    // 3. Try Localhost endpoint
+    try {
+      final response = await http
+          .get(Uri.parse('http://localhost:8000/api/records'))
+          .timeout(const Duration(seconds: 2));
+      if (response.statusCode == 200) {
+        _activeServerUrl = 'http://localhost:8000';
+        return true;
+      }
+    } catch (_) {}
+
+    // 4. Fallback check for general internet connection on physical phones (Wi-Fi / 4G / 5G)
     try {
       final response = await http
           .get(Uri.parse('https://www.google.com'))

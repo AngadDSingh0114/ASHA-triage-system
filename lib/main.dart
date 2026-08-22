@@ -146,14 +146,20 @@ class _AshaHomeScreenState extends State<AshaHomeScreen> {
 
   void _checkNetworkConnectivity() async {
     final status = await SyncService.instance.checkOnlineStatus();
-    if (mounted && status != _isOnline) {
-      setState(() {
-        _isOnline = status;
-      });
+    if (mounted) {
+      if (status != _isOnline) {
+        setState(() {
+          _isOnline = status;
+        });
+      }
+      // If online, automatically trigger background sync for any pending offline assessments
+      if (status) {
+        SyncService.instance.syncPendingRecords();
+      }
     }
   }
 
-  void _reEvaluateTriage() {
+  void _reEvaluateTriage() async {
     setState(() {
       _triageResult = TriageResult.evaluate(
         patient: _patient,
@@ -163,12 +169,17 @@ class _AshaHomeScreenState extends State<AshaHomeScreen> {
     });
 
     // Save locally to SQLite database matching local_schema.sql
-    DatabaseHelper.instance.saveTriageAssessment(
+    await DatabaseHelper.instance.saveTriageAssessment(
       patient: _patient,
       vitals: _vitals,
       dangerSigns: _dangerSigns,
       result: _triageResult,
     );
+
+    // If active network connection is present, immediately auto-sync to Person D server backend
+    if (_isOnline) {
+      SyncService.instance.syncPendingRecords();
+    }
   }
 
   void _showLanguageDialog() {
