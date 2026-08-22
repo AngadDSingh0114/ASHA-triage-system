@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'l10n/app_translations.dart';
 import 'models/patient_triage_model.dart';
 import 'screens/audio_player_screen.dart';
@@ -14,6 +16,9 @@ import 'widgets/language_selector_dialog.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    databaseFactory = databaseFactoryFfi;
+  }
   runApp(const AshaTriageApp());
 }
 

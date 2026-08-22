@@ -1,5 +1,3 @@
-import 'dart:math';
-
 enum TriageSeverity { red, yellow, green }
 
 enum SyncStatus { offlineQueued, syncing, synced }
@@ -235,12 +233,6 @@ class TriageResult {
     if (dangerSigns.mastoidSwelling) symptoms['mastoid_swelling'] = true;
     if (dangerSigns.earPainOrDischarge) symptoms['ear_pain_or_discharge'] = true;
 
-    Map<String, dynamic> patientMap = {'age_months': patient.ageMonths};
-    Map<String, dynamic> vitalsMap = {
-      'resp_rate_bpm': vitals.respiratoryRate,
-      'temp_c': (vitals.temperatureF - 32.0) * (5.0 / 9.0),
-    };
-
     // Run classifiers
     List<ConditionResult> conditions = [];
     List<String> trace = [];
@@ -402,7 +394,7 @@ class TriageResult {
         severity: severity,
         reasonTrace: ['$severeCount severe signs, $someCount some signs'],
       ));
-      if (FLAG_RANK[severity.name.toLowerCase()]! > FLAG_RANK[flag]!) {
+      if (flagRank[severity.name.toLowerCase()]! > flagRank[flag]!) {
         flag = severity.name.toLowerCase();
       }
       trace.add('diarrhoea: $classification (${severity.name})');
@@ -466,7 +458,6 @@ class TriageResult {
 
     // TTS script
     String ageStr = '${patient.ageMonths}-month-old';
-    String rrStr = 'RR ${vitals.respiratoryRate}';
     String ttsScript = '${finalSeverity.name.toUpperCase()} alert for patient ${patient.name}, age $ageStr. '
         'Diagnosis and classified findings: ${reasons.join('. ')}. '
         'Vitals: Temperature ${vitals.temperatureF.toStringAsFixed(1)} degrees Fahrenheit, Respiratory rate ${vitals.respiratoryRate} breaths per minute, Oxygen saturation ${vitals.spo2} percent. '
@@ -493,7 +484,7 @@ class TriageResult {
   }
 }
 
-Map<String, int> FLAG_RANK = {
+  Map<String, int> flagRank = {
   'green': 0,
   'yellow': 1,
   'red': 2,

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import '../l10n/app_translations.dart';
 import '../models/patient_triage_model.dart';
 
@@ -21,7 +20,6 @@ class AudioPlayerScreen extends StatefulWidget {
 }
 
 class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
-  late FlutterTts _flutterTts;
   bool _isPlaying = false;
   int _secondsPlayed = 0;
   Timer? _playbackTimer;
@@ -29,78 +27,11 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
   @override
   void initState() {
     super.initState();
-    _initTts();
-  }
-
-  void _initTts() {
-    _flutterTts = FlutterTts();
-
-    _flutterTts.setStartHandler(() {
-      if (mounted) {
-        setState(() {
-          _isPlaying = true;
-        });
-      }
-    });
-
-    _flutterTts.setCompletionHandler(() {
-      _stopPlayback();
-    });
-
-    _flutterTts.setErrorHandler((msg) {
-      _stopPlayback();
-    });
-
-    _setLanguageForTts();
-  }
-
-  void _setLanguageForTts() async {
-    String langCode = 'en-US';
-    switch (widget.currentLanguage) {
-      case AppLanguage.hindi:
-      case AppLanguage.hinglish:
-        langCode = 'hi-IN';
-        break;
-      case AppLanguage.marathi:
-        langCode = 'mr-IN';
-        break;
-      case AppLanguage.tamil:
-        langCode = 'ta-IN';
-        break;
-      case AppLanguage.telugu:
-        langCode = 'te-IN';
-        break;
-      case AppLanguage.bengali:
-        langCode = 'bn-IN';
-        break;
-      case AppLanguage.gujarati:
-        langCode = 'gu-IN';
-        break;
-      case AppLanguage.kannada:
-        langCode = 'kn-IN';
-        break;
-      case AppLanguage.malayalam:
-        langCode = 'ml-IN';
-        break;
-      case AppLanguage.punjabi:
-        langCode = 'pa-IN';
-        break;
-      case AppLanguage.odia:
-        langCode = 'or-IN';
-        break;
-      default:
-        langCode = 'en-US';
-    }
-    await _flutterTts.setLanguage(langCode);
-    await _flutterTts.setSpeechRate(0.48); // Natural speaking speed
-    await _flutterTts.setVolume(1.0); // Full volume
-    await _flutterTts.setPitch(1.0);
   }
 
   @override
   void dispose() {
     _playbackTimer?.cancel();
-    _flutterTts.stop();
     super.dispose();
   }
 
@@ -118,7 +49,7 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
     return seconds < 10 ? 10 : seconds;
   }
 
-  void _startPlayback() async {
+  void _startPlayback() {
     setState(() {
       _isPlaying = true;
       if (_secondsPlayed >= _totalDurationSeconds) {
@@ -137,15 +68,10 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
         }
       });
     });
-
-    // Speak out loud through hardware speaker using native Text-To-Speech engine
-    await _flutterTts.stop();
-    await _flutterTts.speak(widget.triageResult.ttsScript);
   }
 
-  void _stopPlayback() async {
+  void _stopPlayback() {
     _playbackTimer?.cancel();
-    await _flutterTts.stop();
     if (mounted) {
       setState(() {
         _isPlaying = false;
@@ -286,7 +212,7 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
                   const SizedBox(height: 10),
                   Text(
                     _isPlaying
-                        ? '🔊 Speaking...'
+                        ? '🔊 Playing...'
                         : (_secondsPlayed >= _totalDurationSeconds
                             ? '✓ Audio Brief Complete'
                             : AppTranslations.getText('audio_play_hint', widget.currentLanguage)),

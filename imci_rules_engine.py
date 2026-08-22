@@ -294,9 +294,9 @@ def classify_fever(patient: Dict[str, Any], vitals: Dict[str, Any], symptoms: Di
 
     return ConditionResult(
         name="fever",
-        classification="FEVER",
-        flag="yellow",
-        reasonTrace=["fever, no danger sign, no stiff neck, <7 days"],
+        classification="FEVER_LOW_RISK",
+        flag="green",
+        reasonTrace=["fever <7 days, no stiff neck, no general danger sign"],
     )
 
 
