@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PHC Doctor Tele-Triage Ingestion Dashboard</title>
+    <title>PHC Doctor Tele-Triage Ingestion Console</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -19,11 +19,11 @@
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans min-h-screen">
 
-    <!-- ========================================== -->
-    <!-- 1. SECURE DOCTOR AUTHENTICATION VIEW -->
-    <!-- ========================================== -->
+    <!-- ========================================================= -->
+    <!-- 1. RESTRICTED DOCTOR AUTHENTICATION PORTAL (LOGIN SCREEN) -->
+    <!-- ========================================================= -->
     <div id="doctorLoginView" class="min-h-screen bg-slate-950 flex flex-col justify-center items-center p-4 relative overflow-hidden">
-        <!-- Ambient Glow Elements -->
+        <!-- Ambient Background Glows -->
         <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
         <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-rose-600/20 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -102,539 +102,239 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- 2. AUTHENTICATED DOCTOR DASHBOARD VIEW -->
-    <!-- ========================================== -->
+    <!-- ========================================================= -->
+    <!-- 2. AUTHENTICATED DOCTOR DASHBOARD VIEW (UNLOCKED AFTER AUTH) -->
+    <!-- ========================================================= -->
     <div id="doctorDashboardView" class="hidden min-h-screen flex flex-col">
 
-    <header class="bg-slate-900 text-white p-4 shadow-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <div class="flex items-center space-x-3">
-                <div class="bg-rose-600 text-white p-2.5 rounded-xl shadow">
-                    <i class="fa-solid fa-hospital-user text-xl"></i>
-                </div>
-                <div>
-                    <div class="flex items-center space-x-2">
-                        <h1 class="font-black text-lg tracking-wide">PHC Central Tele-Triage Ingestion Console</h1>
-                        <span class="bg-indigo-700 text-indigo-100 text-[10px] px-2 py-0.5 rounded font-mono font-bold">MoHFW / WHO IMCI</span>
+        <!-- Top Header Navigation -->
+        <header class="bg-slate-900 text-white p-4 shadow-md sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-3">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-rose-600 text-white p-2.5 rounded-xl shadow">
+                        <i class="fa-solid fa-hospital-user text-xl"></i>
                     </div>
-                    <p class="text-xs text-slate-300">Khed Sub-District Primary Health Centre • Live Sync Gateway (Person D)</p>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <h1 class="font-black text-lg tracking-wide">PHC Central Tele-Triage Console</h1>
+                            <span class="bg-indigo-700 text-indigo-100 text-[10px] px-2 py-0.5 rounded font-mono font-bold">MoHFW / WHO IMCI</span>
+                        </div>
+                        <p class="text-xs text-slate-300">Khed Sub-District Primary Health Centre • Live Sync Gateway (Person D)</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center flex-wrap gap-2">
+                    <!-- Logged In Doctor Profile Pill -->
+                    <div class="flex items-center bg-indigo-950 border border-indigo-600/60 text-indigo-200 px-3 py-1.5 rounded-full text-xs font-semibold">
+                        <i class="fa-solid fa-user-doctor mr-1.5 text-amber-300"></i>
+                        <span id="headerDoctorName">Dr. Anjali Deshmukh, MD</span>
+                    </div>
+
+                    <div id="connectionPill" class="flex items-center bg-emerald-950 border border-emerald-500 text-emerald-300 px-3 py-1.5 rounded-full text-xs font-semibold">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-ping"></span>
+                        <span>Gateway: Online</span>
+                    </div>
+
+                    <!-- Redis Status Pill -->
+                    <div id="redisPill" class="flex items-center bg-rose-950 border border-rose-500 text-rose-200 px-3 py-1.5 rounded-full text-xs font-semibold">
+                        <i class="fa-solid fa-bolt mr-1.5 text-amber-300"></i>
+                        <span id="redisStatusText">Redis Queue Buffer: Ready</span>
+                    </div>
+
+                    <!-- SQLite DB Explorer Trigger -->
+                    <button onclick="openDbExplorerModal()" class="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center shadow-sm">
+                        <i class="fa-solid fa-database mr-1.5 text-amber-400"></i> SQLite DB Explorer
+                    </button>
+
+                    <!-- Doctor Settings Button -->
+                    <button onclick="openDoctorModal()" class="bg-indigo-800 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center border border-indigo-700">
+                        <i class="fa-solid fa-gear mr-1.5 text-amber-400"></i> Settings
+                    </button>
+
+                    <!-- Doctor Logout Button -->
+                    <button onclick="handleDoctorLogout()" class="bg-rose-900 hover:bg-rose-800 text-rose-100 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center border border-rose-700/60 shadow-sm">
+                        <i class="fa-solid fa-right-from-bracket mr-1.5 text-rose-300"></i> Log Out
+                    </button>
+
+                    <a href="/index.html" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center">
+                        <i class="fa-solid fa-mobile-screen-button mr-1.5"></i> ASHA App
+                    </a>
                 </div>
             </div>
-            
-            <div class="flex items-center space-x-3">
-                <!-- Logged In Doctor Profile Pill -->
-                <div class="hidden sm:flex items-center bg-indigo-950 border border-indigo-600/60 text-indigo-200 px-3 py-1.5 rounded-full text-xs font-semibold">
-                    <i class="fa-solid fa-user-doctor mr-1.5 text-amber-300"></i>
-                    <span id="headerDoctorName">Dr. Anjali Deshmukh, MD</span>
+        </header>
+
+        <!-- Appointed On-Duty Doctor Banner -->
+        <div class="bg-slate-800 text-slate-200 px-4 py-2 text-xs border-b border-slate-700 shadow-inner">
+            <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
+                <div class="flex items-center space-x-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span><strong>On-Duty Medical Officer:</strong> <span id="bannerDocName" class="text-white font-semibold">Dr. Anjali Deshmukh, MD</span> • <span id="bannerDocPhc" class="text-slate-300">Khed Sub-District PHC</span></span>
                 </div>
-
-                <div id="connectionPill" class="flex items-center bg-emerald-950 border border-emerald-500 text-emerald-300 px-3 py-1.5 rounded-full text-xs font-semibold">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-ping"></span>
-                    <span>Sync Gateway: Connected</span>
+                <div class="flex items-center space-x-4">
+                    <span>Emergency WhatsApp Alert Channel: <strong id="bannerDocPhone" class="text-emerald-400 font-mono">+91 98765 43210</strong></span>
+                    <span class="bg-emerald-900 text-emerald-300 px-2 py-0.5 rounded text-[10px] font-bold uppercase">Ready for Inbound Triage</span>
                 </div>
-
-                <!-- Redis Status Pill -->
-                <div id="redisPill" class="flex items-center bg-rose-950 border border-rose-500 text-rose-200 px-3 py-1.5 rounded-full text-xs font-semibold">
-                    <i class="fa-solid fa-bolt mr-1.5 text-amber-300"></i>
-                    <span id="redisStatusText">Redis Queue Buffer: Ready</span>
-                </div>
-
-                <!-- SQLite DB Explorer Trigger -->
-                <button onclick="openDbExplorerModal()" class="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center shadow-sm">
-                    <i class="fa-solid fa-database mr-1.5 text-amber-400"></i> SQLite DB Explorer
-                </button>
-
-                <!-- Doctor Profile Button -->
-                <button onclick="openDoctorModal()" class="bg-indigo-800 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center border border-indigo-700">
-                    <i class="fa-solid fa-gear mr-1.5 text-amber-400"></i> Settings
-                </button>
-
-                <!-- Doctor Logout Button -->
-                <button onclick="handleDoctorLogout()" class="bg-rose-900 hover:bg-rose-800 text-rose-100 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center border border-rose-700/60 shadow-sm">
-                    <i class="fa-solid fa-right-from-bracket mr-1.5 text-rose-300"></i> Log Out
-                </button>
-
-                <a href="/index.html" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center">
-                    <i class="fa-solid fa-mobile-screen-button mr-1.5"></i> ASHA App
-                </a>
             </div>
         </div>
-    </header>
 
-    <!-- Appointed On-Duty Doctor Banner -->
-    <div class="bg-slate-800 text-slate-200 px-4 py-2 text-xs border-b border-slate-700 shadow-inner">
-        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
-            <div class="flex items-center space-x-2">
-                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                <span><strong>On-Duty Medical Officer:</strong> <span id="bannerDocName" class="text-white font-semibold">Dr. Anjali Deshmukh, MD</span> • <span id="bannerDocPhc" class="text-slate-300">Khed Sub-District PHC</span></span>
+        <main class="max-w-7xl mx-auto p-4 md:p-6 space-y-6 flex-1">
+
+            <!-- High-Level Stats Overview -->
+            <section class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Triaged</span>
+                    <div class="flex items-baseline justify-between mt-2">
+                        <span id="statTotal" class="text-3xl font-black text-slate-800">0</span>
+                        <i class="fa-solid fa-clipboard-list text-slate-300 text-xl"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-rose-200 shadow-sm flex flex-col justify-between bg-gradient-to-br from-white to-rose-50">
+                    <span class="text-xs font-bold text-rose-700 uppercase tracking-wider flex items-center">
+                        <i class="fa-solid fa-triangle-exclamation mr-1.5 pulse-urgent"></i> Red Flags (Immediate)
+                    </span>
+                    <div class="flex items-baseline justify-between mt-2">
+                        <span id="statRed" class="text-3xl font-black text-rose-600">0</span>
+                        <span class="text-[10px] font-bold bg-rose-200 text-rose-800 px-1.5 py-0.5 rounded">Hospital FRU</span>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-amber-200 shadow-sm flex flex-col justify-between bg-gradient-to-br from-white to-amber-50">
+                    <span class="text-xs font-bold text-amber-700 uppercase tracking-wider">Yellow (Within 24h)</span>
+                    <div class="flex items-baseline justify-between mt-2">
+                        <span id="statYellow" class="text-3xl font-black text-amber-600">0</span>
+                        <span class="text-[10px] font-bold bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded">PHC Clinic</span>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-emerald-200 shadow-sm flex flex-col justify-between bg-gradient-to-br from-white to-emerald-50">
+                    <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Green (Home Care)</span>
+                    <div class="flex items-baseline justify-between mt-2">
+                        <span id="statGreen" class="text-3xl font-black text-emerald-600">0</span>
+                        <span class="text-[10px] font-bold bg-emerald-200 text-emerald-800 px-1.5 py-0.5 rounded">Routine ORS</span>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-indigo-200 shadow-sm flex flex-col justify-between bg-gradient-to-br from-white to-indigo-50 col-span-2 md:col-span-1">
+                    <span class="text-xs font-bold text-indigo-700 uppercase tracking-wider">Doctor Action Required</span>
+                    <div class="flex items-baseline justify-between mt-2">
+                        <span id="statPending" class="text-3xl font-black text-indigo-600">0</span>
+                        <span class="text-[10px] font-bold bg-indigo-100 text-indigo-800 px-1.5 py-0.5 rounded">Action Pending</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Triage Ingestion Feed & Priority Filter -->
+            <section class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden">
+                <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap justify-between items-center gap-3">
+                    <div class="flex items-center space-x-2">
+                        <h2 class="font-bold text-slate-800 flex items-center">
+                            <i class="fa-solid fa-list-check mr-2 text-indigo-600"></i> Inbound Field Triage Queue
+                        </h2>
+                        <span id="queueCountBadge" class="bg-slate-200 text-slate-700 text-xs px-2 py-0.5 rounded-full font-bold">0 records</span>
+                    </div>
+
+                    <!-- Filter buttons -->
+                    <div class="flex items-center space-x-2 text-xs">
+                        <button onclick="setFilter('ALL')" id="filterALL" class="px-3 py-1.5 rounded-lg font-bold bg-slate-900 text-white shadow-sm transition">All Cases</button>
+                        <button onclick="setFilter('RED')" id="filterRED" class="px-3 py-1.5 rounded-lg font-bold bg-slate-100 text-rose-700 hover:bg-rose-50 transition">🚨 Red Alerts</button>
+                        <button onclick="setFilter('YELLOW')" id="filterYELLOW" class="px-3 py-1.5 rounded-lg font-bold bg-slate-100 text-amber-700 hover:bg-amber-50 transition">🟡 Yellow</button>
+                        <button onclick="setFilter('GREEN')" id="filterGREEN" class="px-3 py-1.5 rounded-lg font-bold bg-slate-100 text-emerald-700 hover:bg-emerald-50 transition">🟢 Green</button>
+                        <button onclick="seedBenchmarkCases()" class="px-3 py-1.5 rounded-lg font-bold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition">
+                            <i class="fa-solid fa-vial-circle-check mr-1"></i> Seed IMCI Cases
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Patient Cards Container -->
+                <div id="patientGrid" class="p-4 divide-y divide-slate-100 space-y-4">
+                    <div class="text-center py-12 text-slate-400">
+                        <i class="fa-solid fa-spinner fa-spin text-2xl text-indigo-500 mb-2"></i>
+                        <p class="text-xs">Loading inbound patient triage records...</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div> <!-- End of doctorDashboardView -->
+
+    <!-- ========================================================= -->
+    <!-- 3. DOCTOR PROFILE SETTINGS MODAL -->
+    <!-- ========================================================= -->
+    <div id="doctorConfigModal" class="fixed inset-0 bg-slate-950/70 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+            <div class="bg-slate-900 text-white p-4 flex justify-between items-center">
+                <h3 class="font-bold text-base flex items-center">
+                    <i class="fa-solid fa-user-doctor mr-2 text-amber-400"></i> On-Duty Doctor Settings
+                </h3>
+                <button onclick="closeDoctorModal()" class="text-slate-300 hover:text-white text-lg">&times;</button>
             </div>
-            <div class="flex items-center space-x-4">
-                <span>Emergency WhatsApp Alert Channel: <strong id="bannerDocPhone" class="text-emerald-400 font-mono">+91 98765 43210</strong></span>
-                <span class="bg-emerald-900 text-emerald-300 px-2 py-0.5 rounded text-[10px] font-bold uppercase">Ready for Inbound Triage</span>
+            <div class="p-5 space-y-3 text-xs">
+                <div>
+                    <label class="font-bold text-slate-700 block mb-1">Doctor Full Name & Designation:</label>
+                    <input id="editDocName" type="text" class="w-full p-2 border rounded-lg" value="Dr. Anjali Deshmukh, MD (Pediatrics)">
+                </div>
+                <div>
+                    <label class="font-bold text-slate-700 block mb-1">Doctor WhatsApp / Emergency Phone:</label>
+                    <input id="editDocPhone" type="text" class="w-full p-2 border rounded-lg font-mono" value="+919876543210">
+                </div>
+                <div>
+                    <label class="font-bold text-slate-700 block mb-1">Assigned Primary Health Centre (PHC):</label>
+                    <input id="editDocPhc" type="text" class="w-full p-2 border rounded-lg" value="Khed Sub-District Primary Health Centre">
+                </div>
+                <div>
+                    <label class="font-bold text-slate-700 block mb-1">District / Sub-District:</label>
+                    <input id="editDocDistrict" type="text" class="w-full p-2 border rounded-lg" value="Pune Rural">
+                </div>
+                <div class="pt-3 flex justify-end space-x-2">
+                    <button onclick="closeDoctorModal()" class="px-3 py-2 bg-slate-100 text-slate-700 font-bold rounded-lg">Cancel</button>
+                    <button onclick="saveDoctorModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow">Save & Apply</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <main class="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
-
-        <section class="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
-                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Triaged</span>
-                <div class="flex items-baseline justify-between mt-2">
-                    <span id="statTotal" class="text-3xl font-black text-slate-800">0</span>
-                    <i class="fa-solid fa-clipboard-list text-slate-300 text-xl"></i>
-                </div>
-            </div>
-
-            <div class="bg-white p-4 rounded-xl border border-rose-200 shadow-sm flex flex-col justify-between bg-gradient-to-br from-white to-rose-50">
-                <span class="text-xs font-bold text-rose-700 uppercase tracking-wider flex items-center">
-                    <i class="fa-solid fa-triangle-exclamation mr-1.5 pulse-urgent"></i> Red Flags (Immediate)
-                </span>
-                <div class="flex items-baseline justify-between mt-2">
-                    <span id="statRed" class="text-3xl font-black text-rose-600">0</span>
-                    <span class="text-[10px] font-bold bg-rose-200 text-rose-800 px-1.5 py-0.5 rounded">Hospital FRU</span>
-                </div>
-            </div>
-
-            <div class="bg-white p-4 rounded-xl border border-amber-200 shadow-sm flex flex-col justify-between bg-gradient-to-br from-white to-amber-50">
-                <span class="text-xs font-bold text-amber-700 uppercase tracking-wider">Yellow (Within 24h)</span>
-                <div class="flex items-baseline justify-between mt-2">
-                    <span id="statYellow" class="text-3xl font-black text-amber-600">0</span>
-                    <span class="text-[10px] font-bold bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded">PHC Clinic</span>
-                </div>
-            </div>
-
-            <div class="bg-white p-4 rounded-xl border border-emerald-200 shadow-sm flex flex-col justify-between bg-gradient-to-br from-white to-emerald-50">
-                <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Green (Home Care)</span>
-                <div class="flex items-baseline justify-between mt-2">
-                    <span id="statGreen" class="text-3xl font-black text-emerald-600">0</span>
-                    <span class="text-[10px] font-bold bg-emerald-200 text-emerald-800 px-1.5 py-0.5 rounded">Routine ORS</span>
-                </div>
-            </div>
-
-            <div class="bg-white p-4 rounded-xl border border-indigo-200 shadow-sm flex flex-col justify-between bg-gradient-to-br from-white to-indigo-50 col-span-2 md:col-span-1">
-                <span class="text-xs font-bold text-indigo-700 uppercase tracking-wider">Doctor Action Required</span>
-                <div class="flex items-baseline justify-between mt-2">
-                    <span id="statPending" class="text-3xl font-black text-indigo-600">0</span>
-                    <span class="text-[10px] font-bold bg-indigo-200 text-indigo-800 px-1.5 py-0.5 rounded">Pending Review</span>
-                </div>
-            </div>
-        </section>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-            <div class="lg:col-span-2 space-y-4">
-                
-                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap justify-between items-center gap-3">
-                    <div class="flex space-x-2">
-                        <button onclick="setFilter('ALL')" id="btnFilterALL" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-white shadow-sm">All Cases</button>
-                        <button onclick="setFilter('RED')" id="btnFilterRED" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-rose-100 text-rose-700">Red Only</button>
-                        <button onclick="setFilter('YELLOW')" id="btnFilterYELLOW" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-amber-100 text-amber-700">Yellow</button>
-                        <button onclick="setFilter('GREEN')" id="btnFilterGREEN" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-emerald-100 text-emerald-700">Green</button>
-                    </div>
-
-                    <div class="flex items-center space-x-2 text-xs">
-                        <button onclick="triggerSeedData()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg font-semibold border border-slate-300">
-                            <i class="fa-solid fa-database mr-1"></i> Seed Benchmark Cases
-                        </button>
-                        <button onclick="fetchRecords()" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-3 py-1.5 rounded-lg font-bold">
-                            <i class="fa-solid fa-arrows-rotate mr-1"></i> Refresh
-                        </button>
+    <!-- ========================================================= -->
+    <!-- 4. CENTRAL SQLITE DATABASE EXPLORER MODAL -->
+    <!-- ========================================================= -->
+    <div id="dbExplorerModal" class="fixed inset-0 bg-slate-950/80 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+        <div class="bg-slate-900 text-slate-100 rounded-2xl shadow-2xl max-w-5xl w-full border border-slate-700 overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-slate-950 p-4 border-b border-slate-800 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-database text-amber-400 text-xl"></i>
+                    <div>
+                        <h3 class="font-bold text-base">Central SQLite Database Explorer (phc_central.db)</h3>
+                        <p class="text-[11px] text-slate-400">Live Relational Storage • Real-time Query Inspector</p>
                     </div>
                 </div>
-
-                <div id="recordsContainer" class="space-y-3">
-                    <div class="text-center py-12 bg-white rounded-xl border border-slate-200 text-slate-400">
-                        <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-indigo-600"></i>
-                        <p class="text-xs">Loading inbound telemetry and triage queue...</p>
-                    </div>
-                </div>
-
+                <button onclick="closeDbExplorerModal()" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
             </div>
 
-            <div class="space-y-4">
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
-                    <div class="border-b pb-3 flex items-center justify-between">
-                        <h3 class="font-bold text-sm text-slate-900 flex items-center">
-                            <i class="fa-solid fa-chart-line text-indigo-600 mr-2"></i> Clinical & Data Grounding (NFHS-5)
-                        </h3>
-                        <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono font-bold">MoHFW Validated</span>
-                    </div>
+            <div class="p-3 bg-slate-950/60 border-b border-slate-800 flex flex-wrap gap-2" id="dbTableTabs"></div>
 
-                    <div class="space-y-3 text-xs leading-relaxed text-slate-600">
-                        <div class="bg-rose-50 p-3 rounded-lg border border-rose-100">
-                            <span class="font-bold text-rose-900 block mb-1">Under-5 Mortality Rate (U5MR):</span>
-                            <p class="text-rose-800"><strong>35.2 per 1,000 live births</strong> across rural India. Over 68% of deaths are preventable with early acute triage for Pneumonia & Diarrhea.</p>
-                        </div>
-
-                        <div class="bg-amber-50 p-3 rounded-lg border border-amber-100">
-                            <span class="font-bold text-amber-900 block mb-1">Pneumonia Cutoffs (WHO IMCI):</span>
-                            <ul class="list-disc list-inside text-amber-800 space-y-0.5">
-                                <li><strong>&lt;2 months:</strong> RR &ge; 60 bpm &rarr; Urgent RED</li>
-                                <li><strong>2&ndash;11 months:</strong> RR &ge; 50 bpm &rarr; YELLOW</li>
-                                <li><strong>12&ndash;59 months:</strong> RR &ge; 40 bpm &rarr; YELLOW</li>
-                            </ul>
-                        </div>
-
-                        <div class="bg-indigo-50 p-3 rounded-lg border border-indigo-100">
-                            <span class="font-bold text-indigo-900 block mb-1">Offline Architectural Thesis:</span>
-                            <p class="text-indigo-900"><strong>42.7%</strong> of rural health sub-centres operate in intermittent cellular zones. On-device local SQLite + opportunistic batch sync prevents single-point-of-failure cloud dependency.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-slate-900 text-slate-100 rounded-xl shadow-sm p-4 text-xs font-mono">
-                    <h4 class="text-amber-400 font-bold mb-2 flex items-center">
-                        <i class="fa-solid fa-satellite-dish mr-2"></i> Field Gateway Telemetry
-                    </h4>
-                    <div class="space-y-1.5 text-slate-300">
-                        <div class="flex justify-between">
-                            <span class="text-slate-500">Active ASHA Worker:</span>
-                            <span class="text-emerald-400">ASHA-MH-PUNE-012</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-slate-500">Catchment Village:</span>
-                            <span>Khed Shivapur, Pune</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-slate-500">Ingestion Protocol:</span>
-                            <span>REST HTTP / Batch JSON</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-slate-500">Last Poll:</span>
-                            <span id="lastPollTime">Just now</span>
-                        </div>
-                    </div>
-                </div>
+            <div class="p-4 overflow-x-auto overflow-y-auto flex-1">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr id="dbTableHeader" class="text-[10px] uppercase font-bold"></tr>
+                    </thead>
+                    <tbody id="dbTableRows" class="divide-y divide-slate-800"></tbody>
+                </table>
             </div>
 
+            <div class="p-3 bg-slate-950 border-t border-slate-800 flex justify-between items-center text-xs">
+                <span class="text-slate-500 font-mono text-[11px]">Database Engine: SQLite 3.x • ACID Compliant Relational Storage</span>
+                <button onclick="closeDbExplorerModal()" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg shadow">Close Explorer</button>
+            </div>
         </div>
+    </div>
 
-    </main>
-
+    <!-- ========================================================= -->
+    <!-- 5. JAVASCRIPT CLIENT CONTROLLER -->
+    <!-- ========================================================= -->
     <script>
         let currentFilter = 'ALL';
         let recordsData = [];
-
-        async function fetchStats() {
-            try {
-                const res = await fetch('/api/stats');
-                const data = await res.json();
-                if (data.success) {
-                    const s = data.stats;
-                    document.getElementById('statTotal').innerText = s.total_triaged;
-                    document.getElementById('statRed').innerText = s.red_alerts;
-                    document.getElementById('statYellow').innerText = s.yellow_cases;
-                    document.getElementById('statGreen').innerText = s.green_cases;
-                    document.getElementById('statPending').innerText = s.pending_doctor_action;
-                }
-            } catch (err) {
-                console.error("Error fetching stats:", err);
-            }
-        }
-
-        async function fetchRecords() {
-            try {
-                const url = currentFilter === 'ALL' ? '/api/records' : `/api/records?color=${currentFilter}`;
-                const res = await fetch(url);
-                const data = await res.json();
-                document.getElementById('lastPollTime').innerText = new Date().toLocaleTimeString();
-
-                if (data.success) {
-                    recordsData = data.records;
-                    renderRecords(recordsData);
-                }
-            } catch (err) {
-                console.error("Error fetching records:", err);
-            }
-        }
-
-        function renderRecords(records) {
-            const container = document.getElementById('recordsContainer');
-            if (!records || records.length === 0) {
-                container.innerHTML = `
-                    <div class="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-500">
-                        <i class="fa-solid fa-clipboard-check text-3xl text-emerald-500 mb-2"></i>
-                        <p class="font-bold text-sm">No records found for filter '${currentFilter}'</p>
-                        <p class="text-xs text-slate-400 mt-1">Assessments synced from ASHA field devices will appear here live.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = records.map(r => {
-                const isRed = r.triage_color === 'RED';
-                const isYellow = r.triage_color === 'YELLOW';
-                const cardClass = isRed ? 'card-red' : (isYellow ? 'card-yellow' : 'card-green');
-                const badgeColor = isRed ? 'bg-rose-600 text-white' : (isYellow ? 'bg-amber-500 text-white' : 'bg-emerald-600 text-white');
-                const ackBadge = r.doctor_acknowledged 
-                    ? `<span class="bg-slate-200 text-slate-700 text-[10px] px-2 py-0.5 rounded font-bold"><i class="fa-solid fa-check mr-1 text-emerald-600"></i> Doctor Reviewed</span>`
-                    : `<span class="bg-indigo-100 text-indigo-800 text-[10px] px-2 py-0.5 rounded font-bold"><i class="fa-solid fa-clock mr-1"></i> Awaiting Action</span>`;
-
-                const symptomsPills = r.symptoms && r.symptoms.length 
-                    ? r.symptoms.map(s => `<span class="bg-slate-200 text-slate-800 text-[10px] px-1.5 py-0.5 rounded font-medium">${s}</span>`).join(' ')
-                    : '<span class="text-slate-400 text-xs italic">None</span>';
-
-                return `
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 transition hover:shadow-md ${cardClass}">
-                        <div class="flex flex-wrap justify-between items-start gap-2 mb-2">
-                            <div class="flex items-center space-x-2">
-                                <span class="px-2.5 py-1 rounded text-xs font-black tracking-wide ${badgeColor}">
-                                    ${r.triage_color} ALERT
-                                </span>
-                                <h4 class="font-bold text-slate-900 text-base">${r.full_name} (${r.age_months}m, ${r.gender || 'M'})</h4>
-                                <span class="text-xs text-slate-400 font-mono">ID: ${r.patient_id}</span>
-                            </div>
-                            <div class="flex items-center space-x-2">
-                                ${ackBadge}
-                                <span class="text-[11px] text-slate-400 font-mono">${new Date(r.assessed_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                            </div>
-                        </div>
-
-                        <div class="bg-white/80 p-2 rounded-lg border border-slate-200/80 mb-3 flex flex-wrap justify-between items-center gap-2">
-                            <div>
-                                <span class="text-[10px] font-bold text-slate-500 uppercase block">WHO IMCI Diagnosis:</span>
-                                <span class="font-extrabold text-sm text-slate-800">${r.diagnosis}</span>
-                            </div>
-                            <div class="text-right">
-                                <span class="text-[10px] font-bold text-slate-500 uppercase block">Referral Urgency:</span>
-                                <span class="font-bold text-xs ${isRed ? 'text-rose-700 font-black' : (isYellow ? 'text-amber-700' : 'text-emerald-700')}">${r.urgency}</span>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs mb-3 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                            <div>
-                                <span class="text-slate-500 block text-[10px]">Respiratory Rate</span>
-                                <span class="font-bold text-indigo-900 ${r.respiratory_rate >= 50 ? 'text-rose-600 font-black' : ''}">
-                                    ${r.respiratory_rate ? r.respiratory_rate + ' / min' : 'N/A'}
-                                </span>
-                            </div>
-                            <div>
-                                <span class="text-slate-500 block text-[10px]">Temperature / Fever</span>
-                                <span class="font-bold text-indigo-900">${r.temperature_c ? r.temperature_c + '°C' : 'N/A'} (${r.fever_days || 0}d)</span>
-                            </div>
-                            <div>
-                                <span class="text-slate-500 block text-[10px]">Guardian / Village</span>
-                                <span class="font-medium text-slate-700">${r.guardian_name || 'N/A'} • ${r.village_name || 'Khed'}</span>
-                            </div>
-                            <div>
-                                <span class="text-slate-500 block text-[10px]">ASHA Worker</span>
-                                <span class="font-medium text-slate-700 font-mono text-[11px]">${r.asha_id || 'ASHA-001'}</span>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <span class="text-[10px] font-bold text-slate-500 uppercase mr-1">Reported Symptoms:</span>
-                            ${symptomsPills}
-                        </div>
-
-                        <div class="bg-slate-900 text-slate-200 p-2.5 rounded-lg font-mono text-xs mb-3">
-                            <div class="flex justify-between items-center text-slate-400 mb-1 text-[10px]">
-                                <span><i class="fa-solid fa-file-waveform text-indigo-400 mr-1"></i> ASHA Field Referral Brief</span>
-                                <button onclick="speakText('${encodeURIComponent(r.referral_note)}')" class="text-amber-400 hover:text-amber-300 font-bold flex items-center">
-                                    <i class="fa-solid fa-volume-high mr-1"></i> Play 10s Brief
-                                </button>
-                            </div>
-                            <p class="text-emerald-300 leading-snug">${r.referral_note}</p>
-                        </div>
-
-                        <div class="flex justify-between items-center pt-2 border-t border-slate-100 text-xs">
-                            <div class="text-slate-500 text-[11px]">
-                                Primary Indicator: <strong class="text-slate-700">${r.primary_danger || 'Clinical guideline checklist'}</strong>
-                            </div>
-                            <div>
-                                ${!r.doctor_acknowledged ? `
-                                    <button onclick="acknowledgeCase('${r.assessment_id}')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg font-bold shadow-sm transition flex items-center">
-                                        <i class="fa-solid fa-check-double mr-1.5"></i> Mark Acknowledged
-                                    </button>
-                                ` : `
-                                    <span class="text-emerald-700 font-bold text-xs flex items-center">
-                                        <i class="fa-solid fa-circle-check mr-1"></i> Case Handled
-                                    </span>
-                                `}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function setFilter(filter) {
-            currentFilter = filter;
-            ['ALL', 'RED', 'YELLOW', 'GREEN'].forEach(f => {
-                const btn = document.getElementById(`btnFilter${f}`);
-                if (f === filter) {
-                    btn.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-white shadow-sm";
-                } else {
-                    btn.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700";
-                }
-            });
-            fetchRecords();
-        }
-
-        async function acknowledgeCase(assessmentId) {
-            try {
-                const res = await fetch(`/api/records/${assessmentId}/acknowledge`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({doctor_notes: "Doctor reviewed and triaged at PHC."})
-                });
-                const data = await res.json();
-                if (data.success) {
-                    fetchStats();
-                    fetchRecords();
-                }
-            } catch (err) {
-                console.error("Error acknowledging case:", err);
-            }
-        }
-
-        async function triggerSeedData() {
-            try {
-                const res = await fetch('/api/seed', {method: 'POST'});
-                const data = await res.json();
-                if (data.success) {
-                    fetchStats();
-                    fetchRecords();
-                }
-            } catch (err) {
-                console.error("Error seeding data:", err);
-            }
-        }
-
-        function speakText(encodedTxt) {
-            const txt = decodeURIComponent(encodedTxt);
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const u = new SpeechSynthesisUtterance(txt);
-                u.rate = 0.95;
-                u.lang = 'en-IN';
-                window.speechSynthesis.speak(u);
-            } else {
-                alert(txt);
-            }
-        }
-
-        // --- Doctor Profile Registry Logic ---
-        let currentDoctor = {
-            doctor_id: "DOC-PUNE-01",
-            full_name: "Dr. Anjali Deshmukh, MD (Pediatrics)",
-            phone_number: "+919876543210",
-            whatsapp_number: "919876543210",
-            phc_name: "Khed Sub-District Primary Health Centre",
-            district: "Pune Rural"
-        };
-
-        async function fetchDoctorProfile() {
-            try {
-                const res = await fetch('/api/doctor');
-                const data = await res.json();
-                if (data.success && data.doctor) {
-                    currentDoctor = data.doctor;
-                    document.getElementById("bannerDocName").innerText = currentDoctor.full_name;
-                    document.getElementById("bannerDocPhc").innerText = currentDoctor.phc_name;
-                    document.getElementById("bannerDocPhone").innerText = currentDoctor.phone_number;
-                }
-            } catch (e) {
-                console.error("Error fetching doctor profile:", e);
-            }
-        }
-
-        function openDoctorModal() {
-            document.getElementById("editDocName").value = currentDoctor.full_name;
-            document.getElementById("editDocPhone").value = currentDoctor.phone_number;
-            document.getElementById("editDocPhc").value = currentDoctor.phc_name;
-            document.getElementById("editDocDistrict").value = currentDoctor.district || "Pune Rural";
-            document.getElementById("doctorConfigModal").classList.remove("hidden");
-        }
-
-        function closeDoctorModal() {
-            document.getElementById("doctorConfigModal").classList.add("hidden");
-        }
-
-        async function saveDoctorModal() {
-            currentDoctor.full_name = document.getElementById("editDocName").value;
-            currentDoctor.phone_number = document.getElementById("editDocPhone").value;
-            currentDoctor.whatsapp_number = currentDoctor.phone_number.replace(/\D/g, '');
-            currentDoctor.phc_name = document.getElementById("editDocPhc").value;
-            currentDoctor.district = document.getElementById("editDocDistrict").value;
-
-            try {
-                const res = await fetch('/api/doctor', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(currentDoctor)
-                });
-                const data = await res.json();
-                if (data.success) {
-                    currentDoctor = data.doctor;
-                    document.getElementById("bannerDocName").innerText = currentDoctor.full_name;
-                    document.getElementById("bannerDocPhc").innerText = currentDoctor.phc_name;
-                    document.getElementById("bannerDocPhone").innerText = currentDoctor.phone_number;
-                }
-            } catch (e) {
-                console.error("Error saving doctor profile:", e);
-            }
-            closeDoctorModal();
-            alert("PHC Doctor Profile Updated Successfully!");
-        }
-
-        // --- SQLite Database Explorer Logic ---
-        let activeExplorerTable = 'triage_records';
         let dbExplorerData = {};
-
-        async function openDbExplorerModal() {
-            try {
-                const res = await fetch('/api/db/explorer');
-                const data = await res.json();
-                if (data.success) {
-                    dbExplorerData = data.tables;
-                    renderDbExplorer();
-                    document.getElementById("dbExplorerModal").classList.remove("hidden");
-                }
-            } catch (e) {
-                alert("Error loading SQLite database explorer: " + e);
-            }
-        }
-
-        function closeDbExplorerModal() {
-            document.getElementById("dbExplorerModal").classList.add("hidden");
-        }
-
-        function switchExplorerTable(tableName) {
-            activeExplorerTable = tableName;
-            renderDbExplorer();
-        }
-
-        function renderDbExplorer() {
-            const tableNames = Object.keys(dbExplorerData);
-            const tabsContainer = document.getElementById("dbTableTabs");
-            tabsContainer.innerHTML = tableNames.map(t => `
-                <button onclick="switchExplorerTable('${t}')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${activeExplorerTable === t ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
-                    <i class="fa-solid fa-table mr-1 text-amber-400"></i> ${t} (${dbExplorerData[t].row_count} rows)
-                </button>
-            `).join('');
-
-            const tableInfo = dbExplorerData[activeExplorerTable];
-            if (!tableInfo) return;
-
-            const headerContainer = document.getElementById("dbTableHeader");
-            headerContainer.innerHTML = tableInfo.columns.map(c => `
-                <th class="p-2 border-b border-slate-700 bg-slate-800 text-slate-300">${c.name} <span class="text-[9px] text-slate-400 font-normal">(${c.type})</span></th>
-            `).join('');
-
-            const rowsContainer = document.getElementById("dbTableRows");
-            if (tableInfo.rows.length === 0) {
-                rowsContainer.innerHTML = `<tr><td colspan="${tableInfo.columns.length}" class="p-4 text-center text-slate-400 italic">Table is currently empty.</td></tr>`;
-            } else {
-                rowsContainer.innerHTML = tableInfo.rows.map((row, idx) => `
-                    <tr class="border-b border-slate-800 hover:bg-slate-800/50 text-[11px] font-mono">
-                        ${tableInfo.columns.map(c => `<td class="p-2 text-slate-300 max-w-xs truncate" title="${row[c.name] || ''}">${row[c.name] !== null ? String(row[c.name]) : '<span class="text-slate-600">NULL</span>'}</td>`).join('')}
-                    </tr>
-                `).join('');
-            }
-        }
+        let activeExplorerTable = 'triage_records';
 
         // --- DOCTOR AUTHENTICATION & ACCESS CONTROL ---
         function togglePasswordVisibility() {
@@ -671,7 +371,7 @@
                 const res = await fetch('/api/doctor/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: json.stringify ? JSON.stringify({ username, password }) : JSON.stringify({ username, password })
+                    body: JSON.stringify({ username, password })
                 });
                 const data = await res.json();
 
@@ -734,6 +434,325 @@
             document.getElementById("doctorLoginView").classList.remove("hidden");
         }
 
+        // --- DASHBOARD API INTEGRATION ---
+        async function fetchDoctorProfile() {
+            try {
+                const res = await fetch('/api/doctor');
+                const data = await res.json();
+                if (data.success && data.doctor) {
+                    const doc = data.doctor;
+                    const bName = document.getElementById("bannerDocName");
+                    if (bName) bName.innerText = doc.full_name;
+                    const bPhc = document.getElementById("bannerDocPhc");
+                    if (bPhc) bPhc.innerText = doc.phc_name;
+                    const bPhone = document.getElementById("bannerDocPhone");
+                    if (bPhone) bPhone.innerText = doc.phone_number;
+
+                    const editName = document.getElementById("editDocName");
+                    if (editName) editName.value = doc.full_name;
+                    const editPhone = document.getElementById("editDocPhone");
+                    if (editPhone) editPhone.value = doc.phone_number;
+                    const editPhc = document.getElementById("editDocPhc");
+                    if (editPhc) editPhc.value = doc.phc_name;
+                    const editDist = document.getElementById("editDocDistrict");
+                    if (editDist) editDist.value = doc.district || "Pune Rural";
+                }
+            } catch (e) {
+                console.warn("Doctor profile error:", e);
+            }
+        }
+
+        function openDoctorModal() {
+            fetchDoctorProfile();
+            document.getElementById("doctorConfigModal").classList.remove("hidden");
+        }
+
+        function closeDoctorModal() {
+            document.getElementById("doctorConfigModal").classList.add("hidden");
+        }
+
+        async function saveDoctorModal() {
+            const payload = {
+                doctor_id: "DOC-PUNE-01",
+                full_name: document.getElementById("editDocName").value,
+                phone_number: document.getElementById("editDocPhone").value,
+                whatsapp_number: document.getElementById("editDocPhone").value.replace("+", "").replace(" ", "").replace("-", ""),
+                phc_name: document.getElementById("editDocPhc").value,
+                district: document.getElementById("editDocDistrict").value
+            };
+            try {
+                const res = await fetch('/api/doctor', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    closeDoctorModal();
+                    fetchDoctorProfile();
+                    alert("Doctor profile updated successfully.");
+                }
+            } catch (e) {
+                alert("Error updating doctor profile: " + e);
+            }
+        }
+
+        async function fetchStats() {
+            try {
+                const res = await fetch('/api/stats');
+                const data = await res.json();
+                if (data.success && data.stats) {
+                    const s = data.stats;
+                    document.getElementById("statTotal").innerText = s.total_triaged;
+                    document.getElementById("statRed").innerText = s.red_alerts;
+                    document.getElementById("statYellow").innerText = s.yellow_cases;
+                    document.getElementById("statGreen").innerText = s.green_cases;
+                    document.getElementById("statPending").innerText = s.pending_doctor_action;
+                }
+            } catch (e) {
+                console.warn("Stats fetch error:", e);
+            }
+        }
+
+        async function fetchRecords() {
+            try {
+                let url = '/api/records';
+                if (currentFilter !== 'ALL') {
+                    url += `?color=${currentFilter}`;
+                }
+                const res = await fetch(url);
+                const data = await res.json();
+                if (data.success) {
+                    recordsData = data.records;
+                    renderRecords();
+                }
+            } catch (e) {
+                console.warn("Records fetch error:", e);
+            }
+        }
+
+        function setFilter(color) {
+            currentFilter = color;
+            ['ALL', 'RED', 'YELLOW', 'GREEN'].forEach(c => {
+                const btn = document.getElementById(`filter${c}`);
+                if (c === color) {
+                    btn.className = "px-3 py-1.5 rounded-lg font-bold bg-slate-900 text-white shadow-sm transition";
+                } else {
+                    btn.className = "px-3 py-1.5 rounded-lg font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition";
+                }
+            });
+            fetchRecords();
+        }
+
+        function renderRecords() {
+            const grid = document.getElementById("patientGrid");
+            document.getElementById("queueCountBadge").innerText = `${recordsData.length} records`;
+
+            if (recordsData.length === 0) {
+                grid.innerHTML = `
+                    <div class="text-center py-12 text-slate-400">
+                        <i class="fa-solid fa-inbox text-3xl text-slate-300 mb-2"></i>
+                        <p class="text-sm font-semibold">No patient records found in this category.</p>
+                        <p class="text-xs text-slate-500 mt-1">Click "Seed IMCI Cases" to populate benchmark test cases.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = recordsData.map(r => {
+                const isRed = r.triage_color === 'RED';
+                const isYellow = r.triage_color === 'YELLOW';
+                const cardClass = isRed ? 'card-red' : (isYellow ? 'card-yellow' : 'card-green');
+                const badgeBg = isRed ? 'bg-rose-100 text-rose-800 border-rose-300' : (isYellow ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-emerald-100 text-emerald-800 border-emerald-300');
+                const icon = isRed ? 'fa-triangle-exclamation text-rose-600' : (isYellow ? 'fa-circle-exclamation text-amber-600' : 'fa-circle-check text-emerald-600');
+
+                return `
+                    <div class="${cardClass} p-4 rounded-xl shadow-sm bg-white border border-slate-200 transition hover:shadow-md">
+                        <div class="flex flex-wrap justify-between items-start gap-2">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center ${badgeBg} font-black text-sm">
+                                    ${r.gender === 'F' ? '<i class="fa-solid fa-venus"></i>' : '<i class="fa-solid fa-mars"></i>'}
+                                </div>
+                                <div>
+                                    <div class="flex items-center space-x-2">
+                                        <h3 class="font-extrabold text-slate-900 text-sm">${r.full_name || 'Patient'}</h3>
+                                        <span class="text-xs text-slate-500 font-mono">(${r.patient_id})</span>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${badgeBg}">
+                                            <i class="fa-solid ${icon} mr-1"></i> ${r.triage_color}
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-600 mt-0.5">
+                                        <strong>Age:</strong> ${r.age_months} months • <strong>Guardian:</strong> ${r.guardian_name || 'N/A'} • <strong>Village:</strong> ${r.village_name || 'Khed'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="text-right text-xs">
+                                <span class="text-slate-400 font-mono">${r.assessed_at ? new Date(r.assessed_at).toLocaleTimeString() : 'Recent'}</span>
+                                <div class="mt-1">
+                                    ${r.doctor_acknowledged ? `
+                                        <span class="inline-flex items-center bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-300">
+                                            <i class="fa-solid fa-check-double mr-1"></i> Acknowledged
+                                        </span>
+                                    ` : `
+                                        <button onclick="acknowledgeCase('${r.assessment_id}')" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-bold text-[11px] shadow transition flex items-center">
+                                            <i class="fa-solid fa-check mr-1"></i> Acknowledge
+                                        </button>
+                                    `}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Vitals Bar -->
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 my-3 p-2 bg-slate-50 rounded-lg text-xs font-mono border border-slate-100">
+                            <div><span class="text-slate-400">RR:</span> <strong class="${r.respiratory_rate >= 50 ? 'text-rose-600 font-bold' : 'text-slate-700'}">${r.respiratory_rate || '--'}/min</strong></div>
+                            <div><span class="text-slate-400">Temp:</span> <strong>${r.temperature_c ? r.temperature_c + '°C' : '--'}</strong></div>
+                            <div><span class="text-slate-400">SpO2:</span> <strong>${r.spo2 ? r.spo2 + '%' : '--'}</strong></div>
+                            <div><span class="text-slate-400">Fever:</span> <strong>${r.fever_days !== null ? r.fever_days + ' days' : '--'}</strong></div>
+                        </div>
+
+                        <!-- Diagnosis & Recommendation -->
+                        <div class="text-xs space-y-1">
+                            <div class="flex items-start">
+                                <span class="font-bold text-slate-700 w-24 flex-shrink-0">Diagnosis:</span>
+                                <span class="font-bold text-indigo-900">${r.diagnosis}</span>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="font-bold text-slate-700 w-24 flex-shrink-0">Urgency:</span>
+                                <span class="${isRed ? 'text-rose-700 font-extrabold' : (isYellow ? 'text-amber-800 font-bold' : 'text-emerald-700 font-bold')}">${r.urgency}</span>
+                            </div>
+                            <div class="flex items-start">
+                                <span class="font-bold text-slate-700 w-24 flex-shrink-0">Audio Brief:</span>
+                                <div class="flex-1 flex items-center space-x-2">
+                                    <span class="italic text-slate-600 text-[11px]">"${r.referral_note}"</span>
+                                    <button onclick="playDoctorVoice('${r.referral_note.replace(/'/g, "\\'")}')" class="p-1 text-indigo-600 hover:text-indigo-800" title="Play 10s voice summary">
+                                        <i class="fa-solid fa-volume-high text-sm"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function acknowledgeCase(assessmentId) {
+            try {
+                const res = await fetch(`/api/records/${assessmentId}/acknowledge`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ doctor_notes: "Doctor acknowledged via Central Triage Console." })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    fetchStats();
+                    fetchRecords();
+                }
+            } catch (e) {
+                alert("Error acknowledging case: " + e);
+            }
+        }
+
+        async function seedBenchmarkCases() {
+            try {
+                const res = await fetch('/api/seed', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    fetchStats();
+                    fetchRecords();
+                    alert(data.message || "Benchmark cases seeded successfully.");
+                }
+            } catch (e) {
+                alert("Error seeding benchmark cases: " + e);
+            }
+        }
+
+        function playDoctorVoice(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utter = new SpeechSynthesisUtterance(text);
+                utter.rate = 1.0;
+                window.speechSynthesis.speak(utter);
+            } else {
+                alert("Speech Synthesis not supported in this browser.");
+            }
+        }
+
+        // --- SQLITE DB EXPLORER ---
+        async function openDbExplorerModal() {
+            try {
+                const res = await fetch('/api/db/explorer');
+                const data = await res.json();
+                if (data.success) {
+                    dbExplorerData = data.tables;
+                    renderDbExplorer();
+                    document.getElementById("dbExplorerModal").classList.remove("hidden");
+                }
+            } catch (e) {
+                alert("Error loading SQLite database explorer: " + e);
+            }
+        }
+
+        function closeDbExplorerModal() {
+            document.getElementById("dbExplorerModal").classList.add("hidden");
+        }
+
+        function switchExplorerTable(tableName) {
+            activeExplorerTable = tableName;
+            renderDbExplorer();
+        }
+
+        function renderDbExplorer() {
+            const tableNames = Object.keys(dbExplorerData);
+            const tabsContainer = document.getElementById("dbTableTabs");
+            tabsContainer.innerHTML = tableNames.map(t => `
+                <button onclick="switchExplorerTable('${t}')" class="px-3 py-1.5 rounded-lg text-xs font-bold transition ${activeExplorerTable === t ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
+                    <i class="fa-solid fa-table mr-1 text-amber-400"></i> ${t} (${dbExplorerData[t].row_count} rows)
+                </button>
+            `).join('');
+
+            const tableInfo = dbExplorerData[activeExplorerTable];
+            if (!tableInfo) return;
+
+            const headerContainer = document.getElementById("dbTableHeader");
+            headerContainer.innerHTML = tableInfo.columns.map(c => `
+                <th class="p-2 border-b border-slate-700 bg-slate-800 text-slate-300">${c.name} <span class="text-[9px] text-slate-400 font-normal">(${c.type})</span></th>
+            `).join('');
+
+            const rowsContainer = document.getElementById("dbTableRows");
+            if (tableInfo.rows.length === 0) {
+                rowsContainer.innerHTML = `<tr><td colspan="${tableInfo.columns.length}" class="p-4 text-center text-slate-400 italic">Table is currently empty.</td></tr>`;
+            } else {
+                rowsContainer.innerHTML = tableInfo.rows.map((row, idx) => `
+                    <tr class="border-b border-slate-800 hover:bg-slate-800/50 text-[11px] font-mono">
+                        ${tableInfo.columns.map(c => `<td class="p-2 text-slate-300 max-w-xs truncate" title="${row[c.name] || ''}">${row[c.name] !== null ? String(row[c.name]) : '<span class="text-slate-600">NULL</span>'}</td>`).join('')}
+                    </tr>
+                `).join('');
+            }
+        }
+
+        async function fetchRedisStatus() {
+            try {
+                const res = await fetch('/api/redis/status');
+                const data = await res.json();
+                if (data.success && data.redis_telemetry) {
+                    const tel = data.redis_telemetry;
+                    const pill = document.getElementById("redisPill");
+                    const text = document.getElementById("redisStatusText");
+                    if (tel.connection_status === "CONNECTED") {
+                        pill.className = "flex items-center bg-emerald-950 border border-emerald-500 text-emerald-300 px-3 py-1.5 rounded-full text-xs font-semibold";
+                        text.innerText = `Redis Daemon: Online (${tel.ingestion_queue_depth} Ingested)`;
+                    } else {
+                        pill.className = "flex items-center bg-indigo-950 border border-indigo-500 text-indigo-200 px-3 py-1.5 rounded-full text-xs font-semibold";
+                        text.innerText = `Redis Gateway: Active (${tel.emergency_alerts_broadcasted} Alerts)`;
+                    }
+                }
+            } catch (e) {
+                console.warn("Redis status fetch error:", e);
+            }
+        }
+
+        // Initialize Authentication & Dashboard Poller
         fetchDoctorProfile();
         checkDoctorAuth();
 
@@ -745,84 +764,5 @@
             }
         }, 3500);
     </script>
-    </div> <!-- End of doctorDashboardView -->
-
-    <!-- 1. DOCTOR PROFILE SETTINGS MODAL -->
-    <div id="doctorConfigModal" class="fixed inset-0 bg-slate-950/70 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
-            <div class="bg-slate-900 text-white p-4 flex justify-between items-center">
-                <h3 class="font-bold text-base flex items-center">
-                    <i class="fa-solid fa-user-doctor mr-2 text-amber-400"></i> On-Duty Doctor Settings
-                </h3>
-                <button onclick="closeDoctorModal()" class="text-slate-300 hover:text-white">&times;</button>
-            </div>
-            <div class="p-5 space-y-3 text-xs">
-                <div>
-                    <label class="font-bold text-slate-700 block mb-1">Doctor Full Name & Designation:</label>
-                    <input id="editDocName" type="text" class="w-full p-2 border rounded-lg" value="Dr. Anjali Deshmukh, MD (Pediatrics)">
-                </div>
-                <div>
-                    <label class="font-bold text-slate-700 block mb-1">Doctor WhatsApp / Emergency Phone:</label>
-                    <input id="editDocPhone" type="text" class="w-full p-2 border rounded-lg font-mono" value="+919876543210">
-                </div>
-                <div>
-                    <label class="font-bold text-slate-700 block mb-1">Assigned Primary Health Centre (PHC):</label>
-                    <input id="editDocPhc" type="text" class="w-full p-2 border rounded-lg" value="Khed Sub-District Primary Health Centre">
-                </div>
-                <div>
-                    <label class="font-bold text-slate-700 block mb-1">District / Sub-District:</label>
-                    <input id="editDocDistrict" type="text" class="w-full p-2 border rounded-lg" value="Pune Rural">
-                </div>
-                <div class="pt-3 flex justify-end space-x-2">
-                    <button onclick="closeDoctorModal()" class="px-3 py-2 bg-slate-100 text-slate-700 font-bold rounded-lg">Cancel</button>
-                    <button onclick="saveDoctorModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow">Save & Apply</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 2. CENTRAL SQLITE DATABASE EXPLORER MODAL -->
-    <div id="dbExplorerModal" class="fixed inset-0 bg-slate-950/80 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
-        <div class="bg-slate-900 text-slate-100 rounded-2xl shadow-2xl max-w-5xl w-full border border-slate-700 overflow-hidden flex flex-col max-h-[90vh]">
-            <!-- Header -->
-            <div class="bg-slate-950 p-4 border-b border-slate-800 flex justify-between items-center">
-                <div class="flex items-center space-x-2">
-                    <i class="fa-solid fa-database text-amber-400 text-xl"></i>
-                    <div>
-                        <h3 class="font-bold text-base">Central SQLite Database Explorer (phc_central.db)</h3>
-                        <p class="text-[11px] text-slate-400">Live Relational Storage • Real-time Query Inspector</p>
-                    </div>
-                </div>
-                <button onclick="closeDbExplorerModal()" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
-            </div>
-
-            <!-- Table Tabs -->
-            <div class="p-3 bg-slate-950/60 border-b border-slate-800 flex flex-wrap gap-2" id="dbTableTabs">
-                <!-- Populated by JS -->
-            </div>
-
-            <!-- Table Content Grid -->
-            <div class="p-4 overflow-x-auto overflow-y-auto flex-1">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr id="dbTableHeader" class="text-[10px] uppercase font-bold">
-                            <!-- Populated by JS -->
-                        </tr>
-                    </thead>
-                    <tbody id="dbTableRows" class="divide-y divide-slate-800">
-                        <!-- Populated by JS -->
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Footer -->
-            <div class="p-3 bg-slate-950 border-t border-slate-800 flex justify-between items-center text-xs">
-                <span class="text-slate-500 font-mono text-[11px]">Database Engine: SQLite 3.x • ACID Compliant Relational Storage</span>
-                <button onclick="closeDbExplorerModal()" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg shadow">Close Explorer</button>
-            </div>
-        </div>
-    </div>
-
 </body>
 </html>
-

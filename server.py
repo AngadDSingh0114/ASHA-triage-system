@@ -1,14 +1,18 @@
+"""
+Zero-Dependency Backend Ingestion & PHC Doctor Central Server (Person D)
+Provides REST API for batch sync, real-time triage queries, doctor acknowledgment,
+and serves the offline ASHA Companion & PHC Doctor Live Monitoring Dashboard.
+"""
+
 import http.server
 import socketserver
 import json
 import sqlite3
 import os
 import sys
-import hashlib
-import secrets
 import urllib.parse
 from datetime import datetime
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 
 try:
     from asha_extractor import parse_asha_transcript
@@ -24,6 +28,7 @@ from seed_data import (
 
 PORT = 8000
 DB_FILE = "phc_central.db"
+
 
 
 class CentralDBManager:
@@ -53,8 +58,6 @@ class CentralDBManager:
             c.execute("""
             CREATE TABLE IF NOT EXISTS doctors (
                 doctor_id TEXT PRIMARY KEY,
-                username TEXT UNIQUE,
-                password_hash TEXT,
                 full_name TEXT NOT NULL,
                 phone_number TEXT NOT NULL,
                 whatsapp_number TEXT NOT NULL,
@@ -95,60 +98,14 @@ class CentralDBManager:
             c.execute("CREATE INDEX IF NOT EXISTS idx_rec_color ON triage_records(triage_color);")
             c.execute("CREATE INDEX IF NOT EXISTS idx_rec_ack ON triage_records(doctor_acknowledged);")
 
-            # Check migrations for doctors table
-            c.execute("PRAGMA table_info(doctors);")
-            cols = [r["name"] for r in c.fetchall()]
-            if "username" not in cols:
-                c.execute("ALTER TABLE doctors ADD COLUMN username TEXT;")
-            if "password_hash" not in cols:
-                c.execute("ALTER TABLE doctors ADD COLUMN password_hash TEXT;")
-
             # Seed default appointed PHC doctor if table empty
             c.execute("SELECT COUNT(*) as cnt FROM doctors")
             if c.fetchone()["cnt"] == 0:
-                pwd_hash = hashlib.sha256("Doctor@123".encode('utf-8')).hexdigest()
                 c.execute("""
-                INSERT INTO doctors (doctor_id, username, password_hash, full_name, phone_number, whatsapp_number, phc_name, district, is_on_duty)
-                VALUES ('DOC-PUNE-01', 'dr.anjali', ?, 'Dr. Anjali Deshmukh, MD (Pediatrics)', '+919876543210', '919876543210', 'Khed Sub-District Primary Health Centre', 'Pune Rural', 1);
-                """, (pwd_hash,))
-            else:
-                # Ensure default doctor has credentials
-                pwd_hash = hashlib.sha256("Doctor@123".encode('utf-8')).hexdigest()
-                c.execute("UPDATE doctors SET username = 'dr.anjali', password_hash = ? WHERE username IS NULL OR username = '';", (pwd_hash,))
+                INSERT INTO doctors (doctor_id, full_name, phone_number, whatsapp_number, phc_name, district, is_on_duty)
+                VALUES ('DOC-PUNE-01', 'Dr. Anjali Deshmukh, MD (Pediatrics)', '+919876543210', '919876543210', 'Khed Sub-District Primary Health Centre', 'Pune Rural', 1);
+                """)
             conn.commit()
-
-    def authenticate_doctor(self, username: str, password: str) -> Optional[Dict[str, Any]]:
-        """Authenticates medical officer credentials against phc_central.db."""
-        if not username or not password:
-            return None
-        with self.get_conn() as conn:
-            c = conn.cursor()
-            uname = username.strip()
-            c.execute("SELECT * FROM doctors WHERE username = ? OR doctor_id = ? LIMIT 1", (uname, uname))
-            row = c.fetchone()
-            if not row and uname.lower() in ["dr.anjali", "doctor", "doc-pune-01", "admin"]:
-                c.execute("SELECT * FROM doctors LIMIT 1")
-                row = c.fetchone()
-
-            if row:
-                doc = dict(row)
-                input_hash = hashlib.sha256(password.strip().encode('utf-8')).hexdigest()
-                stored_hash = doc.get("password_hash")
-                if stored_hash == input_hash or password.strip() in ["Doctor@123", "123456", "admin", "phc2026"]:
-                    token = secrets.token_hex(16)
-                    return {
-                        "doctor_id": doc["doctor_id"],
-                        "username": doc.get("username", "dr.anjali"),
-                        "full_name": doc["full_name"],
-                        "phone_number": doc["phone_number"],
-                        "whatsapp_number": doc["whatsapp_number"],
-                        "phc_name": doc["phc_name"],
-                        "district": doc["district"],
-                        "is_on_duty": doc["is_on_duty"],
-                        "token": token,
-                        "authenticated_at": datetime.utcnow().isoformat() + "Z"
-                    }
-        return None
 
     def get_doctor_profile(self) -> Dict[str, Any]:
         with self.get_conn() as conn:
@@ -156,12 +113,9 @@ class CentralDBManager:
             c.execute("SELECT * FROM doctors WHERE is_on_duty = 1 LIMIT 1")
             row = c.fetchone()
             if row:
-                res = dict(row)
-                res.pop("password_hash", None)
-                return res
+                return dict(row)
             return {
                 "doctor_id": "DOC-PUNE-01",
-                "username": "dr.anjali",
                 "full_name": "Dr. Anjali Deshmukh, MD (Pediatrics)",
                 "phone_number": "+919876543210",
                 "whatsapp_number": "919876543210",
@@ -174,17 +128,10 @@ class CentralDBManager:
         with self.get_conn() as conn:
             c = conn.cursor()
             doc_id = data.get("doctor_id", "DOC-PUNE-01")
-            uname = data.get("username", "dr.anjali")
-            new_pwd = data.get("password")
-            if new_pwd:
-                new_hash = hashlib.sha256(new_pwd.strip().encode('utf-8')).hexdigest()
-                c.execute("UPDATE doctors SET password_hash = ? WHERE doctor_id = ?", (new_hash, doc_id))
-
             c.execute("""
-            INSERT INTO doctors (doctor_id, username, full_name, phone_number, whatsapp_number, phc_name, district, is_on_duty, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
+            INSERT INTO doctors (doctor_id, full_name, phone_number, whatsapp_number, phc_name, district, is_on_duty, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
             ON CONFLICT(doctor_id) DO UPDATE SET
-                username=excluded.username,
                 full_name=excluded.full_name,
                 phone_number=excluded.phone_number,
                 whatsapp_number=excluded.whatsapp_number,
@@ -193,7 +140,6 @@ class CentralDBManager:
                 updated_at=CURRENT_TIMESTAMP;
             """, (
                 doc_id,
-                uname,
                 data.get("full_name", "Dr. Anjali Deshmukh"),
                 data.get("phone_number", "+919876543210"),
                 data.get("whatsapp_number", "919876543210").replace("+", "").replace(" ", "").replace("-", ""),
@@ -411,9 +357,6 @@ class TriageRequestHandler(http.server.SimpleHTTPRequestHandler):
         elif path == "/api/doctor":
             doc = central_db.get_doctor_profile()
             self._send_json(200, {"success": True, "doctor": doc})
-        elif path == "/api/doctor/session":
-            doc = central_db.get_doctor_profile()
-            self._send_json(200, {"success": True, "active_doctor": doc})
         elif path == "/api/db/explorer":
             data = central_db.get_db_explorer_data()
             self._send_json(200, {"success": True, "database": "phc_central.db", "tables": data})
@@ -482,32 +425,6 @@ class TriageRequestHandler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:
                 self._send_json(400, {"success": False, "error": str(e)})
 
-        elif path == "/api/doctor/login":
-            content_length = int(self.headers.get('Content-Length', 0))
-            body = self.rfile.read(content_length)
-            try:
-                data = json.loads(body.decode('utf-8'))
-                username = data.get("username", "")
-                password = data.get("password", "")
-                auth_res = central_db.authenticate_doctor(username, password)
-                if auth_res:
-                    self._send_json(200, {
-                        "success": True, 
-                        "token": auth_res["token"], 
-                        "doctor": auth_res,
-                        "message": f"Welcome, {auth_res['full_name']}. Access granted to PHC Tele-Triage Ingestion Console."
-                    })
-                else:
-                    self._send_json(401, {
-                        "success": False, 
-                        "error": "Authentication failed. Invalid Medical Officer Username or Password / PIN."
-                    })
-            except Exception as e:
-                self._send_json(400, {"success": False, "error": str(e)})
-
-        elif path == "/api/doctor/logout":
-            self._send_json(200, {"success": True, "message": "Doctor logged out successfully."})
-
         elif path == "/api/doctor":
             content_length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(content_length)
@@ -553,12 +470,15 @@ class TriageRequestHandler(http.server.SimpleHTTPRequestHandler):
             self._send_json(404, {"error": "Endpoint not found"})
 
     def _send_json(self, status_code: int, data: Dict[str, Any]):
-        response = json.dumps(data).encode('utf-8')
-        self.send_response(status_code)
-        self.send_header('Content-Type', 'application/json')
-        self.send_header('Content-Length', str(len(response)))
-        self.end_headers()
-        self.wfile.write(response)
+        try:
+            response = json.dumps(data).encode('utf-8')
+            self.send_response(status_code)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Length', str(len(response)))
+            self.end_headers()
+            self.wfile.write(response)
+        except (ConnectionAbortedError, ConnectionResetError, BrokenPipeError):
+            pass
 
 
 def run_server(port: int = PORT):
