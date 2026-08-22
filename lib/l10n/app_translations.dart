@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 enum AppLanguage {
   english,
   hindi,
@@ -14,13 +16,14 @@ enum AppLanguage {
   odia,
 }
 
-class LanguageController {
+class LanguageController extends ChangeNotifier {
   AppLanguage value;
 
   LanguageController([this.value = AppLanguage.english]);
 
   void setLanguage(AppLanguage language) {
     value = language;
+    notifyListeners();
   }
 }
 

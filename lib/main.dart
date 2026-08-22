@@ -118,12 +118,20 @@ class _AshaHomeScreenState extends State<AshaHomeScreen> {
   @override
   void initState() {
     super.initState();
+    widget.languageController.addListener(_onLanguageChanged);
     _reEvaluateTriage();
     _startNetworkMonitoring();
   }
 
+  void _onLanguageChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   @override
   void dispose() {
+    widget.languageController.removeListener(_onLanguageChanged);
     _networkTimer?.cancel();
     super.dispose();
   }
