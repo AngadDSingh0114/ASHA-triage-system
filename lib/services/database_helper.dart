@@ -36,6 +36,7 @@ class DatabaseHelper {
         gender TEXT CHECK(gender IN ('M', 'F', 'O')),
         guardian_name TEXT,
         village_name TEXT,
+        patient_phone TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
     ''');
@@ -91,6 +92,7 @@ class DatabaseHelper {
         'gender': genderCode,
         'guardian_name': patient.guardianName,
         'village_name': patient.village,
+        'patient_phone': patient.patientPhone,
         'created_at': DateTime.now().toIso8601String(),
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
@@ -193,7 +195,7 @@ class DatabaseHelper {
     return await db.rawQuery('''
       SELECT 
         a.*,
-        p.full_name, p.age_months, p.gender, p.guardian_name, p.village_name
+        p.full_name, p.age_months, p.gender, p.guardian_name, p.village_name, p.patient_phone
       FROM triage_assessments a
       JOIN patients p ON a.patient_id = p.patient_id
       WHERE a.sync_status = 'PENDING'

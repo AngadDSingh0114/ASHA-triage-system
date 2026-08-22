@@ -89,28 +89,29 @@ class _AshaHomeScreenState extends State<AshaHomeScreen> {
   int _currentScreenIndex =
       0; // 0: Patient Details, 1: Voice STT, 2: Result, 3: Audio, 4: Dispatch
 
-  // Active Demo Patient Schema
+  // Active Patient Schema for Live Triage Input
   final Patient _patient = Patient(
-    id: 'ASHA-2026-8942',
-    name: 'Aarav Kumar',
-    ageMonths: 14,
+    id: 'P-101',
+    name: '',
+    ageMonths: 0,
     gender: 'Male',
-    village: 'Rampur Sub-Center',
-    guardianName: 'Sunita Kumar',
-    illnessOnset: '1 - 2 Days ago',
+    village: '',
+    guardianName: '',
+    patientPhone: '',
+    illnessOnset: 'Today (Sudden onset)',
   );
 
   // Active Vitals State
   final Vitals _vitals = Vitals(
-    temperatureF: 101.4,
-    respiratoryRate: 52, // Fast breathing for 14-month old (>50)
-    heartRate: 110,
-    spo2: 93, // Mild hypoxia
+    temperatureF: 98.6,
+    respiratoryRate: 24,
+    heartRate: 80,
+    spo2: 98,
   );
 
   // Active Danger Signs State
   final DangerSigns _dangerSigns = DangerSigns(
-    chestIndrawing: true, // Triggers RED emergency
+    chestIndrawing: false,
     unableToDrinkOrFeed: false,
     convulsions: false,
   );

@@ -108,6 +108,7 @@ class SyncService {
             "gender": row['gender'] ?? 'M',
             "guardian_name": row['guardian_name'] ?? '',
             "village_name": row['village_name'] ?? 'Sector 4',
+            "patient_phone": row['patient_phone'] ?? '',
           },
           "assessment": {
             "assessment_id": row['assessment_id'],

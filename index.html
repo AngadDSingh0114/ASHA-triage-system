@@ -113,11 +113,12 @@
                 <p id="micStatus" class="text-xs text-slate-500 mt-2">Mic idle. Use Chrome/Edge over http://localhost (not file://) for speech input.</p>
             </div>
 
-            <!-- Optional Patient Details -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3 text-xs">
-                <input id="inputPatientName" type="text" value="Aarav Sharma" class="p-2 border border-slate-300 rounded-lg" placeholder="Child Name">
-                <input id="inputGuardian" type="text" value="Sunita Sharma" class="p-2 border border-slate-300 rounded-lg" placeholder="Guardian Name">
-                <input id="inputVillage" type="text" value="Khed Shivapur" class="p-2 border border-slate-300 rounded-lg" placeholder="Village Name">
+            <!-- Patient Details with Phone/WhatsApp Contact -->
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-3 text-xs">
+                <input id="inputPatientName" type="text" value="" class="p-2 border border-slate-300 rounded-lg" placeholder="Child Name (e.g. Aarav)">
+                <input id="inputGuardian" type="text" value="" class="p-2 border border-slate-300 rounded-lg" placeholder="Guardian Name">
+                <input id="inputPatientPhone" type="text" value="" class="p-2 border border-slate-300 rounded-lg font-mono" placeholder="Patient Phone (+91...)">
+                <input id="inputVillage" type="text" value="" class="p-2 border border-slate-300 rounded-lg" placeholder="Village Name">
             </div>
 
             <textarea id="transcriptInput" rows="3" class="w-full p-3 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-base" placeholder="Speak or type transcript in Hindi, Hinglish, or English (e.g. '8 mahine ka bachha, 3 din se bukhar aur 55 saans rate')"></textarea>

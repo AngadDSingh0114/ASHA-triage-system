@@ -30,34 +30,14 @@ try:
 except ImportError:
     get_asr_service = None
 
-try:
-    from seed_data import (
-        GROUNDING_STATS, 
-        CLINICAL_BENCHMARK_SCENARIOS, 
-        DEMO_PATIENT_SCENARIOS, 
-        generate_benchmark_sync_payloads,
-        format_patient_callback_sms,
-        format_patient_callback_whatsapp
-    )
-except Exception:
-    from seed_data import (
-        GROUNDING_STATS, 
-        CLINICAL_BENCHMARK_SCENARIOS, 
-        DEMO_PATIENT_SCENARIOS, 
-        generate_benchmark_sync_payloads
-    )
-    def format_patient_callback_sms(record, doctor_info=None):
-        name = record.get("full_name") or "Patient"
-        color = record.get("triage_color") or "GREEN"
-        diag = record.get("diagnosis") or "Clinical assessment"
-        doc = (doctor_info or {}).get("phone_number", "+919876543210")
-        return f"[MoHFW ASHA Report] {name}: {color} ({diag}). Helpline: {doc}"
-
-    def format_patient_callback_whatsapp(record, doctor_info=None):
-        name = record.get("full_name") or "Patient"
-        diag = record.get("diagnosis") or "Clinical assessment"
-        color = record.get("triage_color") or "GREEN"
-        return f"🏥 *GOVT OF INDIA / MoHFW TELE-TRIAGE REPORT*\nPatient: {name}\nTriage Level: {color}\nDiagnosis: {diag}"
+from seed_data import (
+    GROUNDING_STATS, 
+    CLINICAL_BENCHMARK_SCENARIOS, 
+    DEMO_PATIENT_SCENARIOS, 
+    generate_benchmark_sync_payloads,
+    format_patient_callback_sms,
+    format_patient_callback_whatsapp
+)
 
 PORT = 8000
 DB_FILE = "phc_central.db"

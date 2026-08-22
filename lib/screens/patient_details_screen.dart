@@ -24,13 +24,15 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
   late TextEditingController _nameController;
   late TextEditingController _villageController;
   late TextEditingController _ageController;
+  late TextEditingController _phoneController;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.patient.name);
     _villageController = TextEditingController(text: widget.patient.village);
-    _ageController = TextEditingController(text: widget.patient.ageMonths.toString());
+    _ageController = TextEditingController(text: widget.patient.ageMonths > 0 ? widget.patient.ageMonths.toString() : '');
+    _phoneController = TextEditingController(text: widget.patient.patientPhone);
   }
 
   @override
@@ -38,6 +40,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
     _nameController.dispose();
     _villageController.dispose();
     _ageController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -69,6 +72,9 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
     if (_villageController.text.trim().isNotEmpty) {
       widget.patient.village = _villageController.text.trim();
     }
+    if (_phoneController.text.trim().isNotEmpty) {
+      widget.patient.patientPhone = _phoneController.text.trim();
+    }
 
     // Save Patient to local SQLite database
     await DatabaseHelper.instance.savePatient(widget.patient);
@@ -95,7 +101,6 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title Header
             // Title Header
             FittedBox(
               fit: BoxFit.scaleDown,
@@ -136,6 +141,39 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                       onChanged: (val) {
                         setState(() {
                           widget.patient.name = val;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // 1b. Patient Contact Phone Input
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(14.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Patient / Guardian Mobile Number (WhatsApp / SMS):',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      softWrap: true,
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      decoration: const InputDecoration(
+                        hintText: '+91 98230 11223',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.phone_android),
+                      ),
+                      onChanged: (val) {
+                        setState(() {
+                          widget.patient.patientPhone = val;
                         });
                       },
                     ),
