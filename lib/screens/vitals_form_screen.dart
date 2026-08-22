@@ -38,12 +38,8 @@ class _VitalsFormScreenState extends State<VitalsFormScreen> {
   @override
   void initState() {
     super.initState();
+    _nlpResult = AshaNlpExtractor.parseTranscript(_transcriptionText);
     _initSpeech();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _processNlpTranscription(_transcriptionText);
-      }
-    });
   }
 
   Future<void> _initSpeech() async {
