@@ -382,9 +382,9 @@ class AshaNlpExtractor {
     final bool hasMastoidSwelling = detectedSymptoms.contains('mastoid_swelling');
     final bool hasRestlessIrritable = detectedSymptoms.contains('restless_irritable');
 
-    // 5. FEVER DURATION EXTRACTION
+    // 5. FEVER DURATION EXTRACTION (Spec: Triggered only when a fever class keyword or high temp is present)
     int feverDays = 0;
-    if (hasFever || textLower.contains('din') || textLower.contains('day') || textLower.contains('दिवस') || textLower.contains('roju') || textLower.contains('naal')) {
+    if (hasFever || (temperatureF != null && temperatureF >= 100.4)) {
       final feverDayReg1 = RegExp(r'(\d+|\b(?:ek|do|teen|char|panch|cheh|saat)\b)\s*(?:din|day|days|दिवस|roju|naal)\s*(?:se)?(?:\s*(?:bukhar|fever|ताप))?');
       final feverDayReg2 = RegExp(r'(?:bukhar|fever|ताप)\s*(?:for|se)?\s*(\d+|\b(?:ek|do|teen|char|panch)\b)\s*(?:din|day|days|दिवस|roju|naal)');
 
