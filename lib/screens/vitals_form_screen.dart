@@ -33,13 +33,21 @@ class _VitalsFormScreenState extends State<VitalsFormScreen> {
   String _transcriptionText =
       'Child is 14 months old. Has high fever 101.4°F for 2 days, severe chest indrawing, and fast breathing at 52 breaths per minute.';
 
+  late TextEditingController _transcriptionController;
   late AshaNlpResult _nlpResult;
 
   @override
   void initState() {
     super.initState();
+    _transcriptionController = TextEditingController(text: _transcriptionText);
     _nlpResult = AshaNlpExtractor.parseTranscript(_transcriptionText);
     _initSpeech();
+  }
+
+  @override
+  void dispose() {
+    _transcriptionController.dispose();
+    super.dispose();
   }
 
   Future<void> _initSpeech() async {
@@ -94,7 +102,7 @@ class _VitalsFormScreenState extends State<VitalsFormScreen> {
         onResult: (result) {
           if (mounted) {
             setState(() {
-              _processNlpTranscription(result.recognizedWords);
+              _processNlpTranscription(result.recognizedWords, updateController: true);
             });
           }
         },
@@ -151,8 +159,11 @@ class _VitalsFormScreenState extends State<VitalsFormScreen> {
     }
   }
 
-  void _processNlpTranscription(String text) {
+  void _processNlpTranscription(String text, {bool updateController = false}) {
     _transcriptionText = text;
+    if (updateController) {
+      _transcriptionController.text = text;
+    }
     _nlpResult = AshaNlpExtractor.parseTranscript(text);
 
     final fields = _nlpResult.extractedFields;
@@ -213,7 +224,7 @@ class _VitalsFormScreenState extends State<VitalsFormScreen> {
                   : 'Child is 14 months old. Normal temperature 98.6°F, normal breathing 24 breaths/min, active and feeding well.';
         }
 
-        _processNlpTranscription(text);
+        _processNlpTranscription(text, updateController: true);
       });
     });
   }
@@ -427,8 +438,7 @@ class _VitalsFormScreenState extends State<VitalsFormScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: TextFormField(
-                          initialValue: _transcriptionText,
-                          key: ValueKey(_transcriptionText),
+                          controller: _transcriptionController,
                           maxLines: 3,
                           style: const TextStyle(
                             fontStyle: FontStyle.italic,
@@ -440,9 +450,7 @@ class _VitalsFormScreenState extends State<VitalsFormScreen> {
                             hintText: 'Type or speak symptoms naturally...',
                           ),
                           onChanged: (val) {
-                            if (val.trim().isNotEmpty) {
-                              _processNlpTranscription(val);
-                            }
+                            _processNlpTranscription(val, updateController: false);
                           },
                         ),
                       ),
