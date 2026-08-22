@@ -223,6 +223,34 @@ SYMPTOM_TERMS: Dict[str, Dict[str, List[str]]] = {
                         "ଛାତି ଡସିବା"
                 ]
         },
+        "cough": {
+                "en": ["cough", "coughing", "khansee", "khansi"],
+                "hi": ["khansi", "कांसी", "कहसी"],
+                "ur": ["کھانس"],
+                "ta": ["irumal", "இருமல்"],
+                "te": ["kaburulu", "dakkulu", "కబురులు", "దక్కులు"],
+                "bn": ["কাশি", "kashi"],
+                "mr": ["कास", "kasa"],
+                "kn": ["ಕಾಸು", "kast"],
+                "ml": ["കഞ്ഞി", "kanji"],
+                "gu": ["કાસ", "kas"],
+                "pa": ["ਖਾਂਸੀ", "khansi"],
+                "or": ["କାଶିଶୀଳ", "kash"]
+        },
+        "breathing": {
+                "en": ["breathing problem", "difficulty breathing", "shortness of breath"],
+                "hi": ["saans lene mein dikkat", "saans lene me dikkat", "सांस लेने में दिक्कत"],
+                "ur": ["سانس لینے میں دشواری"],
+                "ta": ["muchchi vali", "மூச்சு வலி"],
+                "te": ["swasa takkuva", "శ్వాస తక్కువ"],
+                "bn": ["shwas kosto", "শ্বাস কষ্ট"],
+                "mr": ["shwas ghetana tras", "श्वास घेण्यास त्रास"],
+                "kn": ["usirata dusk", "ಉಸಿರಾಟ ದುಃಖ"],
+                "ml": ["shwasam kashtam", "ശ്വാസം കഷ്ടം"],
+                "gu": ["shwas levama taklif", "શ્વાસ લેવામાં તકલીફ"],
+                "pa": ["sah lain vich aukshai", "ਸਾਹ ਲੈਣ ਵਿੱਚ ਔਖਿਆਈ"],
+                "or": ["shwas nebara kosta", "ଶ୍ୱାସ ନେବାରେ କଷ୍ଟ"]
+        },
         "diarrhea": {
                 "en": [
                         "diarrhea",
@@ -670,6 +698,104 @@ SYMPTOM_TERMS: Dict[str, Dict[str, List[str]]] = {
                         "ବେସୁଧ",
                         "ଅଚେତନ"
                 ]
+        },
+        "blood_in_stool": {
+                "en": ["blood in stool", "bloody stool", "bloody diarrhea", "red in poop"],
+                "hi": ["pakhane mein khoon", "latrine mein khoon", "खून वाले दस्त", "मल में खून"],
+                "ur": ["پاخانے میں خون", "خونی دست"],
+                "ta": ["malam il rathiram", "malatthil iral", "மலத்தில் இரத்தம்"],
+                "te": ["malamu lo netturu", "మలంలో నెత్తురు"],
+                "bn": ["pajkhana te rakter", "পায়খানায় রক্ত"],
+                "mr": ["pottamadhe rakt", "पोटमाडे रक्त"],
+                "kn": ["male alli raktha", "ಮಲದಲ್ಲಿ ರಕ್ತ"],
+                "ml": ["malam il rathiram", "മലത്തിൽ രക്തം"],
+                "gu": ["latrin ma lahu", "ઝાડામાં લોહી"],
+                "pa": ["pakhane wich lahu", "ਪਖਾਨੇ ਵਿੱਚ ਲਹੂ"],
+                "or": ["motaru re rakta", "ମଳରେ ରକ୍ତ"]
+        },
+        "sunken_eyes": {
+                "en": ["sunken eyes", "eyes sunken", "eyes hollow", "deep set eyes"],
+                "hi": ["aankhein dhansi", "dhansi aankhein", "aankhein andar", "आँखें धंसी", "आँखें अंदर"],
+                "ur": ["آنکھیں دھنسی", "گہری آنکھیں"],
+                "ta": ["vizhi ulle poyiruku", "kannin kulippu", "கண் உள்ளே"],
+                "te": ["kannu lodaki potundi", "కన్ను లోడికి"],
+                "bn": ["chokh dhone gache", "চোখ ডুবে গেছে"],
+                "mr": ["dolya dhaslya", "डोळे धासल्या"],
+                "kn": ["kannu olagade", "ಕಣ್ಣು ಒಳಗಡೆ"],
+                "ml": ["kannu ullilekku", "കണ്ണ് ഉള്ളിലേക്ക്"],
+                "gu": ["aankhein dhasi", "આંખ ઊતરી"],
+                "pa": ["aakhaan dhansi", "ਅੱਖਾਂ ਡੁੱਬੀ"],
+                "or": ["aakhi dhana", "ଆଖି ଧସା"]
+        },
+        "unable_to_drink": {
+                "en": ["cannot drink", "not drinking", "refuses to drink", "unable to drink", "not able to drink", "not breastfeeding", "not feeding"],
+                "hi": ["pi nahi raha", "pi nahi sakta", "kuch pi nahi raha", "doodh nahi pi raha", "पी नहीं रहा", "पीने में तकलीफ"],
+                "ur": ["پی نہیں رہا", "پینے میں دشواری"],
+                "ta": ["kudikka mudiyala", "kudikka mateengra", "குடிக்க முடியல"],
+                "te": ["tagalenu", "taga ledu", "తాగలేడు"],
+                "bn": ["khete parchhe na", "খেতে পারছে না"],
+                "mr": ["pieu nahi shakat", "पिऊ शकत नाही"],
+                "kn": ["kudiyodakke aagalla", "ಕುಡಿಯೊದಕ್ಕೆ ಆಗಲ್ಲ"],
+                "ml": ["kudikkan patilla", "കുടിക്കാൻ പറ്റുന്നില്ല"],
+                "gu": ["pi saktu nathi", "પી શકતો નથી"],
+                "pa": ["pi nahi sakda", "ਪੀ ਨਹੀਂ ਸਕਦਾ"],
+                "or": ["piba para nahi", "ପିବ ପାରୁ ନାହିଁ"]
+        },
+        "stiff_neck": {
+                "en": ["stiff neck", "neck stiff", "neck rigidity", "rigid neck", "cannot bend neck"],
+                "hi": ["gardan akad", "gardan seedhi", "gardan nahi jhukti", "गर्दन अकड़", "गर्दन सीधी"],
+                "ur": ["گردن اکڑ", "گردن نہیں جھکتی"],
+                "ta": ["kuzhal kaduppam", "kanjam thadam", "கழுத்து இறுக்கம்"],
+                "te": ["meda akkadam", "మెడ అక్కడం"],
+                "bn": ["gharer ghad shakata", "ঘাড় শক্ত"],
+                "mr": ["maneki akhad", "मान अकडणे"],
+                "kn": ["kothlu gatthu", "ಕೊರಳು ಗಟ್ಟಿ"],
+                "ml": ["kazhuth kakkal", "കഴുത്ത് കക്കൽ"],
+                "gu": ["gadan akad", "ગળાનો ઉલ્ઝન"],
+                "pa": ["gardan akak", "ਗਰਦਨ ਅਕੜ"],
+                "or": ["gala bhota", "ଗଳା ଭୋଟା"]
+        },
+        "ear_pain": {
+                "en": ["ear pain", "ear ache", "ear discharge", "discharge from ear", "pus from ear", "ear hurts"],
+                "hi": ["kaan mein dard", "kaan dard", "kaan se mawad", "कान दर्द", "कान में दर्द"],
+                "ur": ["کان میں درد", "کان سے مواد"],
+                "ta": ["sevidu vali", "kan vali", "செவிடு வலி"],
+                "te": ["chevi noppi", "chevinundi draavamu", "చెవి నొప్పి"],
+                "bn": ["kan e byatha", "কানে ব্যথা"],
+                "mr": ["kana dukane", "कान दुखणे"],
+                "kn": ["kivi novu", "ಕಿವಿ ನೋವು"],
+                "ml": ["chevi novu", "ചെവി വേദന"],
+                "gu": ["kan ma dard", "કાન માં દર્દ"],
+                "pa": ["kann vich dard", "ਕੰਨ ਵਿੱਚ ਦਰਦ"],
+                "or": ["kaan re byatha", "କାନ ବ୍ୟଥା"]
+        },
+        "mastoid_swelling": {
+                "en": ["mastoid swelling", "swelling behind ear", "bone behind ear swollen", "ear bone swelling"],
+                "hi": ["kaan ke peeche sujan", "kaan ke peeche gaanth", "कान के पीछे सूजन", "कान पीछे गांठ"],
+                "ur": ["کان کے پیچھے سوجن"],
+                "ta": ["kan pakkam vaippu", "kan parikku pirakke", "கான் பக்கம் வைப்பு"],
+                "te": ["chevi venaka vuppu", "చెవి వెనక వుప్పు"],
+                "bn": ["kan er pechone fulay", "কানের পেছনে ফুলে"],
+                "mr": ["kanava maghe sujan", "कानामागे सूज"],
+                "kn": ["kivi hinde ootu", "ಕಿವಿ ಹಿಂದೆ ಊತ"],
+                "ml": ["chevi pirakku nerippu", "ചെവി പിറകിൽ നീർ"],
+                "gu": ["kan pachi sujan", "કાન પાછળ સૂઝ"],
+                "pa": ["kann picho sujan", "ਕੰਨ ਪਿੱਛੇ ਸੋਜ"],
+                "or": ["kaan pachha fulia", "କାନ ପଛ ଫୁଲ"]
+        },
+        "restless_irritable": {
+                "en": ["restless", "irritable", "fussy", "crying a lot", "won't settle", "unsettled"],
+                "hi": ["bechaini", "chidchida", "rota rehta", "बेचैनी", "चिड़चिड़ा"],
+                "ur": ["بے چینی", "چڑچڑا"],
+                "ta": ["alaichiyal", "kavalai", "அலைச்சல்"],
+                "te": ["notarigaa", "notu pigilinchu", "నొటరిగా"],
+                "bn": ["chanchalo", "karatar kanna", "চঞ্চল"],
+                "mr": ["bechaini", "khidkhida", "बेचैनी"],
+                "kn": ["chanchalathe", "ganda", "ಚಂಚಲತೆ"],
+                "ml": ["athashantam", "thamasham", "അസ്വസ്ഥ"],
+                "gu": ["bechaini", "tadaphu", "બેચૈની"],
+                "pa": ["becheni", "chirchira", "ਬੇਚੈਨੀ"],
+                "or": ["bechaeni", "khitkhita", "ବ୍ୟಗ್ರତା"]
         }
 }
 
@@ -679,7 +805,6 @@ THESAURUS: Dict[str, List[str]] = {
     s_key: [t for lang_terms in lang_map.values() for t in lang_terms]
     for s_key, lang_map in SYMPTOM_TERMS.items()
 }
-
 
 # ---------------------------------------------------------------------------
 # Multilingual number words (falls back when ASR emits words instead of digits)
@@ -735,7 +860,7 @@ def detect_language(transcript: str) -> str:
     return best_lang
 
 
-def parse_asha_transcript(transcript: str) -> Dict[str, Any]:
+def parse_asha_transcript(transcript: str, patient_id: str = "P-101") -> Dict[str, Any]:
     """
     Parses raw multilingual ASHA transcriptions into structured IMCI data schema.
     """
@@ -806,6 +931,15 @@ def parse_asha_transcript(transcript: str) -> Dict[str, Any]:
     has_vomiting = "vomiting" in detected_symptoms or "vomiting_everything" in detected_symptoms
     has_vomiting_everything = "vomiting_everything" in detected_symptoms
     has_lethargy = "lethargy" in detected_symptoms
+    has_blood_in_stool = "blood_in_stool" in detected_symptoms
+    has_sunken_eyes = "sunken_eyes" in detected_symptoms
+    has_unable_to_drink = "unable_to_drink" in detected_symptoms
+    has_stiff_neck = "stiff_neck" in detected_symptoms
+    has_ear_pain = "ear_pain" in detected_symptoms
+    has_mastoid_swelling = "mastoid_swelling" in detected_symptoms
+    has_restless_irritable = "restless_irritable" in detected_symptoms
+    has_cough = "cough" in detected_symptoms
+    has_breathing_difficulty = "breathing" in detected_symptoms
 
     # --- 4. FEVER DURATION EXTRACTION ---
     fever_days: int = 0
@@ -822,13 +956,28 @@ def parse_asha_transcript(transcript: str) -> Dict[str, Any]:
         if fever_day_match:
             fever_days = int(fever_day_match.group(1))
 
+    # --- 4b. DIARRHOEA DURATION EXTRACTION ---
+    diarrhoea_days: int = 0
+    if "diarrhea" in detected_symptoms or re.search(_DAY_ALT + r"\b", text_lower):
+        dia_day_match = re.search(
+            r"(?:dast|diarrhea|loose motion|pakhana|atisar)\s*(?:se|for)?\s*(\d+)\s*" + _DAY_ALT,
+            text_lower,
+        )
+        if not dia_day_match:
+            dia_day_match = re.search(
+                r"(\d+)\s*" + _DAY_ALT + r"\s*(?:se)?(?:\s*(?:dast|diarrhea|loose motion))?",
+                text_lower,
+            )
+        if dia_day_match:
+            diarrhoea_days = int(dia_day_match.group(1))
+
     # --- 5. CONFIDENCE CALCULATION ---
     filled_slots = 0
     if age_months is not None:
         filled_slots += 1
     if respiratory_rate is not None:
         filled_slots += 1
-    if fever_days > 0:
+    if fever_days > 0 or diarrhoea_days > 0:
         filled_slots += 1
     if len(detected_symptoms) > 0:
         filled_slots += 2
@@ -843,13 +992,25 @@ def parse_asha_transcript(transcript: str) -> Dict[str, Any]:
         "extracted_fields": {
             "age_months": age_months,
             "respiratory_rate": respiratory_rate,
+            "temperature_f": None,
+            "temperature_c": None,
             "fever_days": fever_days,
+            "diarrhoea_days": diarrhoea_days,
             "symptoms": detected_symptoms,
             "has_chest_indrawing": has_chest_indrawing,
             "has_convulsions": has_convulsions,
             "has_vomiting": has_vomiting,
             "has_vomiting_everything": has_vomiting_everything,
             "has_lethargy": has_lethargy,
+            "has_blood_in_stool": has_blood_in_stool,
+            "has_sunken_eyes": has_sunken_eyes,
+            "has_unable_to_drink": has_unable_to_drink,
+            "has_stiff_neck": has_stiff_neck,
+            "has_ear_pain": has_ear_pain,
+            "has_mastoid_swelling": has_mastoid_swelling,
+            "has_restless_irritable": has_restless_irritable,
+            "has_cough": has_cough,
+            "has_breathing_difficulty": has_breathing_difficulty,
         },
         "extraction_confidence": confidence,
     }
@@ -857,7 +1018,7 @@ def parse_asha_transcript(transcript: str) -> Dict[str, Any]:
     # Integrate NLP Model with Rule-Based Engine:
     # Pass extracted fields to the WHO IMCI decision engine to produce diagnosis & recommendations
     if evaluate_imci_rules is not None:
-        triage_eval = evaluate_imci_rules(res, language=language)
+        triage_eval = evaluate_imci_rules(res, patient_id=patient_id, language=language)
         res["triage_result"] = triage_eval
         res["clinical_triage"] = triage_eval
 
@@ -865,8 +1026,54 @@ def parse_asha_transcript(transcript: str) -> Dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
-# Localized referral note generator
+# Adapter: NLP extracted fields -> TriageInput-shaped dict for the engine
 # ---------------------------------------------------------------------------
+
+def adapt_to_engine_input(extracted_fields: Dict[str, Any], temperature_f: Optional[float] = None) -> Dict[str, Any]:
+    temp_c = None
+    if temperature_f is not None:
+        temp_c = round((temperature_f - 32.0) * (5.0 / 9.0), 1)
+    elif extracted_fields.get("temperature_c") is not None:
+        temp_c = extracted_fields["temperature_c"]
+    elif extracted_fields.get("temperature_f") is not None:
+        temp_c = round((extracted_fields["temperature_f"] - 32.0) * (5.0 / 9.0), 1)
+
+    symptoms_list = extracted_fields.get("symptoms", []) or []
+
+    def _has(key: str) -> bool:
+        return key in symptoms_list
+
+    diarrhoea_days = extracted_fields.get("diarrhoea_days") or (extracted_fields.get("fever_days") if _has("diarrhea") else 0)
+
+    return {
+        "patient": {
+            "age_months": extracted_fields.get("age_months") or 0,
+        },
+        "vitals": {
+            "resp_rate_bpm": extracted_fields.get("respiratory_rate"),
+            "temp_c": temp_c,
+        },
+        "symptoms": {
+            "cough_or_difficulty_breathing": _has("cough") or _has("breathing") or _has("chest_indrawing"),
+            "chest_indrawing": extracted_fields.get("has_chest_indrawing", False),
+            "stridor_calm_child": False,
+            "diarrhoea": _has("diarrhea"),
+            "diarrhoea_days": diarrhoea_days,
+            "blood_in_stool": extracted_fields.get("has_blood_in_stool", False),
+            "restless_irritable": extracted_fields.get("has_restless_irritable", False),
+            "sunken_eyes": extracted_fields.get("has_sunken_eyes", False),
+            "skin_pinch": "immediate",
+            "drinking": "normal",
+            "fever_days": extracted_fields.get("fever_days") or 0,
+            "stiff_neck": extracted_fields.get("has_stiff_neck", False),
+            "not_able_to_drink_or_breastfeed": extracted_fields.get("has_unable_to_drink", False),
+            "vomits_everything": extracted_fields.get("has_vomiting_everything", False),
+            "convulsions": extracted_fields.get("has_convulsions", False),
+            "lethargic_or_unconscious": extracted_fields.get("has_lethargy", False),
+            "ear_pain_or_discharge": extracted_fields.get("has_ear_pain", False),
+            "mastoid_swelling": extracted_fields.get("has_mastoid_swelling", False),
+        },
+    }
 _REFERRAL_TEMPLATES: Dict[str, Dict[str, str]] = {
     "YELLOW_PHC": {
         "en": "Suspected pneumonia. Refer to PHC within 24 hours.",

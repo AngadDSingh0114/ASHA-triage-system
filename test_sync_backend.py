@@ -7,7 +7,7 @@ import os
 import uuid
 from local_db import LocalTriageDB
 from server import CentralDBManager
-from seed_data import GROUNDING_STATS, DEMO_PATIENT_SCENARIOS
+from seed_data import GROUNDING_STATS, DEMO_PATIENT_SCENARIOS, CLINICAL_BENCHMARK_SCENARIOS, generate_benchmark_sync_payloads
 from imci_rules_engine import evaluate_imci_rules
 
 
@@ -60,7 +60,7 @@ class TestBackendAndSync(unittest.TestCase):
         pending = self.local_db.get_pending_sync_records()
         self.assertEqual(len(pending), 1)
         self.assertEqual(pending[0]["patient"]["full_name"], "Test Child")
-        self.assertEqual(pending[0]["assessment"]["triage_color"], "YELLOW")
+        self.assertEqual(pending[0]["assessment"]["triage_color"], "RED")
 
         self.local_db.mark_records_synced([res["assessment_id"]])
         pending_after = self.local_db.get_pending_sync_records()
@@ -119,6 +119,32 @@ class TestBackendAndSync(unittest.TestCase):
         self.assertIn("connectivity_gap", GROUNDING_STATS)
         self.assertGreaterEqual(len(DEMO_PATIENT_SCENARIOS), 3)
 
+    def test_clinical_benchmark_dataset_coverage(self):
+        self.assertGreaterEqual(len(CLINICAL_BENCHMARK_SCENARIOS), 14)
+        payloads = generate_benchmark_sync_payloads()
+        self.assertEqual(len(payloads), len(CLINICAL_BENCHMARK_SCENARIOS))
+
+        colors = set(p["assessment"]["triage_color"] for p in payloads)
+        self.assertIn("RED", colors)
+        self.assertIn("YELLOW", colors)
+
+        # Ingest full benchmark suite into central database
+        synced_ids = self.central_db.ingest_batch({
+            "asha_id": "ASHA-MH-PUNE-012",
+            "records": payloads
+        })
+        self.assertEqual(len(synced_ids), len(payloads))
+
+        # Check priority sorting (RED cases must appear first)
+        records = self.central_db.get_triage_records()
+        self.assertEqual(records[0]["triage_color"], "RED")
+
+        # Stats summary validation
+        stats = self.central_db.get_stats()
+        self.assertGreater(stats["red_alerts"], 0)
+        self.assertGreater(stats["yellow_cases"], 0)
+        self.assertEqual(stats["total_triaged"], len(payloads))
+
     def test_redis_gateway_ingestion_and_caching(self):
         from redis_gateway import PHCRedisGateway
 
@@ -175,6 +201,3 @@ class TestBackendAndSync(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-
-

@@ -208,6 +208,29 @@
 
         </div>
 
+        <!-- Conditions & Rule Trace (Engine Output) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Per-Condition Classification Cards -->
+            <section id="conditionsCard" class="bg-white rounded-xl shadow-md p-5 border border-slate-200">
+                <h3 class="text-md font-bold text-slate-800 mb-3 flex items-center">
+                    <i class="fa-solid fa-list-check text-indigo-600 mr-2"></i> Conditions & Classifications
+                </h3>
+                <div id="conditionsList" class="space-y-2 text-xs">
+                    <p class="text-slate-400 italic">Enter a transcript to see per-disease classifications.</p>
+                </div>
+            </section>
+
+            <!-- Rule Trace Log -->
+            <section id="traceCard" class="bg-white rounded-xl shadow-md p-5 border border-slate-200">
+                <h3 class="text-md font-bold text-slate-800 mb-3 flex items-center">
+                    <i class="fa-solid fa-code-branch text-indigo-600 mr-2"></i> Rule Trace Log
+                </h3>
+                <div id="traceList" class="space-y-1 text-xs font-mono">
+                    <p class="text-slate-400 italic">Trace will appear here after evaluation.</p>
+                </div>
+            </section>
+        </div>
+
         <!-- Person C & B Formatted Outputs (TTS Script & SMS Snippet) -->
         <section class="bg-slate-900 text-slate-100 rounded-xl shadow-md p-5 font-mono text-xs">
             <h3 class="text-sm font-bold text-amber-400 mb-3 flex items-center">
@@ -779,137 +802,94 @@
         }
 
         // --- Parser & IMCI Logic ---
-        function _alt(words) { return "(?:" + words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).sort((a,b)=>b.length-a.length).join("|") + ")"; }
-        function parseAndEvaluate() {
-            const transcript = document.getElementById("transcriptInput").value.toLowerCase();
-            if (!transcript.trim()) return;
+        async function classifyTriage() {
+            const transcript = document.getElementById("transcriptInput").value.trim();
+            if (!transcript) return;
 
-            let age_months = null;
-            const monthMatch = transcript.match(new RegExp("(\\d+)\\s*(-|\\s)?\\s*" + _alt(MONTH_WORDS) + "\\b"));
-            const yearMatch = transcript.match(new RegExp("(\\d+(?:\\.\\d+)?)\\s*(-|\\s)?\\s*" + _alt(YEAR_WORDS) + "\\b"));
-            if (monthMatch) age_months = parseInt(monthMatch[1]);
-            else if (yearMatch) age_months = Math.round(parseFloat(yearMatch[1]) * 12);
-
-            let respiratory_rate = null;
-            const rrMatch = transcript.match(/(\d+)\s*(?:saans\s*rate|saans\/min|breaths\s*per\s*minute|\/min|saans|breaths|shwas|सांस|श्वास|શ્વાસ|ਸਾਹ|மூச்சு|శ్వాస|শ্বাস|ಉಸಿರು|ശ്വಾಸം|سانس|ଶ୍ୱାस)(?!\w)/) || transcript.match(/(?:rr|rate|saans|shwas|सांस|श्वास|શ્વાસ|ਸਾਹ|மூச்சு|శ్వాస|শ্বাস|ಉಸಿರು|ശ್ವಾಸം|سانس|ଶ୍ୱାस)\s*(?:of|is|:)?\s*(\d+)/);
-            if (rrMatch) respiratory_rate = parseInt(rrMatch[1] || rrMatch[2]);
-
-            const symptoms = [];
-            for (const [key, terms] of Object.entries(THESAURUS)) {
-                if (terms.some(t => transcript.includes(t))) symptoms.push(key);
-            }
-
-            let fever_days = 0;
-            const dayMatch = transcript.match(new RegExp("(\\d+)\\s*" + _alt(DAY_WORDS)));
-            if (symptoms.includes("fever") && dayMatch) fever_days = parseInt(dayMatch[1]);
-
-            currentExtractedData = {
-                age_months,
-                respiratory_rate,
-                fever_days,
-                symptoms,
-                has_chest_indrawing: symptoms.includes("chest_indrawing"),
-                has_convulsions: symptoms.includes("convulsions"),
-                has_vomiting_everything: symptoms.includes("vomiting"),
-                has_lethargy: symptoms.includes("lethargy"),
-                temperature_c: fever_days > 0 ? 38.8 : 37.0
-            };
-
-            // Update UI Slots
-            document.getElementById("slotAge").innerText = age_months ? `${age_months} months` : "Not specified";
-            document.getElementById("slotRR").innerText = respiratory_rate ? `${respiratory_rate} / min` : "Not measured";
-            document.getElementById("slotFever").innerText = fever_days ? `${fever_days} days` : (symptoms.includes("fever") ? "Present" : "None");
-            
-            const symContainer = document.getElementById("slotSymptoms");
-            symContainer.innerHTML = symptoms.length ? symptoms.map(s => `<span class="bg-indigo-100 text-indigo-800 text-xs px-2 py-0.5 rounded font-semibold">${s}</span>`).join("") : '<span class="text-slate-400 italic">None</span>';
-
-            const confidence = Math.min(100, Math.round(((age_months ? 1 : 0) + (respiratory_rate ? 1 : 0) + (fever_days ? 1 : 0) + (symptoms.length ? 2 : 1)) / 5 * 100));
-            document.getElementById("slotConfidence").innerText = `${confidence}%`;
-
-            // WHO IMCI Rules Logic
-            const has_chest_indrawing = symptoms.includes("chest_indrawing");
-            const has_convulsions = symptoms.includes("convulsions");
-            const has_lethargy = symptoms.includes("lethargy");
-
-            let is_fast = false;
-            if (respiratory_rate) {
-                if (age_months && age_months < 2) is_fast = respiratory_rate >= 60;
-                else if (age_months && age_months >= 2 && age_months < 12) is_fast = respiratory_rate >= 50;
-                else is_fast = respiratory_rate >= 40;
-            }
-
-            let level = "GREEN", diag = "Cough or Cold / Mild Illness", urg = "Home Care", actions = ["Give home care guidance and fluids."];
-            let dangerText = "No acute danger signs";
-
-            if (has_convulsions || has_lethargy) {
-                level = "RED";
-                diag = "SEVERE PNEUMONIA / VERY SEVERE DISEASE";
-                urg = "URGENT HOSPITAL REFERRAL";
-                dangerText = has_convulsions ? "Convulsions" : "Lethargy";
-                actions = ["Give first dose antibiotic before transfer", "Keep child warm", "Refer IMMEDIATELY to hospital"];
-            } else if (has_chest_indrawing || is_fast) {
-                level = "YELLOW";
-                diag = "PNEUMONIA (Fast Breathing)";
-                urg = "REFER TO PHC WITHIN 24 HOURS";
-                dangerText = has_chest_indrawing ? "Chest indrawing" : `Fast breathing (${respiratory_rate}/min)`;
-                actions = ["Give oral Amoxicillin for 5 days", "Soothe throat and cough", "Refer to PHC clinic"];
-            } else if (symptoms.includes("diarrhea")) {
-                level = fever_days > 7 ? "YELLOW" : "GREEN";
-                diag = "DIARRHEA / GASTROENTERITIS";
-                urg = fever_days > 7 ? "PHC CLINIC VISIT" : "HOME CARE WITH ORS";
-                actions = ["Give ORS solution & Zinc for 14 days", "Continue feeding child"];
-            }
-
-            currentTriageResult = {
-                triage_level: level,
-                diagnosis: diag,
-                urgency: urg,
-                primary_danger: dangerText,
-                actions: actions
-            };
-
-            // Render Triage Card
-            const badge = document.getElementById("triageBadge");
-            badge.className = `px-3 py-1 rounded-full text-xs font-extrabold badge-${level.toLowerCase()}`;
-            badge.innerText = `${level} - ${urg}`;
-
-            document.getElementById("triageDiagnosis").innerText = diag;
-            document.getElementById("triageUrgency").innerText = urg;
-            document.getElementById("triageActions").innerHTML = actions.map(a => `<li>${a}</li>`).join("");
-
-            // Outputs
-            const ageStr = age_months ? `${age_months}-month-old` : "child";
-            currentTTS = `${level} Alert. Patient, ${ageStr} with ${dangerText}. Diagnosis: ${diag}. Action: ${urg}.`;
-            document.getElementById("outTTS").innerText = currentTTS;
-
-            const sms = `[${level}] P-101 | Age:${age_months || 'N/A'}m | ${dangerText} | RR:${respiratory_rate || 'N/A'} | Action:${urg.substring(0,20)}`;
-            document.getElementById("outSMS").innerText = sms;
-
-            const waText = encodeURIComponent(`*EMERGENCY TELE-TRIAGE REFERRAL*\n\n*Patient:* ${document.getElementById("inputPatientName").value}\n*Severity:* ${level}\n*Diagnosis:* ${diag}\n*Vitals:* Age ${age_months || 'N/A'}m, RR ${respiratory_rate || 'N/A'}\n*Danger Sign:* ${dangerText}\n*Action:* ${urg}`);
-            document.getElementById("whatsappBtn").href = `https://api.whatsapp.com/send?text=${waText}`;
-            // If RED high-severity alert detected, trigger emergency modal automatically
-            if (level === "RED") {
-                showRedEmergencyModal({
-                    patientName: document.getElementById("inputPatientName").value || "Pediatric Patient",
-                    ageMonths: age_months,
-                    dangerSign: dangerText,
-                    respiratoryRate: respiratory_rate,
-                    feverDays: fever_days,
-                    diagnosis: diag,
-                    urgency: urg,
-                    sms: sms,
-                    tts: currentTTS
+            try {
+                const res = await fetch("/api/parse", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ transcript, patient_id: "P-101" })
                 });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error || "Parse failed");
+
+                const fields = data.data.extracted_fields || {};
+                const triage = data.data.triage_result || data.data.clinical_triage || {};
+                const level = (triage.triage_level || "GREEN").toLowerCase();
+
+                currentExtractedData = fields;
+                currentTriageResult = triage;
+
+                document.getElementById("slotAge").innerText = fields.age_months ? fields.age_months + " months" : "Not specified";
+                document.getElementById("slotRR").innerText = fields.respiratory_rate ? fields.respiratory_rate + " / min" : "Not measured";
+                document.getElementById("slotFever").innerText = fields.fever_days ? fields.fever_days + " days" : (fields.symptoms && fields.symptoms.includes("fever") ? "Present" : "None");
+
+                const symContainer = document.getElementById("slotSymptoms");
+                const symptoms = fields.symptoms || [];
+                symContainer.innerHTML = symptoms.length ? symptoms.map(s => `<span class="bg-indigo-100 text-indigo-800 text-xs px-2 py-0.5 rounded font-semibold">${s}</span>`).join("") : '<span class="text-slate-400 italic">None</span>';
+
+                document.getElementById("slotConfidence").innerText = Math.round((data.data.extraction_confidence || 0) * 100) + "%";
+
+                const badge = document.getElementById("triageBadge");
+                badge.className = "px-3 py-1 rounded-full text-xs font-extrabold badge-" + level;
+                badge.innerText = level.toUpperCase() + " - " + (triage.urgency || "Home Care");
+
+                document.getElementById("triageDiagnosis").innerText = triage.diagnosis || "Pending evaluation";
+                document.getElementById("triageUrgency").innerText = triage.urgency || "Home Care";
+                document.getElementById("triageActions").innerHTML = (triage.actions || []).map(a => "<li>" + a + "</li>").join("") || "<li>No actions specified</li>";
+
+                const conditionsList = document.getElementById("conditionsList");
+                conditionsList.innerHTML = (triage.conditions || []).map(c => {
+                    const flag = (c.flag || "green").toLowerCase();
+                    return `<div class="p-2 rounded border-l-4 badge-${flag}">
+                        <div class="font-bold text-slate-800">${c.name || "condition"}</div>
+                        <div class="text-slate-600">${(c.classification || "").replace(/_/g, " ")}</div>
+                        <div class="text-[10px] text-slate-500 font-mono">${(c.reasonTrace || []).join("; ")}</div>
+                    </div>`;
+                }).join("") || '<p class="text-slate-400 italic">No conditions detected.</p>';
+
+                const traceList = document.getElementById("traceList");
+                traceList.innerHTML = (triage.rule_trace || []).map(t => `<div class="text-slate-700">• ${t}</div>`).join("") || '<p class="text-slate-400 italic">No trace available.</p>';
+
+                currentTTS = triage.tts_script || (level.toUpperCase() + " Alert. Diagnosis: " + (triage.diagnosis || "Pending") + ". Action: " + (triage.urgency || "Home Care") + ".");
+                document.getElementById("outTTS").innerText = currentTTS;
+
+                document.getElementById("outSMS").innerText = triage.sms_snippet || "[PENDING] Awaiting evaluation";
+
+                document.getElementById("whatsappBtn").href = triage.whatsapp_url || "#";
+
+                if (level === "red") {
+                    showRedEmergencyModal({
+                        patientName: document.getElementById("inputPatientName").value || "Pediatric Patient",
+                        ageMonths: fields.age_months,
+                        dangerSign: triage.primary_danger || "Danger sign(s)",
+                        respiratoryRate: fields.respiratory_rate,
+                        feverDays: fields.fever_days,
+                        diagnosis: triage.diagnosis,
+                        urgency: triage.urgency,
+                        sms: triage.sms_snippet,
+                        tts: currentTTS
+                    });
+                }
+            } catch (err) {
+                console.error("Triage classification failed:", err);
+                alert("Could not connect to triage server. Please ensure the Python backend is running on http://localhost:8000");
             }
+        }
+
+        function parseAndEvaluate() {
+            classifyTriage();
         }
 
         function setPreset(txt, name) {
             document.getElementById("transcriptInput").value = txt;
             if (name) document.getElementById("inputPatientName").value = name;
-            parseAndEvaluate();
+            classifyTriage();
         }
 
-        document.getElementById("transcriptInput").addEventListener("input", parseAndEvaluate);
+        document.getElementById("transcriptInput").addEventListener("input", classifyTriage);
 
         function playTTSAudio() {
             if ('speechSynthesis' in window && currentTTS) {
@@ -1097,7 +1077,7 @@
                     transcript += event.results[i][0].transcript;
                 }
                 document.getElementById("transcriptInput").value = transcript;
-                parseAndEvaluate();
+                classifyTriage();
                 micStatus.innerText = "Heard: " + transcript;
             };
 
