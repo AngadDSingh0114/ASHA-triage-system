@@ -117,9 +117,40 @@ class TestBackendAndSync(unittest.TestCase):
     def test_grounding_stats_integrity(self):
         self.assertIn("under_5_mortality_rate", GROUNDING_STATS)
         self.assertIn("connectivity_gap", GROUNDING_STATS)
-        self.assertGreaterEqual(len(DEMO_PATIENT_SCENARIOS), 3)
+        self.assertGreaterEqual(len(DEMO_PATIENT_SCENARIOS), 10)
+
+    def test_clinical_benchmark_dataset_coverage(self):
+        from seed_data import CLINICAL_BENCHMARK_SCENARIOS, generate_benchmark_sync_payloads
+
+        self.assertGreaterEqual(len(CLINICAL_BENCHMARK_SCENARIOS), 14)
+        payloads = generate_benchmark_sync_payloads()
+        self.assertEqual(len(payloads), len(CLINICAL_BENCHMARK_SCENARIOS))
+
+        colors = set(p["assessment"]["triage_color"] for p in payloads)
+        self.assertIn("RED", colors)
+        self.assertIn("YELLOW", colors)
+        self.assertIn("GREEN", colors)
+
+        # Ingest full benchmark suite into central database
+        synced_ids = self.central_db.ingest_batch({
+            "asha_id": "ASHA-MH-PUNE-012",
+            "records": payloads
+        })
+        self.assertEqual(len(synced_ids), len(payloads))
+
+        # Check priority sorting (RED cases must appear first)
+        records = self.central_db.get_triage_records()
+        self.assertEqual(records[0]["triage_color"], "RED")
+
+        # Stats summary validation
+        stats = self.central_db.get_stats()
+        self.assertGreater(stats["red_alerts"], 0)
+        self.assertGreater(stats["yellow_cases"], 0)
+        self.assertGreater(stats["green_cases"], 0)
+        self.assertEqual(stats["total_triaged"], len(payloads))
 
 
 if __name__ == "__main__":
     unittest.main()
+
 

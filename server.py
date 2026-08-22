@@ -19,120 +19,16 @@ try:
 except ImportError:
     parse_asha_transcript = None
 
+from seed_data import (
+    GROUNDING_STATS, 
+    CLINICAL_BENCHMARK_SCENARIOS, 
+    DEMO_PATIENT_SCENARIOS, 
+    generate_benchmark_sync_payloads
+)
+
 PORT = 8000
 DB_FILE = "phc_central.db"
 
-# Grounding Statistics for Hackathon Pitch & PHC Reference
-GROUNDING_STATS = {
-    "problem_context": "Pediatric Rural Triage Crisis & Connectivity Barrier",
-    "asha_coverage_ratio": "1 ASHA per 1,000–1,200 rural population (covering up to 40+ households/day)",
-    "under_5_mortality_rate": "35.2 per 1,000 live births (NFHS-5 National Average; >45 in rural high-priority districts)",
-    "leading_causes_of_u5_death": [
-        {"cause": "Childhood Pneumonia & Acute Respiratory Infections (ARI)", "percentage": "14.3%"},
-        {"cause": "Diarrheal Diseases & Dehydration", "percentage": "9.8%"},
-        {"cause": "Neonatal Infections / Sepsis", "percentage": "11.2%"}
-    ],
-    "delayed_referral_impact": "Over 68% of preventable under-5 deaths occur due to delayed triage and lack of early warning referral from community level to PHC/FRU.",
-    "connectivity_gap": "42.7% of Sub-Health Centres (SHCs) in aspirational and tribal districts operate in zero or intermittent 2G/unstable cellular connectivity, making cloud-only AI apps unviable.",
-    "clinical_justification": "WHO IMCI guidelines provide deterministic, high-sensitivity decision trees for frontline non-clinical workers where false-negatives (missed severe cases) are life-threatening."
-}
-
-# Realistic Initial Benchmark Cases
-DEMO_PATIENT_SCENARIOS = [
-    {
-        "patient": {
-            "patient_id": "P-MH-101",
-            "full_name": "Aarav Shinde",
-            "age_months": 8,
-            "gender": "M",
-            "guardian_name": "Pooja Shinde",
-            "village_name": "Khed Shivapur"
-        },
-        "assessment": {
-            "assessment_id": "SEED-P-MH-101",
-            "asha_id": "ASHA-MH-PUNE-012",
-            "temperature_c": 38.8,
-            "respiratory_rate": 56,
-            "heart_rate": 118,
-            "spo2": 95,
-            "fever_days": 3,
-            "symptoms": ["fever", "chest_indrawing", "fast_breathing"],
-            "has_chest_indrawing": True,
-            "has_convulsions": False,
-            "has_vomiting_everything": False,
-            "has_lethargy": False,
-            "triage_color": "YELLOW",
-            "diagnosis": "PNEUMONIA (Fast Breathing & Chest Indrawing)",
-            "urgency": "REFER TO PHC WITHIN 24 HOURS",
-            "primary_danger": "Fast breathing (56/min)",
-            "actions": ["Give oral Amoxicillin for 5 days", "Soothe throat and cough", "Refer to PHC clinic"],
-            "referral_note": "YELLOW Alert. P-MH-101, 8-month-old with Fast breathing (56/min), RR 56. Diagnosis: PNEUMONIA. Action: REFER TO PHC WITHIN 24 HOURS.",
-            "assessed_at": "2026-08-21T09:30:00Z"
-        }
-    },
-    {
-        "patient": {
-            "patient_id": "P-MH-102",
-            "full_name": "Ananya Patil",
-            "age_months": 14,
-            "gender": "F",
-            "guardian_name": "Ramesh Patil",
-            "village_name": "Velhe"
-        },
-        "assessment": {
-            "assessment_id": "SEED-P-MH-102",
-            "asha_id": "ASHA-MH-PUNE-012",
-            "temperature_c": 39.5,
-            "respiratory_rate": 44,
-            "heart_rate": 130,
-            "spo2": 92,
-            "fever_days": 2,
-            "symptoms": ["convulsions", "lethargy", "fever"],
-            "has_chest_indrawing": False,
-            "has_convulsions": True,
-            "has_vomiting_everything": False,
-            "has_lethargy": True,
-            "triage_color": "RED",
-            "diagnosis": "SEVERE PNEUMONIA / VERY SEVERE DISEASE",
-            "urgency": "URGENT HOSPITAL REFERRAL",
-            "primary_danger": "Convulsions & Lethargy",
-            "actions": ["Give first dose of antibiotic", "Keep child warm", "Refer IMMEDIATELY to hospital/FRU"],
-            "referral_note": "RED Alert. P-MH-102, 14-month-old with Convulsions, lethargy. Diagnosis: SEVERE DISEASE. Action: URGENT HOSPITAL REFERRAL.",
-            "assessed_at": "2026-08-21T09:45:00Z"
-        }
-    },
-    {
-        "patient": {
-            "patient_id": "P-MH-103",
-            "full_name": "Kabir Jadhav",
-            "age_months": 18,
-            "gender": "M",
-            "guardian_name": "Sunita Jadhav",
-            "village_name": "Bhor"
-        },
-        "assessment": {
-            "assessment_id": "SEED-P-MH-103",
-            "asha_id": "ASHA-MH-PUNE-012",
-            "temperature_c": 37.2,
-            "respiratory_rate": 32,
-            "heart_rate": 100,
-            "spo2": 98,
-            "fever_days": 0,
-            "symptoms": ["diarrhea", "vomiting"],
-            "has_chest_indrawing": False,
-            "has_convulsions": False,
-            "has_vomiting_everything": False,
-            "has_lethargy": False,
-            "triage_color": "GREEN",
-            "diagnosis": "DIARRHEA / GASTROENTERITIS",
-            "urgency": "HOME CARE WITH ORS",
-            "primary_danger": "Acute diarrhea without severe dehydration",
-            "actions": ["Give extra fluid (ORS & Zinc for 14 days)", "Continue feeding child"],
-            "referral_note": "GREEN Alert. P-MH-103, 18-month-old with Acute diarrhea. Action: HOME CARE WITH ORS.",
-            "assessed_at": "2026-08-21T10:00:00Z"
-        }
-    }
-]
 
 
 class CentralDBManager:
@@ -509,13 +405,17 @@ class TriageRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self._send_json(400, {"success": False, "error": str(e)})
 
         elif path == "/api/seed":
-            for item in DEMO_PATIENT_SCENARIOS:
-                batch_payload = {
-                    "asha_id": "ASHA-MH-PUNE-012",
-                    "records": [item]
-                }
-                central_db.ingest_batch(batch_payload)
-            self._send_json(200, {"success": True, "message": f"Seeded {len(DEMO_PATIENT_SCENARIOS)} benchmark cases."})
+            benchmark_records = generate_benchmark_sync_payloads()
+            batch_payload = {
+                "asha_id": "ASHA-MH-PUNE-012",
+                "records": benchmark_records
+            }
+            synced_ids = central_db.ingest_batch(batch_payload)
+            self._send_json(200, {
+                "success": True, 
+                "count": len(synced_ids), 
+                "message": f"Successfully seeded {len(synced_ids)} WHO IMCI clinical benchmark cases."
+            })
 
         elif path.startswith("/api/records/") and path.endswith("/acknowledge"):
             parts = path.strip("/").split("/")
