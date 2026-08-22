@@ -311,7 +311,25 @@ class CentralDBManager:
                     assessed_at, synced_at
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(assessment_id) DO UPDATE SET
-                    doctor_acknowledged=triage_records.doctor_acknowledged,
+                    patient_id=excluded.patient_id,
+                    asha_id=excluded.asha_id,
+                    temperature_c=excluded.temperature_c,
+                    respiratory_rate=excluded.respiratory_rate,
+                    heart_rate=excluded.heart_rate,
+                    spo2=excluded.spo2,
+                    fever_days=excluded.fever_days,
+                    symptoms_json=excluded.symptoms_json,
+                    has_chest_indrawing=excluded.has_chest_indrawing,
+                    has_convulsions=excluded.has_convulsions,
+                    has_vomiting_everything=excluded.has_vomiting_everything,
+                    has_lethargy=excluded.has_lethargy,
+                    triage_color=excluded.triage_color,
+                    diagnosis=excluded.diagnosis,
+                    urgency=excluded.urgency,
+                    primary_danger=excluded.primary_danger,
+                    actions_json=excluded.actions_json,
+                    referral_note=excluded.referral_note,
+                    assessed_at=excluded.assessed_at,
                     synced_at=excluded.synced_at;
                 """, (
                     ass_id,
