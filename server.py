@@ -527,18 +527,6 @@ class TriageRequestHandler(http.server.SimpleHTTPRequestHandler):
         else:
             self._send_json(404, {"error": "Endpoint not found"})
 
-    def copyfile(self, source, outputfile):
-        try:
-            super().copyfile(source, outputfile)
-        except (ConnectionAbortedError, ConnectionResetError, BrokenPipeError):
-            pass
-
-    def handle(self):
-        try:
-            super().handle()
-        except (ConnectionAbortedError, ConnectionResetError, BrokenPipeError):
-            pass
-
     def _send_json(self, status_code: int, data: Dict[str, Any]):
         try:
             response = json.dumps(data).encode('utf-8')
@@ -549,14 +537,6 @@ class TriageRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(response)
         except (ConnectionAbortedError, ConnectionResetError, BrokenPipeError):
             pass
-
-
-class SilentTCPServer(socketserver.TCPServer):
-    def handle_error(self, request, client_address):
-        exc_type, exc_val, exc_tb = sys.exc_info()
-        if exc_type in (ConnectionAbortedError, ConnectionResetError, BrokenPipeError):
-            return
-        super().handle_error(request, client_address)
 
 
 def run_server(port: int = PORT):
@@ -573,8 +553,9 @@ def run_server(port: int = PORT):
     print("=" * 60, flush=True)
     print("[SERVER] ASHA / PHC Tele-Triage Central Backend Server", flush=True)
     print(f"[STATUS] Running on http://localhost:{port}", flush=True)
-    print(f"[ASHA APP]       http://localhost:{port}/index.html", flush=True)
+    print(f"[DOCTOR LOGIN]   http://localhost:{port}/doctor_login.html", flush=True)
     print(f"[PHC DASHBOARD]  http://localhost:{port}/phc_dashboard.html", flush=True)
+    print(f"[ASHA APP]       http://localhost:{port}/index.html", flush=True)
     print("=" * 60, flush=True)
     print("Press Ctrl+C to stop the server.", flush=True)
 
@@ -587,4 +568,3 @@ def run_server(port: int = PORT):
 
 if __name__ == "__main__":
     run_server()
-
