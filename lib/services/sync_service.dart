@@ -24,15 +24,32 @@ class SyncService {
     if (kIsWeb) {
       return 'http://localhost:8000';
     }
-    // Android Emulator host loopback address is 10.0.2.2
-    return 'http://10.0.2.2:8000';
+    // Laptop Wi-Fi IP for physical phone sync: http://172.16.29.169:8000
+    return 'http://172.16.29.169:8000';
   }
 
-  /// Check if network connection to backend server or internet is active
+  /// Check if network connection to backend server or general internet is active
   Future<bool> checkOnlineStatus() async {
+    // 1. Try laptop Wi-Fi server endpoint first (for physical phone)
     try {
       final response = await http
-          .get(Uri.parse('$baseUrl/api/records'))
+          .get(Uri.parse('http://172.16.29.169:8000/api/records'))
+          .timeout(const Duration(seconds: 2));
+      if (response.statusCode == 200) return true;
+    } catch (_) {}
+
+    // 2. Try Android emulator loopback endpoint
+    try {
+      final response = await http
+          .get(Uri.parse('http://10.0.2.2:8000/api/records'))
+          .timeout(const Duration(seconds: 2));
+      if (response.statusCode == 200) return true;
+    } catch (_) {}
+
+    // 3. Fallback check for general internet connection on physical phones (Wi-Fi / 4G / 5G)
+    try {
+      final response = await http
+          .get(Uri.parse('https://www.google.com'))
           .timeout(const Duration(seconds: 3));
       return response.statusCode == 200;
     } catch (_) {
