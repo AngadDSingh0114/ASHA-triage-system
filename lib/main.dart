@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'l10n/app_translations.dart';
 import 'models/patient_triage_model.dart';
@@ -8,6 +9,7 @@ import 'screens/splash_screen.dart';
 import 'screens/triage_result_screen.dart';
 import 'screens/vitals_form_screen.dart';
 import 'services/database_helper.dart';
+import 'services/sync_service.dart';
 import 'widgets/language_selector_dialog.dart';
 
 void main() {
@@ -110,11 +112,37 @@ class _AshaHomeScreenState extends State<AshaHomeScreen> {
 
   // Evaluated Triage Result
   late TriageResult _triageResult;
+  bool _isOnline = false;
+  Timer? _networkTimer;
 
   @override
   void initState() {
     super.initState();
     _reEvaluateTriage();
+    _startNetworkMonitoring();
+  }
+
+  @override
+  void dispose() {
+    _networkTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startNetworkMonitoring() {
+    _checkNetworkConnectivity();
+    _networkTimer?.cancel();
+    _networkTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      _checkNetworkConnectivity();
+    });
+  }
+
+  void _checkNetworkConnectivity() async {
+    final status = await SyncService.instance.checkOnlineStatus();
+    if (mounted && status != _isOnline) {
+      setState(() {
+        _isOnline = status;
+      });
+    }
   }
 
   void _reEvaluateTriage() {
@@ -259,25 +287,39 @@ class _AshaHomeScreenState extends State<AshaHomeScreen> {
               ),
             ),
           ),
-          // Offline Status Badge
-          Container(
+          // Dynamic Network Connectivity Status Badge (ONLINE MODE vs OFFLINE MODE)
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
             margin: const EdgeInsets.only(right: 12, left: 4),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.amber.shade800,
+              color: _isOnline ? Colors.green.shade600 : Colors.amber.shade800,
               borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: (_isOnline ? Colors.green : Colors.amber).withValues(alpha: 0.4),
+                  blurRadius: 6,
+                ),
+              ],
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.wifi_off, size: 12, color: Colors.white),
+                Icon(
+                  _isOnline ? Icons.wifi : Icons.wifi_off,
+                  size: 12,
+                  color: Colors.white,
+                ),
                 const SizedBox(width: 4),
                 Text(
-                  AppTranslations.getText('offline_mode', currentLanguage),
+                  _isOnline
+                      ? 'ONLINE'
+                      : AppTranslations.getText('offline_mode', currentLanguage),
                   style: const TextStyle(
+                    fontSize: 10,
                     color: Colors.white,
-                    fontSize: 9,
                     fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ],
