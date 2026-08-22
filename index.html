@@ -113,12 +113,12 @@
                 <p id="micStatus" class="text-xs text-slate-500 mt-2">Mic idle. Use Chrome/Edge over http://localhost (not file://) for speech input.</p>
             </div>
 
-            <!-- Patient Details with Phone/WhatsApp Contact -->
+            <!-- Optional Patient Details -->
             <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-3 text-xs">
-                <input id="inputPatientName" type="text" value="" class="p-2 border border-slate-300 rounded-lg" placeholder="Child Name (e.g. Aarav)">
-                <input id="inputGuardian" type="text" value="" class="p-2 border border-slate-300 rounded-lg" placeholder="Guardian Name">
-                <input id="inputPatientPhone" type="text" value="" class="p-2 border border-slate-300 rounded-lg font-mono" placeholder="Patient Phone (+91...)">
-                <input id="inputVillage" type="text" value="" class="p-2 border border-slate-300 rounded-lg" placeholder="Village Name">
+                <input id="inputPatientName" type="text" value="Aarav Sharma" class="p-2 border border-slate-300 rounded-lg" placeholder="Child Name">
+                <input id="inputGuardian" type="text" value="Sunita Sharma" class="p-2 border border-slate-300 rounded-lg" placeholder="Guardian Name">
+                <input id="inputVillage" type="text" value="Khed Shivapur" class="p-2 border border-slate-300 rounded-lg" placeholder="Village Name">
+                <input id="inputPatientPhone" type="tel" value="+919876543210" class="p-2 border border-slate-300 rounded-lg" placeholder="Patient/Guardian Phone (e.g. +919876543210)">
             </div>
 
             <textarea id="transcriptInput" rows="3" class="w-full p-3 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-base" placeholder="Speak or type transcript in Hindi, Hinglish, or English (e.g. '8 mahine ka bachha, 3 din se bukhar aur 55 saans rate')"></textarea>
@@ -719,6 +719,7 @@
             const patientName = document.getElementById("inputPatientName").value || "Patient";
             const guardianName = document.getElementById("inputGuardian").value || "Guardian";
             const villageName = document.getElementById("inputVillage").value || "Village";
+            const patientPhone = document.getElementById("inputPatientPhone").value || "";
             const patientId = "P-" + Math.floor(100 + Math.random() * 900);
             const assessmentId = "ASS-" + Date.now();
 
@@ -729,7 +730,8 @@
                     age_months: currentExtractedData.age_months || 12,
                     gender: "M",
                     guardian_name: guardianName,
-                    village_name: villageName
+                    village_name: villageName,
+                    patient_phone: patientPhone
                 },
                 assessment: {
                     assessment_id: assessmentId,

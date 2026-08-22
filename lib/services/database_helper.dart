@@ -71,9 +71,27 @@ class DatabaseHelper {
       );
     ''');
 
+    // 3. Follow-ups Table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS followups (
+        followup_id TEXT PRIMARY KEY,
+        patient_id TEXT NOT NULL,
+        assessment_id TEXT NOT NULL,
+        doctor_id TEXT NOT NULL DEFAULT 'DOC-PUNE-01',
+        follow_up_date TEXT NOT NULL,
+        follow_up_notes TEXT DEFAULT '',
+        status TEXT DEFAULT 'SCHEDULED' CHECK(status IN ('SCHEDULED', 'COMPLETED', 'OVERDUE', 'CANCELLED')),
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        completed_at TEXT,
+        FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
+      );
+    ''');
+
     await db.execute('CREATE INDEX IF NOT EXISTS idx_sync_status ON triage_assessments(sync_status);');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_triage_color ON triage_assessments(triage_color);');
     await db.execute('CREATE INDEX IF NOT EXISTS idx_patient_lookup ON triage_assessments(patient_id);');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_followup_status ON followups(status);');
+    await db.execute('CREATE INDEX IF NOT EXISTS idx_followup_patient ON followups(patient_id);');
   }
 
   // --- Patients CRUD Operations ---
@@ -92,7 +110,7 @@ class DatabaseHelper {
         'gender': genderCode,
         'guardian_name': patient.guardianName,
         'village_name': patient.village,
-        'patient_phone': patient.patientPhone,
+        'patient_phone': patient.phone,
         'created_at': DateTime.now().toIso8601String(),
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
@@ -235,5 +253,58 @@ class DatabaseHelper {
     final db = await instance.database;
     await db.delete('triage_assessments');
     await db.delete('patients');
+  }
+
+  // --- Follow-ups CRUD Operations ---
+  Future<void> createFollowup(Map<String, dynamic> followupData) async {
+    final db = await instance.database;
+    await db.insert(
+      'followups',
+      {
+        'followup_id': followupData['followup_id'],
+        'patient_id': followupData['patient_id'],
+        'assessment_id': followupData['assessment_id'],
+        'doctor_id': followupData['doctor_id'] ?? 'DOC-PUNE-01',
+        'follow_up_date': followupData['follow_up_date'],
+        'follow_up_notes': followupData['follow_up_notes'] ?? '',
+        'status': followupData['status'] ?? 'SCHEDULED',
+        'created_at': DateTime.now().toIso8601String(),
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getFollowupsForPatient(String patientId) async {
+    final db = await instance.database;
+    return await db.query(
+      'followups',
+      where: 'patient_id = ?',
+      whereArgs: [patientId],
+      orderBy: 'follow_up_date DESC',
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getAllFollowups() async {
+    final db = await instance.database;
+    return await db.rawQuery('''
+      SELECT f.*, p.full_name, p.patient_phone, p.age_months
+      FROM followups f
+      JOIN patients p ON f.patient_id = p.patient_id
+      ORDER BY f.follow_up_date DESC
+    ''');
+  }
+
+  Future<void> updateFollowupStatus(String followupId, String status) async {
+    final db = await instance.database;
+    final completedAt = status == 'COMPLETED' ? DateTime.now().toIso8601String() : null;
+    await db.update(
+      'followups',
+      {
+        'status': status,
+        if (completedAt != null) 'completed_at': completedAt,
+      },
+      where: 'followup_id = ?',
+      whereArgs: [followupId],
+    );
   }
 }

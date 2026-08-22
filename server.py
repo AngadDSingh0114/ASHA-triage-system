@@ -30,6 +30,11 @@ try:
 except ImportError:
     get_asr_service = None
 
+try:
+    from dispatch_service import get_dispatch_service
+except ImportError:
+    get_dispatch_service = None
+
 from seed_data import (
     GROUNDING_STATS, 
     CLINICAL_BENCHMARK_SCENARIOS, 
@@ -421,6 +426,82 @@ class CentralDBManager:
             conn.commit()
             return c.rowcount > 0
 
+    def init_followups_table(self):
+        with self.get_conn() as conn:
+            c = conn.cursor()
+            c.execute("""
+            CREATE TABLE IF NOT EXISTS followups (
+                followup_id TEXT PRIMARY KEY,
+                patient_id TEXT NOT NULL,
+                assessment_id TEXT NOT NULL,
+                doctor_id TEXT NOT NULL DEFAULT 'DOC-PUNE-01',
+                follow_up_date TEXT NOT NULL,
+                follow_up_notes TEXT DEFAULT '',
+                status TEXT DEFAULT 'SCHEDULED' CHECK(status IN ('SCHEDULED', 'COMPLETED', 'OVERDUE', 'CANCELLED')),
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                completed_at TEXT,
+                FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
+            );
+            """)
+            c.execute("CREATE INDEX IF NOT EXISTS idx_followup_status ON followups(status);")
+            c.execute("CREATE INDEX IF NOT EXISTS idx_followup_patient ON followups(patient_id);")
+            conn.commit()
+
+    def create_followup(self, followup_data: Dict[str, Any]) -> Dict[str, Any]:
+        self.init_followups_table()
+        with self.get_conn() as conn:
+            c = conn.cursor()
+            c.execute("""
+            INSERT INTO followups (followup_id, patient_id, assessment_id, doctor_id, follow_up_date, follow_up_notes, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                followup_data.get("followup_id"),
+                followup_data.get("patient_id"),
+                followup_data.get("assessment_id"),
+                followup_data.get("doctor_id", "DOC-PUNE-01"),
+                followup_data.get("follow_up_date"),
+                followup_data.get("follow_up_notes", ""),
+                followup_data.get("status", "SCHEDULED"),
+            ))
+            conn.commit()
+        return followup_data
+
+    def get_followups_for_patient(self, patient_id: str) -> List[Dict[str, Any]]:
+        self.init_followups_table()
+        with self.get_conn() as conn:
+            c = conn.cursor()
+            c.execute("""
+            SELECT f.*, p.full_name, p.patient_phone, p.age_months
+            FROM followups f
+            JOIN patients p ON f.patient_id = p.patient_id
+            WHERE f.patient_id = ?
+            ORDER BY f.follow_up_date DESC
+            """, (patient_id,))
+            return [dict(row) for row in c.fetchall()]
+
+    def get_all_followups(self) -> List[Dict[str, Any]]:
+        self.init_followups_table()
+        with self.get_conn() as conn:
+            c = conn.cursor()
+            c.execute("""
+            SELECT f.*, p.full_name, p.patient_phone, p.age_months
+            FROM followups f
+            JOIN patients p ON f.patient_id = p.patient_id
+            ORDER BY f.follow_up_date DESC
+            """)
+            return [dict(row) for row in c.fetchall()]
+
+    def update_followup_status(self, followup_id: str, status: str) -> bool:
+        self.init_followups_table()
+        with self.get_conn() as conn:
+            c = conn.cursor()
+            completed_at = datetime.utcnow().isoformat() + "Z" if status == "COMPLETED" else None
+            c.execute("""
+            UPDATE followups SET status = ?, completed_at = ? WHERE followup_id = ?
+            """, (status, completed_at, followup_id))
+            conn.commit()
+            return c.rowcount > 0
+
     def acknowledge_record(self, assessment_id: str, doctor_notes: str = "") -> bool:
         with self.get_conn() as conn:
             c = conn.cursor()
@@ -542,6 +623,13 @@ class TriageRequestHandler(http.server.SimpleHTTPRequestHandler):
                 "redis_status": redis_gateway.get_telemetry()["connection_status"],
                 "timestamp": datetime.utcnow().isoformat() + "Z"
             })
+        elif path == "/api/followups":
+            patient_id = query.get("patient_id", [""])[0]
+            if patient_id:
+                followups = central_db.get_followups_for_patient(patient_id)
+            else:
+                followups = central_db.get_all_followups()
+            self._send_json(200, {"success": True, "followups": followups})
         else:
             super().do_GET()
 
@@ -702,6 +790,50 @@ class TriageRequestHandler(http.server.SimpleHTTPRequestHandler):
                     self._send_json(200, {"success": True, "data": result})
                 else:
                     self._send_json(500, {"success": False, "error": "ASR service not loaded"})
+            except Exception as e:
+                self._send_json(400, {"success": False, "error": str(e)})
+        elif path == "/api/followups":
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length)
+            try:
+                data = json.loads(body.decode('utf-8'))
+                followup = {
+                    "followup_id": f"FUP-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
+                    "patient_id": data.get("patient_id", ""),
+                    "assessment_id": data.get("assessment_id", ""),
+                    "follow_up_date": data.get("follow_up_date", ""),
+                    "follow_up_notes": data.get("follow_up_notes", ""),
+                    "status": "SCHEDULED",
+                }
+                central_db.create_followup(followup)
+                self._send_json(200, {"success": True, "followup": followup})
+            except Exception as e:
+                self._send_json(400, {"success": False, "error": str(e)})
+        elif path.startswith("/api/followups/") and path.endswith("/complete"):
+            parts = path.strip("/").split("/")
+            followup_id = parts[2]
+            success = central_db.update_followup_status(followup_id, "COMPLETED")
+            self._send_json(200, {"success": success, "followup_id": followup_id})
+        elif path == "/api/dispatch/sms":
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length)
+            try:
+                data = json.loads(body.decode('utf-8'))
+                record = data.get("record", {})
+                doctor_info = data.get("doctor_info")
+                sms_text = format_patient_callback_sms(record, doctor_info)
+                self._send_json(200, {"success": True, "sms_text": sms_text, "method": "sms"})
+            except Exception as e:
+                self._send_json(400, {"success": False, "error": str(e)})
+        elif path == "/api/dispatch/whatsapp":
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length)
+            try:
+                data = json.loads(body.decode('utf-8'))
+                record = data.get("record", {})
+                doctor_info = data.get("doctor_info")
+                wa_text = format_patient_callback_whatsapp(record, doctor_info)
+                self._send_json(200, {"success": True, "whatsapp_text": wa_text, "method": "whatsapp"})
             except Exception as e:
                 self._send_json(400, {"success": False, "error": str(e)})
         else:
@@ -874,6 +1006,77 @@ if Flask is not None:
             "redis_status": redis_gateway.get_telemetry()["connection_status"],
             "timestamp": datetime.utcnow().isoformat() + "Z"
         })
+
+    @flask_app.route("/api/followups", methods=["GET"])
+    def api_followups():
+        patient_id = request.args.get("patient_id")
+        if patient_id:
+            followups = central_db.get_followups_for_patient(patient_id)
+        else:
+            followups = central_db.get_all_followups()
+        return jsonify({"success": True, "followups": followups})
+
+    @flask_app.route("/api/followups", methods=["POST"])
+    def api_create_followup():
+        try:
+            data = request.get_json(force=True)
+            if get_dispatch_service is not None:
+                service = get_dispatch_service()
+                followup = service.schedule_followup(
+                    patient_id=data.get("patient_id", ""),
+                    assessment_id=data.get("assessment_id", ""),
+                    follow_up_date=data.get("follow_up_date", ""),
+                    follow_up_notes=data.get("follow_up_notes", ""),
+                    doctor_id=data.get("doctor_id", "DOC-PUNE-01"),
+                )
+            else:
+                followup = {
+                    "followup_id": f"FUP-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
+                    "patient_id": data.get("patient_id", ""),
+                    "assessment_id": data.get("assessment_id", ""),
+                    "follow_up_date": data.get("follow_up_date", ""),
+                    "follow_up_notes": data.get("follow_up_notes", ""),
+                    "status": "SCHEDULED",
+                }
+            central_db.create_followup(followup)
+            return jsonify({"success": True, "followup": followup})
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 400
+
+    @flask_app.route("/api/followups/<followup_id>/complete", methods=["POST"])
+    def api_complete_followup(followup_id):
+        success = central_db.update_followup_status(followup_id, "COMPLETED")
+        return jsonify({"success": success, "followup_id": followup_id})
+
+    @flask_app.route("/api/dispatch/sms", methods=["POST"])
+    def api_dispatch_sms():
+        try:
+            data = request.get_json(force=True)
+            record = data.get("record", {})
+            doctor_info = data.get("doctor_info")
+            if get_dispatch_service is not None:
+                service = get_dispatch_service()
+                sms_text = service.format_sms(record, doctor_info)
+            else:
+                sms_text = format_patient_callback_sms(record, doctor_info)
+            return jsonify({"success": True, "sms_text": sms_text, "method": "sms"})
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 400
+
+    @flask_app.route("/api/dispatch/whatsapp", methods=["POST"])
+    def api_dispatch_whatsapp():
+        try:
+            data = request.get_json(force=True)
+            record = data.get("record", {})
+            doctor_info = data.get("doctor_info")
+            if get_dispatch_service is not None:
+                service = get_dispatch_service()
+                wa_text = service.format_whatsapp(record, doctor_info)
+            else:
+                wa_text = format_patient_callback_whatsapp(record, doctor_info)
+            return jsonify({"success": True, "whatsapp_text": wa_text, "method": "whatsapp"})
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 400
 
     def create_app():
         return flask_app

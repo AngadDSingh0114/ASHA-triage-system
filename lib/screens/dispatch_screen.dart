@@ -457,8 +457,193 @@ class _DispatchScreenState extends State<DispatchScreen> {
               ),
             ),
           ),
+          const SizedBox(height: 20),
+
+          // 3. Follow-Up Scheduling
+          Text(
+            'Follow-Up Scheduling',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 6),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Schedule a follow-up appointment for this patient with the PHC doctor.',
+                    style: const TextStyle(fontSize: 13, color: Colors.black87),
+                  ),
+                  const SizedBox(height: 14),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      _showScheduleFollowupDialog(context);
+                    },
+                    icon: const Icon(Icons.calendar_today),
+                    label: const Text('Schedule Follow-Up'),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                      backgroundColor: const Color(0xFF0D47A1),
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  FutureBuilder<List<Map<String, dynamic>>>(
+                    future: DatabaseHelper.instance.getPendingAssessmentsWithPatientData(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const SizedBox.shrink();
+                      }
+                      final rows = snapshot.data ?? [];
+                      if (rows.isEmpty) return const SizedBox.shrink();
+                      
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Recent Patients (tap to schedule follow-up):',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.grey),
+                          ),
+                          const SizedBox(height: 8),
+                          ...rows.map((row) => ListTile(
+                            dense: true,
+                            leading: const Icon(Icons.person, size: 20, color: Colors.grey),
+                            title: Text(
+                              '${row['full_name'] ?? 'Patient'} (${row['patient_id']})',
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                            ),
+                            subtitle: Text(
+                              '${row['triage_color']} • ${row['diagnosis']}',
+                              style: const TextStyle(fontSize: 11, color: Colors.grey),
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.calendar_plus, size: 18, color: Color(0xFF0D47A1)),
+                              onPressed: () => _showScheduleFollowupDialog(context, patientId: row['patient_id']),
+                            ),
+                          )).toList(),
+                        ],
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
-}
+
+  void _showScheduleFollowupDialog(BuildContext context, {String? patientId}) {
+    final nameController = TextEditingController();
+    final phoneController = TextEditingController();
+    final notesController = TextEditingController();
+    DateTime? selectedDate;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Schedule Follow-Up'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Patient Name',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.person),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: phoneController,
+                  decoration: const InputDecoration(
+                    labelText: 'Patient Phone',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.phone),
+                  ),
+                  keyboardType: TextInputType.phone,
+                ),
+                const SizedBox(height: 12),
+                InkWell(
+                  onTap: () async {
+                    final DateTime? picked = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now().add(const Duration(days: 3)),
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                    );
+                    if (picked != null) {
+                      setDialogState(() {
+                        selectedDate = picked;
+                      });
+                    }
+                  },
+                  child: InputDecorator(
+                    decoration: const InputDecoration(
+                      labelText: 'Follow-Up Date',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.calendar_today),
+                    ),
+                    child: Text(
+                      selectedDate == null
+                          ? 'Select Date'
+                          : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: notesController,
+                  decoration: const InputDecoration(
+                    labelText: 'Notes',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.notes),
+                  ),
+                  maxLines: 3,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (nameController.text.isEmpty || selectedDate == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please fill all required fields')),
+                  );
+                  return;
+                }
+                final followup = {
+                  'followup_id': 'FUP-${DateTime.now().millisecondsSinceEpoch}',
+                  'patient_id': patientId ?? 'P-${DateTime.now().millisecondsSinceEpoch}',
+                  'assessment_id': widget.triageResult.patientId ?? '',
+                  'follow_up_date': selectedDate!.toIso8601String(),
+                  'follow_up_notes': notesController.text,
+                  'status': 'SCHEDULED',
+                };
+                await DatabaseHelper.instance.createFollowup(followup);
+                if (!context.mounted) return;
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('✅ Follow-up scheduled successfully'),
+                    backgroundColor: Color(0xFF2E7D32),
+                  ),
+                );
+              },
+              child: const Text('Schedule'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }

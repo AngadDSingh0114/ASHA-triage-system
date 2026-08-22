@@ -71,6 +71,9 @@ class LocalTriageDB:
             if "patient_phone" not in cols:
                 cursor.execute("ALTER TABLE patients ADD COLUMN patient_phone TEXT;")
 
+            # Initialize follow-ups table
+            self.init_followups_table()
+
             conn.commit()
 
     def upsert_patient(self, patient_data: Dict[str, Any]) -> str:
@@ -232,3 +235,75 @@ class LocalTriageDB:
             ORDER BY t.assessed_at DESC
             """)
             return [dict(row) for row in cursor.fetchall()]
+
+    def init_followups_table(self):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+            CREATE TABLE IF NOT EXISTS followups (
+                followup_id TEXT PRIMARY KEY,
+                patient_id TEXT NOT NULL,
+                assessment_id TEXT NOT NULL,
+                doctor_id TEXT NOT NULL DEFAULT 'DOC-PUNE-01',
+                follow_up_date TEXT NOT NULL,
+                follow_up_notes TEXT DEFAULT '',
+                status TEXT DEFAULT 'SCHEDULED' CHECK(status IN ('SCHEDULED', 'COMPLETED', 'OVERDUE', 'CANCELLED')),
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                completed_at TEXT,
+                FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
+            );
+            """)
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_followup_status ON followups(status);")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_followup_patient ON followups(patient_id);")
+            conn.commit()
+
+    def create_followup(self, followup_data: Dict[str, Any]) -> Dict[str, Any]:
+        self.init_followups_table()
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+            INSERT INTO followups (followup_id, patient_id, assessment_id, doctor_id, follow_up_date, follow_up_notes, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                followup_data.get("followup_id"),
+                followup_data.get("patient_id"),
+                followup_data.get("assessment_id"),
+                followup_data.get("doctor_id", "DOC-PUNE-01"),
+                followup_data.get("follow_up_date"),
+                followup_data.get("follow_up_notes", ""),
+                followup_data.get("status", "SCHEDULED"),
+            ))
+            conn.commit()
+        return followup_data
+
+    def get_followups_for_patient(self, patient_id: str) -> List[Dict[str, Any]]:
+        self.init_followups_table()
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+            SELECT * FROM followups WHERE patient_id = ? ORDER BY follow_up_date DESC
+            """, (patient_id,))
+            return [dict(row) for row in cursor.fetchall()]
+
+    def get_all_followups(self) -> List[Dict[str, Any]]:
+        self.init_followups_table()
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+            SELECT f.*, p.full_name, p.patient_phone, p.age_months
+            FROM followups f
+            JOIN patients p ON f.patient_id = p.patient_id
+            ORDER BY f.follow_up_date DESC
+            """)
+            return [dict(row) for row in cursor.fetchall()]
+
+    def update_followup_status(self, followup_id: str, status: str) -> bool:
+        self.init_followups_table()
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            completed_at = datetime.utcnow().isoformat() + "Z" if status == "COMPLETED" else None
+            cursor.execute("""
+            UPDATE followups SET status = ?, completed_at = ? WHERE followup_id = ?
+            """, (status, completed_at, followup_id))
+            conn.commit()
+            return cursor.rowcount > 0

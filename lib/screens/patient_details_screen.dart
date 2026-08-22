@@ -31,8 +31,8 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
     super.initState();
     _nameController = TextEditingController(text: widget.patient.name);
     _villageController = TextEditingController(text: widget.patient.village);
-    _ageController = TextEditingController(text: widget.patient.ageMonths > 0 ? widget.patient.ageMonths.toString() : '');
-    _phoneController = TextEditingController(text: widget.patient.patientPhone);
+    _ageController = TextEditingController(text: widget.patient.ageMonths.toString());
+    _phoneController = TextEditingController(text: widget.patient.phone);
   }
 
   @override
@@ -73,7 +73,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
       widget.patient.village = _villageController.text.trim();
     }
     if (_phoneController.text.trim().isNotEmpty) {
-      widget.patient.patientPhone = _phoneController.text.trim();
+      widget.patient.phone = _phoneController.text.trim();
     }
 
     // Save Patient to local SQLite database
@@ -285,26 +285,47 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                       softWrap: true,
                     ),
                     const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _villageController,
-                      decoration: const InputDecoration(
-                        hintText: 'e.g. Rampur Sub-Center',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.location_on),
-                      ),
-                      onChanged: (val) {
-                        setState(() {
-                          widget.patient.village = val;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
+                     TextFormField(
+                       controller: _villageController,
+                       decoration: const InputDecoration(
+                         hintText: 'e.g. Rampur Sub-Center',
+                         border: OutlineInputBorder(),
+                         prefixIcon: Icon(Icons.location_on),
+                       ),
+                       onChanged: (val) {
+                         setState(() {
+                           widget.patient.village = val;
+                         });
+                       },
+                     ),
+                     const SizedBox(height: 14),
+                     Text(
+                       'Patient / Guardian Phone Number',
+                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                       softWrap: true,
+                     ),
+                     const SizedBox(height: 8),
+                     TextFormField(
+                       controller: _phoneController,
+                       decoration: const InputDecoration(
+                         hintText: 'e.g. +919876543210',
+                         border: OutlineInputBorder(),
+                         prefixIcon: Icon(Icons.phone),
+                       ),
+                       keyboardType: TextInputType.phone,
+                       onChanged: (val) {
+                         setState(() {
+                           widget.patient.phone = val;
+                         });
+                       },
+                     ),
+                   ],
+                 ),
+               ),
+             ),
+             const SizedBox(height: 14),
 
-            // 4. Illness Onset Selection Card
+             // 4. Illness Onset Selection Card
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(14.0),
@@ -388,15 +409,15 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                           softWrap: true,
                         ),
                         const SizedBox(height: 2),
-                        Text(
-                          '${widget.patient.name} (${widget.patient.gender}, ${widget.patient.ageDisplay}) • Village: ${widget.patient.village}',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                          softWrap: true,
-                        ),
+                         Text(
+                           '${widget.patient.name} (${widget.patient.gender}, ${widget.patient.ageDisplay}) • Village: ${widget.patient.village} • Phone: ${widget.patient.phone.isNotEmpty ? widget.patient.phone : 'N/A'}',
+                           style: const TextStyle(
+                             fontSize: 13,
+                             fontWeight: FontWeight.bold,
+                             color: Colors.black87,
+                           ),
+                           softWrap: true,
+                         ),
                       ],
                     ),
                   ),

@@ -10,19 +10,19 @@ class Patient {
   String gender;
   String village;
   String guardianName;
-  String patientPhone;
   String illnessOnset;
+  String phone;
 
   Patient({
     required this.id,
-    this.name = '',
+    required this.name,
     this.birthdate,
-    this.ageMonths = 0,
-    this.gender = 'Male',
-    this.village = '',
-    this.guardianName = '',
-    this.patientPhone = '',
-    this.illnessOnset = '',
+    required this.ageMonths,
+    required this.gender,
+    required this.village,
+    required this.guardianName,
+    this.illnessOnset = 'Started 2 days ago',
+    this.phone = '',
   });
 
   String get ageDisplay {

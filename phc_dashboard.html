@@ -136,6 +136,29 @@
             </div>
         </section>
 
+        <!-- Follow-Up Management Section -->
+        <section class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden">
+            <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap justify-between items-center gap-3">
+                <div class="flex items-center space-x-2">
+                    <h2 class="font-bold text-slate-800 flex items-center">
+                        <i class="fa-solid fa-calendar-check mr-2 text-indigo-600"></i> Patient Follow-Up Schedule
+                    </h2>
+                    <span id="followupCountBadge" class="bg-slate-200 text-slate-700 text-xs px-2 py-0.5 rounded-full font-bold">0 follow-ups</span>
+                </div>
+                <div class="flex items-center space-x-2 text-xs">
+                    <button onclick="fetchFollowups()" class="px-3 py-1.5 rounded-lg font-bold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition">
+                        <i class="fa-solid fa-rotate mr-1"></i> Refresh
+                    </button>
+                </div>
+            </div>
+            <div id="followupGrid" class="p-4 divide-y divide-slate-100 space-y-4">
+                <div class="text-center py-8 text-slate-400">
+                    <i class="fa-solid fa-calendar text-2xl text-slate-300 mb-2"></i>
+                    <p class="text-xs">No follow-ups scheduled yet.</p>
+                </div>
+            </div>
+        </section>
+
         <!-- Triage Ingestion Feed & Priority Filter -->
         <section class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden">
             <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap justify-between items-center gap-3">
@@ -204,6 +227,40 @@
                     <button onclick="sendCbSMS()" class="flex-1 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl shadow transition flex items-center justify-center">
                         <i class="fa-solid fa-comment-sms mr-1.5 text-base"></i> Send via GSM SMS
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOLLOW-UP MODAL -->
+    <div id="followupModal" class="fixed inset-0 bg-slate-950/70 z-50 flex items-center justify-center p-4 hidden backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+            <div class="bg-slate-900 text-white p-4 flex justify-between items-center">
+                <h3 class="font-bold text-base flex items-center">
+                    <i class="fa-solid fa-calendar-plus mr-2 text-amber-400"></i> Schedule Follow-Up
+                </h3>
+                <button onclick="closeFollowupModal()" class="text-slate-300 hover:text-white text-lg">&times;</button>
+            </div>
+            <div class="p-5 space-y-3 text-xs">
+                <div>
+                    <label class="font-bold text-slate-700 block mb-1">Patient:</label>
+                    <input id="followupPatientName" type="text" readonly class="w-full p-2 bg-slate-100 rounded-lg border border-slate-200">
+                </div>
+                <div>
+                    <label class="font-bold text-slate-700 block mb-1">Patient ID:</label>
+                    <input id="followupPatientId" type="text" readonly class="w-full p-2 bg-slate-100 rounded-lg border border-slate-200">
+                </div>
+                <div>
+                    <label class="font-bold text-slate-700 block mb-1">Follow-Up Date:</label>
+                    <input id="followupDate" type="datetime-local" class="w-full p-2 border border-slate-300 rounded-lg">
+                </div>
+                <div>
+                    <label class="font-bold text-slate-700 block mb-1">Notes:</label>
+                    <textarea id="followupNotes" rows="3" class="w-full p-2 border border-slate-300 rounded-lg" placeholder="Follow-up notes..."></textarea>
+                </div>
+                <div class="pt-2 flex justify-end space-x-2">
+                    <button onclick="closeFollowupModal()" class="px-3 py-2 bg-slate-100 text-slate-700 font-bold rounded-lg">Cancel</button>
+                    <button onclick="saveFollowup()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow">Schedule Follow-Up</button>
                 </div>
             </div>
         </div>
@@ -445,6 +502,9 @@
                                     <button onclick="openPatientCallback('${r.assessment_id}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-[11px] shadow transition flex items-center" title="Send official diagnosis report to patient">
                                         <i class="fa-solid fa-paper-plane mr-1"></i> Report to Patient
                                     </button>
+                                    <button onclick="openFollowupModal('${r.patient_id}', '${r.full_name || 'Patient'}', '${r.assessment_id}')" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded font-bold text-[11px] shadow transition flex items-center" title="Schedule follow-up appointment">
+                                        <i class="fa-solid fa-calendar-plus mr-1"></i> Follow-Up
+                                    </button>
                                     ${r.doctor_acknowledged ? `
                                         <span class="inline-flex items-center bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-indigo-300">
                                             <i class="fa-solid fa-check-double mr-1"></i> Acked
@@ -558,6 +618,137 @@
             }
         }
 
+        let currentFollowup = null;
+
+        async function fetchFollowups() {
+            try {
+                const res = await fetch('/api/followups');
+                const data = await res.json();
+                if (data.success) {
+                    renderFollowups(data.followups || []);
+                }
+            } catch (e) {
+                console.warn("Followups fetch error:", e);
+            }
+        }
+
+        function renderFollowups(followups) {
+            const grid = document.getElementById("followupGrid");
+            document.getElementById("followupCountBadge").innerText = `${followups.length} follow-ups`;
+
+            if (followups.length === 0) {
+                grid.innerHTML = `
+                    <div class="text-center py-8 text-slate-400">
+                        <i class="fa-solid fa-calendar text-2xl text-slate-300 mb-2"></i>
+                        <p class="text-xs">No follow-ups scheduled yet.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = followups.map(f => {
+                const statusColors = {
+                    'SCHEDULED': 'bg-blue-100 text-blue-800 border-blue-300',
+                    'COMPLETED': 'bg-emerald-100 text-emerald-800 border-emerald-300',
+                    'OVERDUE': 'bg-rose-100 text-rose-800 border-rose-300',
+                    'CANCELLED': 'bg-slate-100 text-slate-600 border-slate-300'
+                };
+                const statusColor = statusColors[f.status] || statusColors['SCHEDULED'];
+                const isOverdue = f.status === 'OVERDUE';
+                
+                return `
+                    <div class="p-4 rounded-xl shadow-sm bg-white border border-slate-200 ${isOverdue ? 'border-rose-300 bg-rose-50' : ''}">
+                        <div class="flex flex-wrap justify-between items-start gap-2">
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <h3 class="font-extrabold text-slate-900 text-sm">${f.full_name || 'Patient'}</h3>
+                                    <span class="text-xs text-slate-500 font-mono">(${f.patient_id})</span>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${statusColor}">
+                                        ${f.status}
+                                    </span>
+                                </div>
+                                <p class="text-xs text-slate-600 mt-0.5">
+                                    <strong>Phone:</strong> <a href="tel:${f.patient_phone || ''}" class="text-indigo-600 font-mono underline font-bold">${f.patient_phone || 'N/A'}</a>
+                                    • <strong>Age:</strong> ${f.age_months || '--'}m
+                                </p>
+                                <p class="text-xs text-slate-500 mt-0.5">
+                                    <strong>Follow-up Date:</strong> ${f.follow_up_date ? new Date(f.follow_up_date).toLocaleString() : 'N/A'}
+                                </p>
+                                ${f.follow_up_notes ? `<p class="text-xs text-slate-600 mt-0.5 italic">"${f.follow_up_notes}"</p>` : ''}
+                            </div>
+                            <div class="text-right text-xs flex flex-col items-end gap-1">
+                                ${f.status === 'SCHEDULED' || f.status === 'OVERDUE' ? `
+                                    <button onclick="completeFollowup('${f.followup_id}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-[11px] shadow transition">
+                                        <i class="fa-solid fa-check mr-1"></i> Mark Complete
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openFollowupModal(patientId, patientName, assessmentId) {
+            currentFollowup = { patient_id: patientId, patient_name: patientName, assessment_id: assessmentId };
+            document.getElementById("followupPatientName").value = patientName || "";
+            document.getElementById("followupPatientId").value = patientId || "";
+            document.getElementById("followupDate").value = "";
+            document.getElementById("followupNotes").value = "";
+            document.getElementById("followupModal").classList.remove("hidden");
+        }
+
+        function closeFollowupModal() {
+            document.getElementById("followupModal").classList.add("hidden");
+            currentFollowup = null;
+        }
+
+        async function saveFollowup() {
+            if (!currentFollowup) return;
+            const followUpDate = document.getElementById("followupDate").value;
+            const followUpNotes = document.getElementById("followupNotes").value;
+            
+            if (!followUpDate) {
+                alert("Please select a follow-up date.");
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/followups', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        patient_id: currentFollowup.patient_id,
+                        assessment_id: currentFollowup.assessment_id,
+                        follow_up_date: new Date(followUpDate).toISOString(),
+                        follow_up_notes: followUpNotes
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    closeFollowupModal();
+                    fetchFollowups();
+                    alert("Follow-up scheduled successfully.");
+                } else {
+                    alert("Error scheduling follow-up: " + (data.error || "Unknown error"));
+                }
+            } catch (e) {
+                alert("Error scheduling follow-up: " + e);
+            }
+        }
+
+        async function completeFollowup(followupId) {
+            try {
+                const res = await fetch(`/api/followups/${followupId}/complete`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    fetchFollowups();
+                }
+            } catch (e) {
+                alert("Error completing follow-up: " + e);
+            }
+        }
+
         async function seedBenchmarkCases() {
             try {
                 const res = await fetch('/api/seed', { method: 'POST' });
@@ -661,11 +852,13 @@
         fetchDoctorProfile();
         fetchStats();
         fetchRecords();
+        fetchFollowups();
         fetchRedisStatus();
 
         setInterval(() => {
             fetchStats();
             fetchRecords();
+            fetchFollowups();
             fetchRedisStatus();
         }, 3500);
     </script>
