@@ -418,7 +418,7 @@ class TriageResult {
 
     // Determine worst flag from all evaluated conditions (Worst Flag Wins)
     for (var c in conditions) {
-      if (FLAG_RANK[c.severity.name.toLowerCase()]! > FLAG_RANK[flag]!) {
+      if (flagRank[c.severity.name.toLowerCase()]! > flagRank[flag]!) {
         flag = c.severity.name.toLowerCase();
       }
     }

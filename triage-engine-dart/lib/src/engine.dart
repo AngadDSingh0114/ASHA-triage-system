@@ -220,7 +220,6 @@ TriageResult classify(TriageInput i) {
   }
 
   // 3. Run per-condition classifiers
-<<<<<<< HEAD
   final conditions = <ConditionResult?>[
     classifyPneumonia(i),
     classifyDiarrhoea(i),
