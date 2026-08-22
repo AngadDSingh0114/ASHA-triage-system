@@ -113,22 +113,23 @@
                 <p id="micStatus" class="text-xs text-slate-500 mt-2">Mic idle. Use Chrome/Edge over http://localhost (not file://) for speech input.</p>
             </div>
 
-            <!-- Optional Patient Details -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3 text-xs">
+            <!-- Patient Details with Phone/WhatsApp Contact -->
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-3 text-xs">
                 <input id="inputPatientName" type="text" value="Aarav Sharma" class="p-2 border border-slate-300 rounded-lg" placeholder="Child Name">
                 <input id="inputGuardian" type="text" value="Sunita Sharma" class="p-2 border border-slate-300 rounded-lg" placeholder="Guardian Name">
+                <input id="inputPatientPhone" type="text" value="+91 98230 11223" class="p-2 border border-slate-300 rounded-lg font-mono" placeholder="Patient Phone (+91...)">
                 <input id="inputVillage" type="text" value="Khed Shivapur" class="p-2 border border-slate-300 rounded-lg" placeholder="Village Name">
             </div>
 
-            <textarea id="transcriptInput" rows="3" class="w-full p-3 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-base" placeholder="Speak or type transcript in Hindi, Hinglish, or English (e.g. '8 mahine ka bachha, 3 din se bukhar aur 55 saans rate')"></textarea>
+            <textarea id="transcriptInput" rows="3" class="w-full p-3 border border-slate-300 rounded-lg text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-base" placeholder="Speak or type transcript in Hindi, Hinglish, or English (e.g. '8 mahine ka bachha, phone 9823011223, 3 din se bukhar aur 55 saans rate')"></textarea>
 
             <!-- Quick Demo Transcripts -->
             <div class="mt-3 flex flex-wrap gap-2 text-xs">
                 <span class="font-semibold text-slate-500 py-1">Quick Presets:</span>
-                <button onclick="setPreset('8 mahine ka bachha, 3 din se bukhar aur 55 saans rate', 'Aarav Shinde')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 px-2.5 py-1 rounded-md font-semibold">Fast Breathing (Pneumonia - Yellow)</button>
-                <button onclick="setPreset('jhatke aa rahe hain aur behoosh hai', 'Ananya Patil')" class="bg-rose-50 hover:bg-rose-100 text-rose-800 px-2.5 py-1 rounded-md font-semibold">Convulsions (Danger Sign - Red)</button>
-                <button onclick="setPreset('8 month child with fever for 2 days and chest indrawing', 'Kabir Jadhav')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 px-2.5 py-1 rounded-md font-semibold">Chest Indrawing (English)</button>
-                <button onclick="setPreset('dast aur ulti ho rahi hai 2 din se', 'Rohan More')" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-md font-semibold">Diarrhea (Home Care - Green)</button>
+                <button onclick="setPreset('8 mahine ka bachha, contact 9823011223, 3 din se bukhar aur 55 saans rate', 'Aarav Shinde', '+91 98230 11223')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 px-2.5 py-1 rounded-md font-semibold">Fast Breathing (Pneumonia - Yellow)</button>
+                <button onclick="setPreset('jhatke aa rahe hain aur behoosh hai, phone 9890123456', 'Ananya Patil', '+91 98901 23456')" class="bg-rose-50 hover:bg-rose-100 text-rose-800 px-2.5 py-1 rounded-md font-semibold">Convulsions (Danger Sign - Red)</button>
+                <button onclick="setPreset('8 month child with fever for 2 days and chest indrawing, mobile 9765432100', 'Kabir Jadhav', '+91 97654 32100')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 px-2.5 py-1 rounded-md font-semibold">Chest Indrawing (English)</button>
+                <button onclick="setPreset('dast aur ulti ho rahi hai 2 din se, phone 9822114455', 'Rohan More', '+91 98221 14455')" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-md font-semibold">Diarrhea (Home Care - Green)</button>
             </div>
         </section>
 
@@ -152,6 +153,10 @@
                     <div class="flex justify-between border-b pb-2">
                         <span class="text-slate-600">Fever Duration:</span>
                         <span id="slotFever" class="font-bold text-indigo-900">--</span>
+                    </div>
+                    <div class="flex justify-between border-b pb-2">
+                        <span class="text-slate-600">Patient Contact:</span>
+                        <span id="slotPhone" class="font-bold text-indigo-900 font-mono">+91 98230 11223</span>
                     </div>
                     <div>
                         <span class="text-slate-600 block mb-1">Detected Signs:</span>
@@ -195,13 +200,26 @@
                         <i class="fa-solid fa-floppy-disk mr-2"></i> Save Assessment to Local Database
                     </button>
 
+                    <!-- Send Patient Diagnosis & Care Report Buttons -->
+                    <div class="p-3 bg-indigo-50/80 rounded-xl border border-indigo-100 space-y-2">
+                        <div class="flex items-center justify-between text-xs font-bold text-indigo-950">
+                            <span class="flex items-center"><i class="fa-solid fa-paper-plane mr-1.5 text-indigo-600"></i> Send Report to Patient:</span>
+                            <span id="patientPhonePreview" class="text-indigo-600 font-mono">+91 98230 11223</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <button onclick="openPatientWhatsAppDirect()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center justify-center shadow-sm">
+                                <i class="fa-brands fa-whatsapp mr-1.5 text-base"></i> WhatsApp Report
+                            </button>
+                            <button onclick="openPatientSMSDirect()" class="flex-1 bg-sky-600 hover:bg-sky-700 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center justify-center shadow-sm">
+                                <i class="fa-solid fa-comment-sms mr-1.5 text-base"></i> GSM SMS Report
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="flex flex-col sm:flex-row gap-2">
                         <button onclick="playTTSAudio()" class="flex-1 bg-slate-800 hover:bg-slate-900 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center justify-center">
                             <i class="fa-solid fa-volume-high mr-2 text-amber-400"></i> 10s Audio Brief
                         </button>
-                        <a id="whatsappBtn" href="#" target="_blank" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center justify-center">
-                            <i class="fa-brands fa-whatsapp mr-2 text-lg"></i> Send WhatsApp
-                        </a>
                     </div>
                 </div>
             </section>
@@ -721,6 +739,9 @@
             const patientId = "P-" + Math.floor(100 + Math.random() * 900);
             const assessmentId = "ASS-" + Date.now();
 
+            const phoneInput = document.getElementById("inputPatientPhone");
+            const patientPhone = phoneInput ? phoneInput.value.trim() : "+91 98230 11223";
+
             const record = {
                 patient: {
                     patient_id: patientId,
@@ -728,7 +749,8 @@
                     age_months: currentExtractedData.age_months || 12,
                     gender: "M",
                     guardian_name: guardianName,
-                    village_name: villageName
+                    village_name: villageName,
+                    patient_phone: patientPhone
                 },
                 assessment: {
                     assessment_id: assessmentId,
@@ -760,7 +782,7 @@
             }
 
             if (!silent) {
-                alert(`Saved locally in on-device database!\nPatient: ${patientName} (${record.assessment.triage_color} Alert)\nPending Sync Queue Count: ${outbox.length}`);
+                alert(`Saved locally in on-device database!\nPatient: ${patientName} (${record.assessment.triage_color} Alert)\nPhone: ${patientPhone}\nPending Sync Queue Count: ${outbox.length}`);
             }
 
             if (isOnline) {
@@ -826,6 +848,22 @@
                 document.getElementById("slotRR").innerText = fields.respiratory_rate ? fields.respiratory_rate + " / min" : "Not measured";
                 document.getElementById("slotFever").innerText = fields.fever_days ? fields.fever_days + " days" : (fields.symptoms && fields.symptoms.includes("fever") ? "Present" : "None");
 
+                if (fields.patient_phone) {
+                    const pInput = document.getElementById("inputPatientPhone");
+                    if (pInput) pInput.value = fields.patient_phone;
+                    const pSlot = document.getElementById("slotPhone");
+                    if (pSlot) pSlot.innerText = fields.patient_phone;
+                    const pPrev = document.getElementById("patientPhonePreview");
+                    if (pPrev) pPrev.innerText = fields.patient_phone;
+                } else {
+                    const pInput = document.getElementById("inputPatientPhone");
+                    const curPhone = pInput ? pInput.value : "+91 98230 11223";
+                    const pSlot = document.getElementById("slotPhone");
+                    if (pSlot) pSlot.innerText = curPhone;
+                    const pPrev = document.getElementById("patientPhonePreview");
+                    if (pPrev) pPrev.innerText = curPhone;
+                }
+
                 const symContainer = document.getElementById("slotSymptoms");
                 const symptoms = fields.symptoms || [];
                 symContainer.innerHTML = symptoms.length ? symptoms.map(s => `<span class="bg-indigo-100 text-indigo-800 text-xs px-2 py-0.5 rounded font-semibold">${s}</span>`).join("") : '<span class="text-slate-400 italic">None</span>';
@@ -858,8 +896,6 @@
 
                 document.getElementById("outSMS").innerText = triage.sms_snippet || "[PENDING] Awaiting evaluation";
 
-                document.getElementById("whatsappBtn").href = triage.whatsapp_url || "#";
-
                 if (level === "red") {
                     showRedEmergencyModal({
                         patientName: document.getElementById("inputPatientName").value || "Pediatric Patient",
@@ -883,13 +919,80 @@
             classifyTriage();
         }
 
-        function setPreset(txt, name) {
+        function setPreset(txt, name, phone) {
             document.getElementById("transcriptInput").value = txt;
             if (name) document.getElementById("inputPatientName").value = name;
+            if (phone) {
+                const pInput = document.getElementById("inputPatientPhone");
+                if (pInput) pInput.value = phone;
+                const pSlot = document.getElementById("slotPhone");
+                if (pSlot) pSlot.innerText = phone;
+                const pPrev = document.getElementById("patientPhonePreview");
+                if (pPrev) pPrev.innerText = phone;
+            }
             classifyTriage();
         }
 
         document.getElementById("transcriptInput").addEventListener("input", classifyTriage);
+
+        // --- Patient Callback Direct Actions ---
+        function getFormattedPatientWhatsAppText() {
+            const pName = document.getElementById("inputPatientName").value || "Patient";
+            const pAge = (currentExtractedData && currentExtractedData.age_months) ? currentExtractedData.age_months : 12;
+            const diag = (currentTriageResult && currentTriageResult.diagnosis) ? currentTriageResult.diagnosis : "Clinical Assessment";
+            const urgency = (currentTriageResult && currentTriageResult.urgency) ? currentTriageResult.urgency : "Home Care";
+            const color = (currentTriageResult && currentTriageResult.triage_level) ? currentTriageResult.triage_level.toUpperCase() : "GREEN";
+            const actions = (currentTriageResult && currentTriageResult.actions) ? currentTriageResult.actions : ["Continue frequent hydration, ORS & feeding."];
+            const doc = currentDoctor || { full_name: "Dr. Anjali Deshmukh, MD", phc_name: "Khed PHC", phone_number: "+91 98765 43210" };
+            const icon = color === "RED" ? "🚨 RED ALERT (EMERGENCY)" : (color === "YELLOW" ? "🟡 YELLOW ALERT (CLINIC CHECKUP)" : "🟢 GREEN (HOME CARE)");
+
+            let lines = [
+                `🏥 *GOVT OF INDIA / MoHFW TELE-TRIAGE REPORT*`,
+                `━━━━━━━━━━━━━━━━━━━━━`,
+                `👶 *Patient:* ${pName} (Age: ${pAge} months)`,
+                `📊 *Triage Level:* ${icon}`,
+                `🩺 *Diagnosis:* ${diag}`,
+                `⏱️ *Urgency:* ${urgency}`,
+                ``,
+                `📋 *PRESCRIBED HOME CARE & ACTION PLAN:*`
+            ];
+            actions.slice(0, 3).forEach(a => lines.push(` • ${a}`));
+            lines.push(
+                ``,
+                `⚠️ *DANGER SIGNS (Rush to PHC if seen):*`,
+                ` • Unable to drink or breastfeed`,
+                ` • Chest indrawing / rapid breathing`,
+                ` • Convulsions / severe lethargy / vomiting everything`,
+                ``,
+                `👩‍⚕️ *Appointed Medical Officer:*`,
+                `${doc.full_name} • ${doc.phc_name}`,
+                `📞 *Emergency Helpline:* ${doc.phone_number}`,
+                `━━━━━━━━━━━━━━━━━━━━━`,
+                `_Generated by village ASHA companion._`
+            );
+            return lines.join("\n");
+        }
+
+        function openPatientWhatsAppDirect() {
+            const rawPhone = (document.getElementById("inputPatientPhone").value || "9823011223").replace(/\D/g, "");
+            const cleanPhone = rawPhone.length === 10 ? "91" + rawPhone : rawPhone;
+            const text = encodeURIComponent(getFormattedPatientWhatsAppText());
+            window.open(`https://wa.me/${cleanPhone}?text=${text}`, "_blank");
+        }
+
+        function openPatientSMSDirect() {
+            const rawPhone = (document.getElementById("inputPatientPhone").value || "9823011223").replace(/\D/g, "");
+            const pName = document.getElementById("inputPatientName").value || "Patient";
+            const diag = (currentTriageResult && currentTriageResult.diagnosis) ? currentTriageResult.diagnosis : "Clinical Assessment";
+            const color = (currentTriageResult && currentTriageResult.triage_level) ? currentTriageResult.triage_level.toUpperCase() : "GREEN";
+            const docPhone = currentDoctor ? currentDoctor.phone_number : "+919876543210";
+            
+            let body = `[MoHFW ASHA Report] ${pName}: ${color} (${diag}). Follow home care & ORS. Emergency Doctor: ${docPhone}`;
+            if (color === "RED") {
+                body = `[EMERGENCY RED FLAG] ${pName}: ${diag}. Rush to PHC/Hospital immediately! Keep warm. Doctor: ${docPhone}`;
+            }
+            window.location.href = `sms:${rawPhone}?body=${encodeURIComponent(body)}`;
+        }
 
         function playTTSAudio() {
             if ('speechSynthesis' in window && currentTTS) {

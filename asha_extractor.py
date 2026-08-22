@@ -971,6 +971,16 @@ def parse_asha_transcript(transcript: str, patient_id: str = "P-101") -> Dict[st
         if dia_day_match:
             diarrhoea_days = int(dia_day_match.group(1))
 
+    # --- 4c. PATIENT CONTACT PHONE NUMBER EXTRACTION ---
+    patient_phone: Optional[str] = None
+    # Normalize Devanagari digits to Latin digits
+    dev_to_latin = str.maketrans("०१२३४५६७८९", "0123456789")
+    norm_text = text_lower.translate(dev_to_latin)
+    phone_match = re.search(r"(?:phone|mobile|contact|number|call|फ़ोन|फोन|मोबाइल|नंबर|संपर्क|मोबाईल)?\s*[:\-]?\s*(?:\+91|91|0)?\s*([6-9]\d{9})\b", norm_text)
+    if phone_match:
+        raw_digits = phone_match.group(1)
+        patient_phone = f"+91 {raw_digits[:5]} {raw_digits[5:]}"
+
     # --- 5. CONFIDENCE CALCULATION ---
     filled_slots = 0
     if age_months is not None:
@@ -996,6 +1006,7 @@ def parse_asha_transcript(transcript: str, patient_id: str = "P-101") -> Dict[st
             "temperature_c": None,
             "fever_days": fever_days,
             "diarrhoea_days": diarrhoea_days,
+            "patient_phone": patient_phone,
             "symptoms": detected_symptoms,
             "has_chest_indrawing": has_chest_indrawing,
             "has_convulsions": has_convulsions,

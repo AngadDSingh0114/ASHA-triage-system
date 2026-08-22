@@ -1,7 +1,6 @@
 """
-Zero-Dependency Backend Ingestion & PHC Doctor Central Server (Person D)
-Provides REST API for batch sync, real-time triage queries, doctor acknowledgment,
-and serves the offline ASHA Companion & PHC Doctor Live Monitoring Dashboard.
+Central PHC Tele-Triage Ingestion & Sync Backend Server (Person D)
+Provides local HTTP ingestion API, Redis Gateway integration, SQLite DB explorer, and Patient Callback Reports.
 """
 
 import http.server
@@ -25,12 +24,13 @@ from seed_data import (
     GROUNDING_STATS, 
     CLINICAL_BENCHMARK_SCENARIOS, 
     DEMO_PATIENT_SCENARIOS, 
-    generate_benchmark_sync_payloads
+    generate_benchmark_sync_payloads,
+    format_patient_callback_sms,
+    format_patient_callback_whatsapp
 )
 
 PORT = 8000
 DB_FILE = "phc_central.db"
-
 
 
 class CentralDBManager:
@@ -54,12 +54,15 @@ class CentralDBManager:
                 gender TEXT,
                 guardian_name TEXT,
                 village_name TEXT,
+                patient_phone TEXT,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             );
             """)
             c.execute("""
             CREATE TABLE IF NOT EXISTS doctors (
                 doctor_id TEXT PRIMARY KEY,
+                username TEXT UNIQUE,
+                password_hash TEXT,
                 full_name TEXT NOT NULL,
                 phone_number TEXT NOT NULL,
                 whatsapp_number TEXT NOT NULL,
@@ -92,6 +95,8 @@ class CentralDBManager:
                 referral_note TEXT NOT NULL,
                 doctor_acknowledged BOOLEAN DEFAULT 0,
                 doctor_notes TEXT,
+                patient_callback_sent BOOLEAN DEFAULT 0,
+                patient_callback_sent_at DATETIME,
                 assessed_at DATETIME NOT NULL,
                 synced_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
@@ -99,6 +104,12 @@ class CentralDBManager:
             """)
             c.execute("CREATE INDEX IF NOT EXISTS idx_rec_color ON triage_records(triage_color);")
             c.execute("CREATE INDEX IF NOT EXISTS idx_rec_ack ON triage_records(doctor_acknowledged);")
+
+            # Check migrations for patients table
+            c.execute("PRAGMA table_info(patients);")
+            p_cols = [r["name"] for r in c.fetchall()]
+            if "patient_phone" not in p_cols:
+                c.execute("ALTER TABLE patients ADD COLUMN patient_phone TEXT;")
 
             # Check migrations for doctors table
             c.execute("PRAGMA table_info(doctors);")
@@ -108,6 +119,14 @@ class CentralDBManager:
             if "password_hash" not in cols:
                 c.execute("ALTER TABLE doctors ADD COLUMN password_hash TEXT;")
 
+            # Check migrations for triage_records table
+            c.execute("PRAGMA table_info(triage_records);")
+            t_cols = [r["name"] for r in c.fetchall()]
+            if "patient_callback_sent" not in t_cols:
+                c.execute("ALTER TABLE triage_records ADD COLUMN patient_callback_sent BOOLEAN DEFAULT 0;")
+            if "patient_callback_sent_at" not in t_cols:
+                c.execute("ALTER TABLE triage_records ADD COLUMN patient_callback_sent_at DATETIME;")
+
             # Seed default appointed PHC doctor if table empty
             c.execute("SELECT COUNT(*) as cnt FROM doctors")
             if c.fetchone()["cnt"] == 0:
@@ -116,9 +135,6 @@ class CentralDBManager:
                 INSERT INTO doctors (doctor_id, username, password_hash, full_name, phone_number, whatsapp_number, phc_name, district, is_on_duty)
                 VALUES ('DOC-PUNE-01', 'dr.anjali', ?, 'Dr. Anjali Deshmukh, MD (Pediatrics)', '+919876543210', '919876543210', 'Khed Sub-District Primary Health Centre', 'Pune Rural', 1);
                 """, (pwd_hash,))
-            else:
-                pwd_hash = hashlib.sha256("Doctor@123".encode('utf-8')).hexdigest()
-                c.execute("UPDATE doctors SET username = 'dr.anjali', password_hash = ? WHERE username IS NULL OR username = '';", (pwd_hash,))
             conn.commit()
 
     def authenticate_doctor(self, username: str, password: str) -> Optional[Dict[str, Any]]:
@@ -217,19 +233,23 @@ class CentralDBManager:
             result = {}
             for t in tables:
                 c.execute(f"PRAGMA table_info({t});")
-                cols = [dict(col) for col in c.fetchall()]
-                c.execute(f"SELECT * FROM {t} ORDER BY rowid DESC LIMIT 50;")
-                rows = [dict(row) for row in c.fetchall()]
+                cols = [{"name": r["name"], "type": r["type"], "pk": bool(r["pk"])} for r in c.fetchall()]
+                
+                c.execute(f"SELECT COUNT(*) as count FROM {t};")
+                row_count = c.fetchone()["count"]
+
+                c.execute(f"SELECT * FROM {t} ORDER BY rowid DESC LIMIT 25;")
+                rows = [dict(r) for r in c.fetchall()]
+
                 result[t] = {
                     "columns": cols,
-                    "row_count": len(rows),
+                    "row_count": row_count,
                     "rows": rows
                 }
             return result
 
-
     def ingest_batch(self, payload: Dict[str, Any]) -> List[str]:
-        asha_id = payload.get("asha_id", "ASHA-UNKNOWN")
+        asha_id = payload.get("asha_id", "ASHA-001")
         records = payload.get("records", [])
         synced_ids = []
 
@@ -245,14 +265,15 @@ class CentralDBManager:
                     continue
 
                 c.execute("""
-                INSERT INTO patients (patient_id, full_name, age_months, gender, guardian_name, village_name)
-                VALUES (?, ?, ?, ?, ?, ?)
+                INSERT INTO patients (patient_id, full_name, age_months, gender, guardian_name, village_name, patient_phone)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(patient_id) DO UPDATE SET
                     full_name=excluded.full_name,
                     age_months=excluded.age_months,
                     gender=excluded.gender,
                     guardian_name=excluded.guardian_name,
-                    village_name=excluded.village_name;
+                    village_name=excluded.village_name,
+                    patient_phone=excluded.patient_phone;
                 """, (
                     p_id,
                     p.get("full_name", "Unknown Child"),
@@ -260,6 +281,7 @@ class CentralDBManager:
                     p.get("gender", "M"),
                     p.get("guardian_name", ""),
                     p.get("village_name", "Sector 4"),
+                    p.get("patient_phone", ""),
                 ))
 
                 symptoms = a.get("symptoms", [])
@@ -310,7 +332,7 @@ class CentralDBManager:
             query = """
             SELECT 
                 r.*,
-                p.full_name, p.age_months, p.gender, p.guardian_name, p.village_name
+                p.full_name, p.age_months, p.gender, p.guardian_name, p.village_name, p.patient_phone
             FROM triage_records r
             JOIN patients p ON r.patient_id = p.patient_id
             """
@@ -339,6 +361,55 @@ class CentralDBManager:
                 item["actions"] = json.loads(item["actions_json"]) if item["actions_json"] else []
                 out.append(item)
             return out
+
+    def get_patient_callback_report(self, assessment_id: str) -> Optional[Dict[str, Any]]:
+        with self.get_conn() as conn:
+            c = conn.cursor()
+            c.execute("""
+            SELECT 
+                r.*,
+                p.full_name, p.age_months, p.gender, p.guardian_name, p.village_name, p.patient_phone
+            FROM triage_records r
+            JOIN patients p ON r.patient_id = p.patient_id
+            WHERE r.assessment_id = ?
+            LIMIT 1;
+            """, (assessment_id,))
+            row = c.fetchone()
+            if not row:
+                return None
+            record = dict(row)
+            record["symptoms"] = json.loads(record["symptoms_json"]) if record["symptoms_json"] else []
+            record["actions"] = json.loads(record["actions_json"]) if record["actions_json"] else []
+            doc = self.get_doctor_profile()
+            return {
+                "assessment_id": assessment_id,
+                "patient_id": record["patient_id"],
+                "full_name": record["full_name"],
+                "patient_phone": record["patient_phone"] or "+91 98765 43210",
+                "guardian_name": record["guardian_name"],
+                "village_name": record["village_name"],
+                "triage_color": record["triage_color"],
+                "diagnosis": record["diagnosis"],
+                "urgency": record["urgency"],
+                "actions": record["actions"],
+                "referral_note": record["referral_note"],
+                "sms_text": format_patient_callback_sms(record, doc),
+                "whatsapp_text": format_patient_callback_whatsapp(record, doc),
+                "doctor_info": doc,
+                "callback_sent": bool(record.get("patient_callback_sent", 0)),
+                "generated_at": datetime.utcnow().isoformat() + "Z"
+            }
+
+    def mark_patient_callback_sent(self, assessment_id: str) -> bool:
+        with self.get_conn() as conn:
+            c = conn.cursor()
+            c.execute("""
+            UPDATE triage_records 
+            SET patient_callback_sent = 1, patient_callback_sent_at = CURRENT_TIMESTAMP
+            WHERE assessment_id = ?;
+            """, (assessment_id,))
+            conn.commit()
+            return c.rowcount > 0
 
     def acknowledge_record(self, assessment_id: str, doctor_notes: str = "") -> bool:
         with self.get_conn() as conn:
@@ -369,13 +440,17 @@ class CentralDBManager:
             c.execute("SELECT COUNT(*) as cnt FROM triage_records WHERE doctor_acknowledged = 1")
             ack_count = c.fetchone()["cnt"]
 
+            c.execute("SELECT COUNT(*) as cnt FROM triage_records WHERE patient_callback_sent = 1")
+            cb_count = c.fetchone()["cnt"]
+
             return {
                 "total_triaged": total,
                 "red_alerts": red_count,
                 "yellow_cases": yellow_count,
                 "green_cases": green_count,
                 "acknowledged_cases": ack_count,
-                "pending_doctor_action": max(0, (red_count + yellow_count) - ack_count)
+                "patient_callbacks_sent": cb_count,
+                "pending_doctor_action": total - ack_count
             }
 
 
@@ -394,6 +469,18 @@ class TriageRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200)
         self.end_headers()
+
+    def copyfile(self, source, outputfile):
+        try:
+            super().copyfile(source, outputfile)
+        except (ConnectionAbortedError, ConnectionResetError, BrokenPipeError):
+            pass
+
+    def handle(self):
+        try:
+            super().handle()
+        except (ConnectionAbortedError, ConnectionResetError, BrokenPipeError):
+            pass
 
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
@@ -418,6 +505,14 @@ class TriageRequestHandler(http.server.SimpleHTTPRequestHandler):
         elif path == "/api/db/explorer":
             data = central_db.get_db_explorer_data()
             self._send_json(200, {"success": True, "database": "phc_central.db", "tables": data})
+        elif path.startswith("/api/patient-report/"):
+            parts = path.strip("/").split("/")
+            assessment_id = parts[2] if len(parts) >= 3 else ""
+            report = central_db.get_patient_callback_report(assessment_id)
+            if report:
+                self._send_json(200, {"success": True, "report": report})
+            else:
+                self._send_json(404, {"success": False, "error": "Assessment record not found."})
         elif path == "/api/redis/status":
             telemetry = redis_gateway.get_telemetry()
             self._send_json(200, {"success": True, "redis_telemetry": telemetry})
@@ -483,6 +578,32 @@ class TriageRequestHandler(http.server.SimpleHTTPRequestHandler):
             except Exception as e:
                 self._send_json(400, {"success": False, "error": str(e)})
 
+        elif path == "/api/doctor/login":
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length)
+            try:
+                data = json.loads(body.decode('utf-8'))
+                username = data.get("username", "")
+                password = data.get("password", "")
+                auth_res = central_db.authenticate_doctor(username, password)
+                if auth_res:
+                    self._send_json(200, {
+                        "success": True, 
+                        "token": auth_res["token"], 
+                        "doctor": auth_res,
+                        "message": f"Welcome, {auth_res['full_name']}. Access granted to PHC Tele-Triage Ingestion Console."
+                    })
+                else:
+                    self._send_json(401, {
+                        "success": False, 
+                        "error": "Authentication failed. Invalid Medical Officer Username or Password / PIN."
+                    })
+            except Exception as e:
+                self._send_json(400, {"success": False, "error": str(e)})
+
+        elif path == "/api/doctor/logout":
+            self._send_json(200, {"success": True, "message": "Doctor logged out successfully."})
+
         elif path == "/api/doctor":
             content_length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(content_length)
@@ -507,6 +628,18 @@ class TriageRequestHandler(http.server.SimpleHTTPRequestHandler):
                 "success": True, 
                 "count": len(synced_ids), 
                 "message": f"Successfully seeded {len(synced_ids)} WHO IMCI clinical benchmark cases via Redis Ingestion Queue."
+            })
+
+        elif path.startswith("/api/patient-report/") and path.endswith("/send"):
+            parts = path.strip("/").split("/")
+            assessment_id = parts[2]
+            success = central_db.mark_patient_callback_sent(assessment_id)
+            report = central_db.get_patient_callback_report(assessment_id)
+            self._send_json(200, {
+                "success": success, 
+                "assessment_id": assessment_id, 
+                "report": report,
+                "delivered_at": datetime.utcnow().isoformat() + "Z"
             })
 
         elif path.startswith("/api/records/") and path.endswith("/acknowledge"):
@@ -539,6 +672,14 @@ class TriageRequestHandler(http.server.SimpleHTTPRequestHandler):
             pass
 
 
+class SilentTCPServer(socketserver.TCPServer):
+    def handle_error(self, request, client_address):
+        exc_type, exc_val, exc_tb = sys.exc_info()
+        if exc_type in (ConnectionAbortedError, ConnectionResetError, BrokenPipeError):
+            return
+        super().handle_error(request, client_address)
+
+
 def run_server(port: int = PORT):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     os.chdir(current_dir)
@@ -553,9 +694,9 @@ def run_server(port: int = PORT):
     print("=" * 60, flush=True)
     print("[SERVER] ASHA / PHC Tele-Triage Central Backend Server", flush=True)
     print(f"[STATUS] Running on http://localhost:{port}", flush=True)
-    print(f"[DOCTOR LOGIN]   http://localhost:{port}/doctor_login.html", flush=True)
-    print(f"[PHC DASHBOARD]  http://localhost:{port}/phc_dashboard.html", flush=True)
     print(f"[ASHA APP]       http://localhost:{port}/index.html", flush=True)
+    print(f"[PHC DASHBOARD]  http://localhost:{port}/phc_dashboard.html", flush=True)
+    print(f"[DOCTOR LOGIN]   http://localhost:{port}/doctor_login.html", flush=True)
     print("=" * 60, flush=True)
     print("Press Ctrl+C to stop the server.", flush=True)
 

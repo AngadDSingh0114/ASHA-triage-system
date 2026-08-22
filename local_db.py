@@ -31,6 +31,7 @@ class LocalTriageDB:
                 gender TEXT CHECK(gender IN ('M', 'F', 'O')),
                 guardian_name TEXT,
                 village_name TEXT,
+                patient_phone TEXT,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             );
             """)
@@ -63,6 +64,13 @@ class LocalTriageDB:
             );
             """)
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_sync_status ON triage_assessments(sync_status);")
+
+            # Check migrations for patients table
+            cursor.execute("PRAGMA table_info(patients);")
+            cols = [r["name"] for r in cursor.fetchall()]
+            if "patient_phone" not in cols:
+                cursor.execute("ALTER TABLE patients ADD COLUMN patient_phone TEXT;")
+
             conn.commit()
 
     def upsert_patient(self, patient_data: Dict[str, Any]) -> str:
@@ -70,14 +78,15 @@ class LocalTriageDB:
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-            INSERT INTO patients (patient_id, full_name, age_months, gender, guardian_name, village_name)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO patients (patient_id, full_name, age_months, gender, guardian_name, village_name, patient_phone)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(patient_id) DO UPDATE SET
                 full_name=excluded.full_name,
                 age_months=excluded.age_months,
                 gender=excluded.gender,
                 guardian_name=excluded.guardian_name,
-                village_name=excluded.village_name;
+                village_name=excluded.village_name,
+                patient_phone=excluded.patient_phone;
             """, (
                 p_id,
                 patient_data.get("full_name", "Unknown Child"),
@@ -85,6 +94,7 @@ class LocalTriageDB:
                 patient_data.get("gender", "M"),
                 patient_data.get("guardian_name", ""),
                 patient_data.get("village_name", "Village Ward 4"),
+                patient_data.get("patient_phone", ""),
             ))
             conn.commit()
         return p_id
@@ -152,7 +162,7 @@ class LocalTriageDB:
             cursor.execute("""
             SELECT 
                 t.*,
-                p.full_name, p.age_months, p.gender, p.guardian_name, p.village_name
+                p.full_name, p.age_months, p.gender, p.guardian_name, p.village_name, p.patient_phone
             FROM triage_assessments t
             JOIN patients p ON t.patient_id = p.patient_id
             WHERE t.sync_status IN ('PENDING', 'FAILED')
@@ -172,7 +182,8 @@ class LocalTriageDB:
                         "age_months": r["age_months"],
                         "gender": r["gender"],
                         "guardian_name": r["guardian_name"],
-                        "village_name": r["village_name"]
+                        "village_name": r["village_name"],
+                        "patient_phone": r["patient_phone"]
                     },
                     "assessment": {
                         "assessment_id": r["assessment_id"],
@@ -215,10 +226,9 @@ class LocalTriageDB:
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
-            SELECT t.*, p.full_name, p.age_months, p.village_name
+            SELECT t.*, p.full_name, p.age_months, p.village_name, p.patient_phone
             FROM triage_assessments t
             JOIN patients p ON t.patient_id = p.patient_id
             ORDER BY t.assessed_at DESC
             """)
             return [dict(row) for row in cursor.fetchall()]
-

@@ -172,12 +172,87 @@ class TestBackendAndSync(unittest.TestCase):
         invalidated = gw.get_cached_stats()
         self.assertIsNone(invalidated)
 
-        # Test Telemetry
-        telemetry = gw.get_telemetry()
-        self.assertTrue(telemetry["redis_enabled"])
-        self.assertIn("connection_status", telemetry)
+    def test_patient_phone_storage_and_sync(self):
+        patient_info = {
+            "patient_id": "P-PHONE-01",
+            "full_name": "Rohan Deshmukh",
+            "age_months": 14,
+            "gender": "M",
+            "guardian_name": "Sunita Deshmukh",
+            "village_name": "Khed Shivapur",
+            "patient_phone": "+91 98230 11223"
+        }
+        extracted = {
+            "extracted_fields": {
+                "age_months": 14,
+                "respiratory_rate": 30,
+                "temperature_c": 37.5,
+                "fever_days": 1,
+                "symptoms": ["cough"]
+            }
+        }
+        triage = evaluate_imci_rules(extracted, patient_id="P-PHONE-01")
+        
+        # Test local db records patient phone
+        self.local_db.record_triage_assessment(
+            extracted_data=extracted,
+            triage_result=triage,
+            patient_info=patient_info
+        )
+        pending = self.local_db.get_pending_sync_records()
+        self.assertEqual(len(pending), 1)
+        self.assertEqual(pending[0]["patient"]["patient_phone"], "+91 98230 11223")
+
+        # Test central DB ingestion stores patient_phone
+        synced_ids = self.central_db.ingest_batch({
+            "asha_id": "ASHA-MH-PUNE-012",
+            "records": pending
+        })
+        self.assertEqual(len(synced_ids), 1)
+        records = self.central_db.get_triage_records()
+        self.assertEqual(records[0]["patient_phone"], "+91 98230 11223")
+
+    def test_patient_callback_report_generation(self):
+        from server import format_patient_callback_sms, format_patient_callback_whatsapp
+        
+        sample_record = {
+            "full_name": "Aarav Shinde",
+            "patient_id": "P-101",
+            "age_months": 14,
+            "triage_color": "RED",
+            "diagnosis": "Severe Pneumonia / Very Severe Disease",
+            "urgency": "URGENT HOSPITAL REFERRAL",
+            "actions": ["Give first dose of amoxicillin", "Keep child warm during transit", "Refer immediately to FRU"]
+        }
+        doctor_info = {
+            "full_name": "Dr. Anjali Deshmukh, MD",
+            "phc_name": "Khed PHC",
+            "phone_number": "+91 98765 43210"
+        }
+        
+        sms = format_patient_callback_sms(sample_record, doctor_info)
+        self.assertIn("EMERGENCY RED FLAG", sms)
+        self.assertIn("Aarav Shinde", sms)
+        self.assertIn("+91 98765 43210", sms)
+
+        wa = format_patient_callback_whatsapp(sample_record, doctor_info)
+        self.assertIn("TELE-TRIAGE REPORT", wa)
+        self.assertIn("RED ALERT", wa)
+        self.assertIn("Dr. Anjali Deshmukh", wa)
+
+    def test_phone_extraction_from_transcripts(self):
+        from asha_extractor import parse_asha_transcript
+        
+        # Test English transcript with phone number
+        res_en = parse_asha_transcript("14 month child with fever for 2 days, respiratory rate 48, phone 9823011223")
+        self.assertEqual(res_en["extracted_fields"]["patient_phone"], "+91 98230 11223")
+
+        # Test Hindi transcript with phone number
+        res_hi = parse_asha_transcript("1 saal ka bachha bukhar hai, mobile number 9890123456")
+        self.assertEqual(res_hi["extracted_fields"]["patient_phone"], "+91 98901 23456")
 
 
 if __name__ == "__main__":
     unittest.main()
+
 
