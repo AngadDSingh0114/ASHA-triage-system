@@ -460,7 +460,7 @@ def adapt_to_engine_input(extracted_fields: Dict[str, Any], temperature_f: Optio
     def _has(key: str) -> bool:
         return key in symptoms_list
 
-    diarrhoea_days = extracted_fields.get("fever_days") if _has("diarrhea") else 0
+    diarrhoea_days = extracted_fields.get("diarrhoea_days") or (extracted_fields.get("fever_days") if _has("diarrhea") else 0)
 
     # Best-effort enum defaults; NLP cannot reliably distinguish these yet
     skin_pinch = "immediate"
