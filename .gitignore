@@ -8,5 +8,6 @@ __pycache__/
 .flutter-plugins-dependencies
 .packages
 build/
-triage_engine/
+.idea/
+android/.kotlin/
 
