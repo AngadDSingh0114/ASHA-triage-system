@@ -213,4 +213,11 @@ class DatabaseHelper {
       whereArgs: [assessmentId],
     );
   }
+
+  /// Delete all stored local triage assessments and patient records
+  Future<void> clearAllAssessmentData() async {
+    final db = await instance.database;
+    await db.delete('triage_assessments');
+    await db.delete('patients');
+  }
 }

@@ -302,22 +302,57 @@ class _DispatchScreenState extends State<DispatchScreen> {
                       ),
                       const SizedBox(height: 8),
 
-                      // In-App DB Inspector Button
-                      OutlinedButton.icon(
-                        onPressed: () => _showInAppDbInspector(context),
-                        icon: const Icon(Icons.manage_search, size: 18),
-                        label: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            AppTranslations.getText('view_db_records_label', widget.currentLanguage),
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                      // In-App DB Inspector Button & Clear Data Button Row
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () => _showInAppDbInspector(context),
+                              icon: const Icon(Icons.manage_search, size: 16),
+                              label: const FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  'View DB',
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: const Size.fromHeight(38),
+                                foregroundColor: const Color(0xFF0D47A1),
+                                side: const BorderSide(color: Color(0xFF0D47A1)),
+                              ),
+                            ),
                           ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size.fromHeight(38),
-                          foregroundColor: const Color(0xFF0D47A1),
-                          side: const BorderSide(color: Color(0xFF0D47A1)),
-                        ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () async {
+                                await DatabaseHelper.instance.clearAllAssessmentData();
+                                if (!context.mounted) return;
+                                setState(() {});
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('🗑️ All local assessment & patient data cleared!'),
+                                    backgroundColor: Colors.redAccent,
+                                  ),
+                                );
+                              },
+                              icon: const Icon(Icons.delete_forever, size: 16),
+                              label: const FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  'Clear All Data',
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: const Size.fromHeight(38),
+                                foregroundColor: Colors.redAccent,
+                                side: const BorderSide(color: Colors.redAccent),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
