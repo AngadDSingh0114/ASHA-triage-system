@@ -103,12 +103,13 @@ class DatabaseHelper {
     required Vitals vitals,
     required DangerSigns dangerSigns,
     required TriageResult result,
+    String? customAssessmentId,
     List<String>? detectedSymptoms,
   }) async {
     final db = await instance.database;
     await savePatient(patient);
 
-    final assessmentId = 'TRG-${DateTime.now().millisecondsSinceEpoch ~/ 1000}';
+    final assessmentId = customAssessmentId ?? 'TRG-${patient.id}';
     final tempC = (vitals.temperatureF - 32.0) * (5.0 / 9.0);
 
     final String triageColor;

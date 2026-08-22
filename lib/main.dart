@@ -112,12 +112,14 @@ class _AshaHomeScreenState extends State<AshaHomeScreen> {
 
   // Evaluated Triage Result
   late TriageResult _triageResult;
+  late String _currentAssessmentId;
   bool _isOnline = false;
   Timer? _networkTimer;
 
   @override
   void initState() {
     super.initState();
+    _currentAssessmentId = 'TRG-${_patient.id}';
     widget.languageController.addListener(_onLanguageChanged);
     _reEvaluateTriage();
     _startNetworkMonitoring();
@@ -168,12 +170,13 @@ class _AshaHomeScreenState extends State<AshaHomeScreen> {
       );
     });
 
-    // Save locally to SQLite database matching local_schema.sql
+    // Save locally to SQLite database matching local_schema.sql (updates existing record, 0 duplicates)
     await DatabaseHelper.instance.saveTriageAssessment(
       patient: _patient,
       vitals: _vitals,
       dangerSigns: _dangerSigns,
       result: _triageResult,
+      customAssessmentId: _currentAssessmentId,
     );
 
     // If active network connection is present, immediately auto-sync to Person D server backend
