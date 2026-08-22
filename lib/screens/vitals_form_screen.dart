@@ -455,9 +455,9 @@ class _VitalsFormScreenState extends State<VitalsFormScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        '⚡ LIVE AI MODEL EXTRACTION RESULT:',
-                        style: TextStyle(
+                      Text(
+                        '⚡ ${AppTranslations.getText('live_ai_title', widget.currentLanguage)}:',
+                        style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF0D47A1),
@@ -521,7 +521,7 @@ class _VitalsFormScreenState extends State<VitalsFormScreen> {
               child: Column(
                 children: [
                   _buildEntityRow(
-                    'Extracted Age',
+                    AppTranslations.getText('extracted_age_label', widget.currentLanguage),
                     _nlpResult.extractedFields.ageMonths != null
                         ? '${_nlpResult.extractedFields.ageMonths} months'
                         : 'Not detected',
@@ -529,7 +529,7 @@ class _VitalsFormScreenState extends State<VitalsFormScreen> {
                   ),
                   const Divider(height: 14),
                   _buildEntityRow(
-                    'Extracted Respiratory Rate',
+                    AppTranslations.getText('extracted_rr_label', widget.currentLanguage),
                     _nlpResult.extractedFields.respiratoryRate != null
                         ? '${_nlpResult.extractedFields.respiratoryRate} bpm'
                         : 'Not detected',
@@ -537,7 +537,7 @@ class _VitalsFormScreenState extends State<VitalsFormScreen> {
                   ),
                   const Divider(height: 14),
                   _buildEntityRow(
-                    'Extracted Temperature',
+                    AppTranslations.getText('extracted_temp_label', widget.currentLanguage),
                     _nlpResult.extractedFields.temperatureF != null
                         ? '${_nlpResult.extractedFields.temperatureF!.toStringAsFixed(1)} °F'
                         : (_nlpResult.extractedFields.symptoms.contains('fever') ? 'Fever detected' : 'Normal'),
@@ -545,7 +545,7 @@ class _VitalsFormScreenState extends State<VitalsFormScreen> {
                   ),
                   const Divider(height: 14),
                   _buildEntityRow(
-                    'Severe Chest Indrawing',
+                    AppTranslations.getText('extracted_indrawing_label', widget.currentLanguage),
                     _nlpResult.extractedFields.hasChestIndrawing ? 'DETECTED (YES)' : 'NONE (NO)',
                     _nlpResult.extractedFields.hasChestIndrawing ? Colors.red : Colors.green,
                   ),
@@ -595,7 +595,7 @@ class _VitalsFormScreenState extends State<VitalsFormScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'AI Predicted Severity: ${triageResult.severityLabel}',
+                        '${AppTranslations.getText('ai_predicted_severity_title', widget.currentLanguage)}: ${AppTranslations.localizeDiagnosis(triageResult.severityLabel, widget.currentLanguage)}',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 14,
@@ -608,7 +608,7 @@ class _VitalsFormScreenState extends State<VitalsFormScreen> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        triageResult.recommendation,
+                        AppTranslations.localizeUrgency(triageResult.recommendation, widget.currentLanguage),
                         style: const TextStyle(fontSize: 12),
                       ),
                     ],

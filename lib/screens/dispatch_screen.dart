@@ -287,8 +287,8 @@ class _DispatchScreenState extends State<DispatchScreen> {
                             : const Icon(Icons.cloud_upload),
                         label: Text(
                           _isSyncing
-                              ? 'Syncing to PHC Server...'
-                              : '⚡ Sync Pending Records to PHC Dashboard',
+                              ? 'Syncing...'
+                              : AppTranslations.getText('sync_btn_label', widget.currentLanguage),
                         ),
                         style: ElevatedButton.styleFrom(
                           minimumSize: const Size.fromHeight(48),
@@ -303,9 +303,9 @@ class _DispatchScreenState extends State<DispatchScreen> {
                       OutlinedButton.icon(
                         onPressed: () => _showInAppDbInspector(context),
                         icon: const Icon(Icons.manage_search, size: 18),
-                        label: const Text(
-                          '🔍 View Saved SQLite Records',
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                        label: Text(
+                          AppTranslations.getText('view_db_records_label', widget.currentLanguage),
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                         ),
                         style: OutlinedButton.styleFrom(
                           minimumSize: const Size.fromHeight(38),

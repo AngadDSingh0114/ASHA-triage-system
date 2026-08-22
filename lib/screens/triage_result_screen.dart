@@ -62,7 +62,7 @@ class TriageResultScreen extends StatelessWidget {
                 Icon(badgeIcon, size: 60, color: Colors.white),
                 const SizedBox(height: 12),
                 Text(
-                  triageResult.severityLabel,
+                  AppTranslations.localizeDiagnosis(triageResult.severityLabel, currentLanguage),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 22,
@@ -73,7 +73,7 @@ class TriageResultScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  triageResult.title,
+                  AppTranslations.localizeDiagnosis(triageResult.title, currentLanguage),
                   style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 14,
@@ -88,9 +88,7 @@ class TriageResultScreen extends StatelessWidget {
 
           // Clinical Rationale Title
           Text(
-            AppTranslations.getText('rationale_title', currentLanguage) == 'rationale_title'
-                ? 'Clinical Rationale'
-                : AppTranslations.getText('rationale_title', currentLanguage),
+            AppTranslations.getText('rationale_title', currentLanguage),
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
@@ -114,7 +112,7 @@ class TriageResultScreen extends StatelessWidget {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            reason,
+                            AppTranslations.localizeReason(reason, currentLanguage),
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
@@ -132,9 +130,7 @@ class TriageResultScreen extends StatelessWidget {
 
           // Action Recommendation Title
           Text(
-            AppTranslations.getText('recommendation_title', currentLanguage) == 'recommendation_title'
-                ? 'Recommended Care Plan'
-                : AppTranslations.getText('recommendation_title', currentLanguage),
+            AppTranslations.getText('recommendation_title', currentLanguage),
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
@@ -145,7 +141,7 @@ class TriageResultScreen extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(18.0),
               child: Text(
-                triageResult.recommendation,
+                AppTranslations.localizeUrgency(triageResult.recommendation, currentLanguage),
                 style: const TextStyle(
                   fontSize: 15,
                   height: 1.5,
@@ -164,9 +160,9 @@ class TriageResultScreen extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: onGoToAudio,
                   icon: const Icon(Icons.graphic_eq),
-                  label: const Text(
-                    'Audio Brief',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  label: Text(
+                    AppTranslations.getText('listen_tts_btn', currentLanguage),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size.fromHeight(52),
@@ -179,9 +175,9 @@ class TriageResultScreen extends StatelessWidget {
                 child: ElevatedButton.icon(
                   onPressed: onGoToDispatch,
                   icon: const Icon(Icons.send),
-                  label: const Text(
-                    'Send Dispatch',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  label: Text(
+                    AppTranslations.getText('dispatch_alert_btn', currentLanguage),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size.fromHeight(52),

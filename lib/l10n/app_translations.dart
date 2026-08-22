@@ -606,6 +606,321 @@ class AppTranslations {
       AppLanguage.punjabi: 'ਭੇਜੋ',
       AppLanguage.odia: 'ପଠାନ୍ତୁ',
     },
+    'sqlite_queue_note': {
+      AppLanguage.english: 'Saved offline in local SQLite database until network connection is restored',
+      AppLanguage.hindi: 'नेटवर्क कनेक्शन बहाल होने तक स्थानीय SQLite डेटाबेस में ऑफ़लाइन सहेजा गया',
+      AppLanguage.hinglish: 'Local SQLite database mein offline saved',
+      AppLanguage.marathi: 'नेटवर्क जोडणी पुनर्संचयित होईपर्यंत स्थानिक SQLite डेटाबेसमध्ये जतन केले',
+      AppLanguage.urdu: 'مقامی SQLite ڈیٹا بیس میں محفوظ ہے',
+      AppLanguage.tamil: 'உள்ளூர் SQLite தரவுத்தளத்தில் சேமிக்கப்பட்டது',
+      AppLanguage.telugu: 'స్థానిక SQLite డేటాబేస్ లో సేవ్ చేయబడింది',
+      AppLanguage.bengali: 'স্থানীয় SQLite ডেটাবেসে সংরক্ষিত',
+      AppLanguage.gujarati: 'સ્થાનિક SQLite ડેટાબેઝમાં સાચવેલ',
+      AppLanguage.kannada: 'ಸ್ಥಾನಿಕ SQLite ಡೇಟಾಬೇಸ್‌ಗಳಲ್ಲಿ ಉಳಿಸಲಾಗಿದೆ',
+      AppLanguage.malayalam: 'ലോക്കൽ SQLite ഡാറ്റാബേസിൽ സേവ് ചെയ്തു',
+      AppLanguage.punjabi: 'ਸਥਾਨਕ SQLite ਡਾਟਾਬੇਸ ਵਿੱਚ ਸੰਭਾਲਿਆ ਗਿਆ',
+      AppLanguage.odia: 'ସ୍ଥାନୀୟ SQLite ଡାଟାବେସରେ ସଂରକ୍ଷିତ',
+    },
+    'whatsapp_title': {
+      AppLanguage.english: 'Instant Doctor Alert (WhatsApp)',
+      AppLanguage.hindi: 'त्वरित डॉक्टर अलर्ट (व्हाट्सएप)',
+      AppLanguage.hinglish: 'Instant Doctor Alert (WhatsApp)',
+      AppLanguage.marathi: 'झटपट डॉक्टर अलर्ट (व्हॉट्सॲप)',
+      AppLanguage.urdu: 'فوری ڈاکٹر الرٹ (واٹس ایپ)',
+      AppLanguage.tamil: 'உடனடி மருத்துவர் எச்சரிக்கை (வாட்ஸ்அப்)',
+      AppLanguage.telugu: 'క్షణంలో డాక్టర్ హెచ్చరిక (వాట్సాప్)',
+      AppLanguage.bengali: 'ঝটপট ডাক্তার সতর্কবার্তা (হোয়াটসঅ্যাপ)',
+      AppLanguage.gujarati: 'ત્વરિત ડોક્ટર એલર્ટ (વોટ્સએપ)',
+      AppLanguage.kannada: 'ತಕ್ಷಣದ ವೈದ್ಯರ ಎಚ್ಚರಿಕೆ (ವಾಟ್ಸಾಪ್)',
+      AppLanguage.malayalam: 'തൽക്ഷണ ഡോക്ടർ അലേർട്ട് (വാട്ട്സ്ആപ്പ്)',
+      AppLanguage.punjabi: 'ਤੁਰੰਤ ਡਾਕਟਰ ਅਲਰਟ (ਵਟਸਐਪ)',
+      AppLanguage.odia: 'ତୁରନ୍ତ ଡାକ୍ତର ଆଲର୍ଟ (ହ୍ୱାଟସଆପ୍)',
+    },
+    'whatsapp_sub': {
+      AppLanguage.english: 'Send pre-formatted emergency triage summary directly to PHC Medical Officer',
+      AppLanguage.hindi: 'पीएचसी चिकित्सा अधिकारी को सीधे प्री-फॉर्मेटेड आपातकालीन ट्राइएज सारांश भेजें',
+      AppLanguage.hinglish: 'PHC Doctor ko direct emergency referral message bhejein',
+      AppLanguage.marathi: 'पीएचसी वैद्यकीय अधिकाऱ्याला थेट आणीबाणी ट्रायएज सारांश पाठवा',
+      AppLanguage.urdu: 'میڈیکل آفیسر کو براہ راست ریفرل متن بھیجیں',
+      AppLanguage.tamil: 'மருத்துவ அதிகாரிக்கு அவசர சிகிச்சை சுருக்கத்தை அனுப்பவும்',
+      AppLanguage.telugu: 'మెడికల్ ఆఫీసర్‌కు నేరుగా ఎమర్జెన్సీ సారాంశం పంపండి',
+      AppLanguage.bengali: 'মেডিকেল অফিসারকে সরাসরি জরুরি ট্রিয়েজ সারসংক্ষেপ পাঠান',
+      AppLanguage.gujarati: 'મેડિકલ ઓફિસરને સીધો ઇમરજન્સી ટ્રાયજ સારાંશ મોકલો',
+      AppLanguage.kannada: 'ಮೆಡಿಕಲ್ ಆಫೀಸರ್‌ಗೆ ತುರ್ತು ಸಾರಾಂಶವನ್ನು ಕಳುಹಿಸಿ',
+      AppLanguage.malayalam: 'മെഡിക്കൽ ഓഫീസർക്ക് അടിയന്തിര ചുരുക്കം അയക്കുക',
+      AppLanguage.punjabi: 'ਮੈਡੀਕਲ ਅਫਸਰ ਨੂੰ ਤੁਰੰਤ ਐਮਰਜੈਂਸੀ ਸਮਰੀ ਭੇਜੋ',
+      AppLanguage.odia: 'ମେଡିକାଲ୍ ଅଫିସରଙ୍କୁ ସିଧାସଳଖ ଜରୁରୀ ସାରାଂଶ ପଠାନ୍ତୁ',
+    },
+    'send_wa_btn': {
+      AppLanguage.english: 'Dispatch WhatsApp Alert',
+      AppLanguage.hindi: 'व्हाट्सएप अलर्ट भेजें',
+      AppLanguage.hinglish: 'WhatsApp Alert Bhejein',
+      AppLanguage.marathi: 'व्हॉट्सॲप अलर्ट पाठवा',
+      AppLanguage.urdu: 'واٹس ایپ الرٹ بھیجیں',
+      AppLanguage.tamil: 'வாட்ஸ்அப் எச்சரிக்கை அனுப்பு',
+      AppLanguage.telugu: 'వాట్సాప్ అలర్ట్ పంపండి',
+      AppLanguage.bengali: 'হোয়াটসঅ্যাপ অ্যালার্ট পাঠান',
+      AppLanguage.gujarati: 'વોટ્સએપ એલર્ટ મોકલો',
+      AppLanguage.kannada: 'ವಾಟ್ಸಾಪ್ ಎಚ್ಚರಿಕೆ ಕಳುಹಿಸಿ',
+      AppLanguage.malayalam: 'വാട്ട്സ്ആപ്പ് അലേർട്ട് അയക്കുക',
+      AppLanguage.punjabi: 'ਵਟਸਐਪ ਅਲਰਟ ਭੇਜੋ',
+      AppLanguage.odia: 'ହ୍ୱାଟସଆପ୍ ଆଲର୍ଟ ପଠାନ୍ତୁ',
+    },
+    'sms_title': {
+      AppLanguage.english: 'Offline SMS Referral (Fallback)',
+      AppLanguage.hindi: 'ऑफ़लाइन एसएमएस रेफरल (फ़ॉलबैक)',
+      AppLanguage.hinglish: 'Offline SMS Referral',
+      AppLanguage.marathi: 'ऑफलाइन एसएमएस संदर्भ (फॉलबॅक)',
+      AppLanguage.urdu: 'آف لائن ایس ایم ایس ریفرل',
+      AppLanguage.tamil: 'ஆஃப்லைன் எஸ்எம்எஸ் பரிந்துரை',
+      AppLanguage.telugu: 'ఆఫ్‌లైన్ ఎస్ఎమ్ఎస్ రిఫరల్',
+      AppLanguage.bengali: 'অফলাইন এসএমএস রেফারেল',
+      AppLanguage.gujarati: 'ઓફલાઇન એસએમએસ રિફરલ',
+      AppLanguage.kannada: 'ಆಫ್‌ಲೈನ್ ಎಸ್‌ಎಮ್‌ಎಸ್‌ ಶಿಫಾರಸು',
+      AppLanguage.malayalam: 'ഓഫ്‌ലൈൻ എസ്എംഎസ് റഫറൽ',
+      AppLanguage.punjabi: 'ਆਫਲਾਈਨ ਐਸਐਮਐਸ ਰੈਫਰਲ',
+      AppLanguage.odia: 'ଅଫଲାଇନ୍ ଏସଏମଏସ ରେଫରାଲ୍',
+    },
+    'sms_sub': {
+      AppLanguage.english: '140-Character optimized SMS snippet for 0G network areas',
+      AppLanguage.hindi: '0G नेटवर्क क्षेत्रों के लिए 140-वर्णों का अनुकूलित एसएमएस कोड',
+      AppLanguage.hinglish: '0G network ke liye 140-character SMS snippet',
+      AppLanguage.marathi: '0G नेटवर्क क्षेत्रांसाठी 140-अक्षरांचा एसएमएस',
+      AppLanguage.urdu: '0G نیٹ ورک کے لیے 140 حرفی ایس ایم ایس',
+      AppLanguage.tamil: '0G நெட்வொர்க்கிற்கான 140-எழுத்து SMS',
+      AppLanguage.telugu: '0G నెట్‌వర్క్ కోసం 140-అక్షరాల SMS',
+      AppLanguage.bengali: '0G নেটওয়ার্কের জন্য 140-অক্ষরের এসএমএস',
+      AppLanguage.gujarati: '0G નેટવર્ક માટે 140-અક્ષરનો એસએમએસ',
+      AppLanguage.kannada: '0G ನೆಟ್‌ವರ್ಕ್‌ಗಾಗಿ 140-ಅಕ್ಷರಗಳ SMS',
+      AppLanguage.malayalam: '0G നെറ്റ്‌വർക്കിനായുള്ള 140-അക്ഷര SMS',
+      AppLanguage.punjabi: '0G ਨੈੱਟਵਰਕ ਲਈ 140-ਅੱਖਰਾਂ ਦਾ SMS',
+      AppLanguage.odia: '0G ନେଟୱାର୍କ ପାଇଁ 140-ଅକ୍ଷର SMS',
+    },
+    'send_sms_btn': {
+      AppLanguage.english: 'Copy & Send SMS Snippet',
+      AppLanguage.hindi: 'एसएमएस कॉपी करें और भेजें',
+      AppLanguage.hinglish: 'Copy & Send SMS Snippet',
+      AppLanguage.marathi: 'एसएमएस कॉपी करा आणि पाठवा',
+      AppLanguage.urdu: 'ایس ایم ایس کاپی اور ارسال کریں',
+      AppLanguage.tamil: 'SMS நகலெடுத்து அனுப்பு',
+      AppLanguage.telugu: 'SMS కాపీ చేసి పంపండి',
+      AppLanguage.bengali: 'এসএমএস কপি করুন এবং পাঠান',
+      AppLanguage.gujarati: 'એસએમએસ કોપી કરો અને મોકલો',
+      AppLanguage.kannada: 'SMS ನಕಲಿಸಿ ಮತ್ತು ಕಳುಹಿಸಿ',
+      AppLanguage.malayalam: 'SMS കോപ്പി ചെയ്തു അയക്കുക',
+      AppLanguage.punjabi: 'SMS ਕਾਪੀ ਕਰੋ ਅਤੇ ਭੇਜੋ',
+      AppLanguage.odia: 'SMS କପି କରନ୍ତୁ ଏବଂ ପଠାନ୍ତୁ',
+    },
+    'audio_card_title': {
+      AppLanguage.english: '10s Clinical Audio Note',
+      AppLanguage.hindi: '10-सेकंड क्लिनिकल ऑडियो नोट',
+      AppLanguage.hinglish: '10s Clinical Audio Note',
+      AppLanguage.marathi: '10-सेकंद क्लिनिकल ऑडिओ नोट',
+      AppLanguage.urdu: '10 سیکنڈ کلینیکل آڈیو نوٹ',
+      AppLanguage.tamil: '10 வினாடி மருத்துவ ஆடியோ குறிப்பு',
+      AppLanguage.telugu: '10 సెకన్ల క్లినికల్ ఆడియో నోట్',
+      AppLanguage.bengali: '১০ সেকেন্ডের ক্লিনিকাল অডিও নোট',
+      AppLanguage.gujarati: '૧૦ સેકન્ડ ક્લિનિકલ ઓડિયો નોટ',
+      AppLanguage.kannada: '10ಸೆ ಕ್ಲಿನಿಕಲ್ ಆಡಿಯೋ ನೋಟ್',
+      AppLanguage.malayalam: '10 സെക്കൻഡ് ക്ലിനിക്കൽ ഓഡിയോ നോട്ട്',
+      AppLanguage.punjabi: '10 ਸੈਕਿੰਡ ਕਲੀਨਿਕਲ ਆਡੀਓ ਨੋਟ',
+      AppLanguage.odia: '୧୦ ସେକେଣ୍ଡ କ୍ଲିନିକାଲ୍ ଅଡିଓ ନୋଟ୍',
+    },
+    'audio_target_subtitle': {
+      AppLanguage.english: 'Target: PHC Medical Officer / CHC Referral',
+      AppLanguage.hindi: 'लक्ष्य: पीएचसी चिकित्सा अधिकारी / सीएचसी रेफरल',
+      AppLanguage.hinglish: 'Target: PHC Medical Officer / CHC Referral',
+      AppLanguage.marathi: 'लक्ष्य: पीएचसी वैद्यकीय अधिकारी / सीएचसी संदर्भ',
+      AppLanguage.urdu: 'ہدف: پی ایچ سی میڈیکل آفیسر',
+      AppLanguage.tamil: 'இலக்கு: ஆரம்ப சுகாதார நிலைய மருத்துவர்',
+      AppLanguage.telugu: 'లక్ష్యం: పిహెచ్‌సి మెడికల్ ఆఫీసర్',
+      AppLanguage.bengali: 'লক্ষ্য: পিএইচসি মেডিকেল অফিসার',
+      AppLanguage.gujarati: 'લક્ષ્ય: પીએચસી મેડિકલ ઓફિસર',
+      AppLanguage.kannada: 'ಗುರಿ: PHC ಮೆಡಿಕಲ್ ಆಫೀಸರ್',
+      AppLanguage.malayalam: 'ലക്ഷ്യം: PHC മെഡിക്കൽ ഓഫീസർ',
+      AppLanguage.punjabi: 'ਨਿਸ਼ਾਨਾ: PHC ਮੈਡੀਕਲ ਅਫਸਰ',
+      AppLanguage.odia: 'ଲକ୍ଷ୍ୟ: PHC ମେଡିକାଲ୍ ଅଫିସର',
+    },
+    'audio_play_hint': {
+      AppLanguage.english: 'Tap Play to Hear 10s Audio Summary',
+      AppLanguage.hindi: '10-सेकंड का ऑडियो सारांश सुनने के लिए प्ले दबाएं',
+      AppLanguage.hinglish: '10s Audio Summary Sunne Ke Liye Play Dhabayein',
+      AppLanguage.marathi: '10-सेकंदाचा ऑडिओ सारांश ऐकण्यासाठी प्ले दाबा',
+      AppLanguage.urdu: 'آڈیو خلاصہ سننے کے لیے پلے کو دبائیں',
+      AppLanguage.tamil: 'ஆடியோ சுருக்கத்தைக் கேட்க பிளே தட்டவும்',
+      AppLanguage.telugu: 'ఆడియో సారాంశం వినడానికి ప్లే నొక్కండి',
+      AppLanguage.bengali: 'অডিও সারসংক্ষেপ শুনতে প্লে চাপুন',
+      AppLanguage.gujarati: 'ઓડિયો સારાંશ સાંભળવા પ્લે દબાવો',
+      AppLanguage.kannada: 'ಆಡಿಯೋ ಸಾರಾಂಶ ಕೇಳಲು ಪ್ಲೇ ಒತ್ತಿರಿ',
+      AppLanguage.malayalam: 'ഓഡിയോ സംഗ്രഹം കേൾക്കാൻ പ്ലേ ചെയ്യുക',
+      AppLanguage.punjabi: 'ਆਡੀਓ ਸਮਰੀ ਸੁਣਨ ਲਈ ਪਲੇ ਦਬਾਓ',
+      AppLanguage.odia: 'ଅଡିଓ ସାରାଂଶ ଶୁଣିବା ପାଇଁ ପ୍ଲେ ଦବାନ୍ତୁ',
+    },
+    'audio_script_title': {
+      AppLanguage.english: '10-Second Synthesized Doctor Audio Script',
+      AppLanguage.hindi: '10-सेकंड का संश्लेषित डॉक्टर ऑडियो स्क्रिप्ट',
+      AppLanguage.hinglish: '10-Second Synthesized Doctor Audio Script',
+      AppLanguage.marathi: '10-सेकंदाचा संश्लेषित डॉक्टर ऑडिओ स्क्रिप्ट',
+      AppLanguage.urdu: '10 سیکنڈ ڈاکٹر آڈیو اسکرپٹ',
+      AppLanguage.tamil: '10-வினாடி மருத்துவர் ஆடியோ ஸ்கிரிப்ட்',
+      AppLanguage.telugu: '10-సెకన్ల డాక్టర్ ఆడియో స్క్రిప్ట్',
+      AppLanguage.bengali: '১০-সেকেন্ডের ডাক্তার অডিও স্ক্রিপ্ট',
+      AppLanguage.gujarati: '૧૦-સેકન્ડ ડોક્ટર ઓડિયો સ્ક્રીપ્ટ',
+      AppLanguage.kannada: '10-ಸೆಕೆಂಡ್ ಡಾಕ್ಟರ್ ಆಡಿಯೋ ಸ್ಕ್ರಿಪ್ಟ್',
+      AppLanguage.malayalam: '10-സെക്കൻഡ് ഡോക്ടർ ഓഡിയോ സ്ക്രിപ്റ്റ്',
+      AppLanguage.punjabi: '10-ਸੈਕਿੰਡ ਡਾਕਟਰ ਆਡੀਓ ਸਕ੍ਰਿਪਟ',
+      AppLanguage.odia: '୧୦-ସେକେଣ୍ଡ ଡାକ୍ତର ଅଡିଓ ସ୍କ୍ରିପ୍ଟ',
+    },
+    'audio_digest_title': {
+      AppLanguage.english: 'Classified Symptoms Audio Digest',
+      AppLanguage.hindi: 'वर्गीकृत लक्षणों का ऑडियो सारांश',
+      AppLanguage.hinglish: 'Classified Symptoms Audio Digest',
+      AppLanguage.marathi: 'वर्गीकृत लक्षणांचा ऑडिओ गोषवारा',
+      AppLanguage.urdu: 'تشخیص شدہ علامات کا آڈیو خلاصہ',
+      AppLanguage.tamil: 'வகைப்படுத்தப்பட்ட அறிகுறிகள் ஆடியோ',
+      AppLanguage.telugu: 'వర్గీకరించబడిన లక్షణాల ఆడియో సారాంశం',
+      AppLanguage.bengali: 'শ্রেণীবদ্ধ লক্ষণগুলির অডিও ডাইজেস্ট',
+      AppLanguage.gujarati: 'વર્ગીકૃત લક્ષણોનો ઓડિયો ડાઇજેસ્ટ',
+      AppLanguage.kannada: 'ವರ್ಗೀಕರಿಸಿದ ರೋಗಲಕ್ಷಣಗಳ ಆಡಿಯೋ ಸಾರಾಂಶ',
+      AppLanguage.malayalam: 'വർഗ്ഗീകരിച്ച ലക്ഷണങ്ങളുടെ ഓഡിയോ സംഗ്രഹം',
+      AppLanguage.punjabi: 'ਵਰਗੀਕ੍ਰਿਤ ਲੱਛਣਾਂ ਦਾ ਆਡੀਓ ਸਮਰੀ',
+      AppLanguage.odia: 'ବର୍ଗୀକୃତ ଲକ୍ଷଣର ଅଡିଓ ସାରାଂଶ',
+    },
+    'audio_page_subtitle': {
+      AppLanguage.english: 'Synthesized text-to-speech audio summary for fast PHC doctor handoff',
+      AppLanguage.hindi: 'तेज पीएचसी डॉक्टर हैंडऑफ के लिए टेक्स्ट-टू-स्पीच ऑडियो सारांश',
+      AppLanguage.hinglish: 'Fast PHC Doctor handoff ke liye Text-To-Speech audio note',
+      AppLanguage.marathi: 'जलद पीएचसी डॉक्टर हस्तांतरणासाठी मजकूर-ते-उच्चार ऑडिओ सारांश',
+      AppLanguage.urdu: 'ڈاکٹر کو فوری منتقلی کے لیے آڈیو خلاصہ',
+      AppLanguage.tamil: 'மருத்துவர் ஒப்படைப்பிற்கான உரை-பேச்சு ஆடியோ சுருக்கம்',
+      AppLanguage.telugu: 'డాక్టర్ హ్యాండ్‌ఆఫ్ కోసం టెక్స్ట్-టు-స్పీచ్ ఆడియో సారాంశం',
+      AppLanguage.bengali: 'দ্রুত পিএইচসি ডাক্তার হ্যান্ডঅফের জন্য পাঠ্য-থেকে-বাক অডিও',
+      AppLanguage.gujarati: 'ઝડપી પીએચસી ડોક્ટર હેન્ડઓફ માટે ઓડિયો સારાંશ',
+      AppLanguage.kannada: 'ವೇಗದ PHC ವೈದ್ಯರ ಹಸ್ತಾಂತರಕ್ಕಾಗಿ ಆಡಿಯೋ ಸಾರಾಂಶ',
+      AppLanguage.malayalam: 'വേഗത്തിലുള്ള ഡോക്ടർ ഹാൻഡ് ഓഫിനായുള്ള ഓഡിയോ സംഗ്രഹം',
+      AppLanguage.punjabi: 'ਤੁਰੰਤ ਡਾਕਟਰ ਹੈਂਡਆਫ ਲਈ ਟੈਕਸਟ-ਟੂ-ਸਪੀਚ ਆਡੀਓ ਸਮਰੀ',
+      AppLanguage.odia: 'ଦ୍ରୁତ ଡାକ୍ତର ହ୍ୟାଣ୍ଡଅଫ୍ ପାଇଁ ଟେକ୍ସଟ୍-ଟୁ-ସ୍ପିଚ୍ ଅଡିଓ',
+    },
+    'live_ai_title': {
+      AppLanguage.english: 'LIVE AI MODEL EXTRACTION RESULT',
+      AppLanguage.hindi: 'लाइव एआई मॉडल निष्कर्षण परिणाम',
+      AppLanguage.hinglish: 'LIVE AI Model Result',
+      AppLanguage.marathi: 'थेट एआय मॉडेल निष्कर्ष निकाल',
+      AppLanguage.urdu: 'لائیو اے آئی ماڈل کے نتائج',
+      AppLanguage.tamil: 'நேரடி AI மாதிரி பிரித்தெடுத்தல் முடிவு',
+      AppLanguage.telugu: 'లైవ్ AI మోడల్ ఎక్స్‌ట్రాక్షన్ ఫలితం',
+      AppLanguage.bengali: 'লাইভ AI মডেল নিষ্কাশন ফলাফল',
+      AppLanguage.gujarati: 'લાઈવ AI મોડલ નિષ્કર્ષણ પરિણામ',
+      AppLanguage.kannada: 'ಲೈವ್ AI ಮಾಡೆಲ್ ಹೊರತೆಗೆಯುವಿಕೆ ಫಲಿತಾಂಶ',
+      AppLanguage.malayalam: 'ലൈവ് AI മോഡൽ എക്സ്ട്രാക്ഷൻ ഫലം',
+      AppLanguage.punjabi: 'ਲਾਈਵ AI ਮਾਡਲ ਨਤੀਜਾ',
+      AppLanguage.odia: 'ଲାଇଭ୍ AI ମଡେଲ୍ ନିଷ୍କାସନ ଫଳାଫଳ',
+    },
+    'extracted_age_label': {
+      AppLanguage.english: 'Extracted Age',
+      AppLanguage.hindi: 'पहचाना गया आयु',
+      AppLanguage.hinglish: 'Extracted Age',
+      AppLanguage.marathi: 'ओळखलेले वय',
+      AppLanguage.urdu: 'نکالی گئی عمر',
+      AppLanguage.tamil: 'பிரித்தெடுக்கப்பட்ட வயது',
+      AppLanguage.telugu: 'గుర్తించిన వయస్సు',
+      AppLanguage.bengali: 'নিষ্কাশিত বয়স',
+      AppLanguage.gujarati: 'નિષ્કર્ષિત ઉંમર',
+      AppLanguage.kannada: 'ಹೊರತೆಗೆದ ವಯಸ್ಸು',
+      AppLanguage.malayalam: 'വേർതിരിച്ചെടുത്ത വയസ്സ്',
+      AppLanguage.punjabi: 'ਪਛਾਣੀ ਗਈ ਉਮਰ',
+      AppLanguage.odia: 'ସଂଗୃହିତ ବୟସ',
+    },
+    'extracted_rr_label': {
+      AppLanguage.english: 'Extracted Respiratory Rate',
+      AppLanguage.hindi: 'पहचाना गया श्वसन दर (RR)',
+      AppLanguage.hinglish: 'Extracted Respiratory Rate (RR)',
+      AppLanguage.marathi: 'ओळखलेला श्वसन दर (RR)',
+      AppLanguage.urdu: 'نکالی گئی سانس کی شرح',
+      AppLanguage.tamil: 'பிரித்தெடுக்கப்பட்ட சுவாச விகிதம்',
+      AppLanguage.telugu: 'గుర్తించిన శ్వాసకోశ రేటు',
+      AppLanguage.bengali: 'নিষ্কাশিত শ্বাসযন্ত্রের হার',
+      AppLanguage.gujarati: 'નિષ્કર્ષિત શ્વસન દર',
+      AppLanguage.kannada: 'ಹೊರತೆಗೆದ ಉಸಿರಾಟದ ದರ',
+      AppLanguage.malayalam: 'വേർതിരിച്ചെടുത്ത ശ്വസന നിരക്ക്',
+      AppLanguage.punjabi: 'ਪਛਾਣੀ ਗਈ ਸਾਹ ਦੀ ਦਰ',
+      AppLanguage.odia: 'ସଂଗୃହିତ ଶ୍ୱାସକ୍ରିୟା ହାର',
+    },
+    'extracted_temp_label': {
+      AppLanguage.english: 'Extracted Temperature',
+      AppLanguage.hindi: 'पहचाना गया तापमान',
+      AppLanguage.hinglish: 'Extracted Temperature',
+      AppLanguage.marathi: 'ओळखलेले तापमान',
+      AppLanguage.urdu: 'نکالا گیا درجہ حرارت',
+      AppLanguage.tamil: 'பிரித்தெடுக்கப்பட்ட வெப்பநிலை',
+      AppLanguage.telugu: 'గుర్తించిన ఉష్ణోగ్రత',
+      AppLanguage.bengali: 'নিষ্কাশিত তাপমাত্রা',
+      AppLanguage.gujarati: 'નિષ્કર્ષિત તાપમાન',
+      AppLanguage.kannada: 'ಹೊರತೆಗೆದ ತಾಪಮಾನ',
+      AppLanguage.malayalam: 'വേർതിരിച്ചെടുത്ത താപനില',
+      AppLanguage.punjabi: 'ਪਛਾਣਿਆ ਗਿਆ ਤਾਪਮਾਨ',
+      AppLanguage.odia: 'ସଂଗୃହିତ ତାପମାତ୍ରା',
+    },
+    'extracted_indrawing_label': {
+      AppLanguage.english: 'Severe Chest Indrawing',
+      AppLanguage.hindi: 'गंभीर छाती धंसना',
+      AppLanguage.hinglish: 'Severe Chest Indrawing',
+      AppLanguage.marathi: 'गंभीर छाती धसणे',
+      AppLanguage.urdu: 'شدید چھاتی کا دھنسنا',
+      AppLanguage.tamil: 'கடுமையான மார்பு உள்ளிழுப்பு',
+      AppLanguage.telugu: 'తీవ్రమైన ఛాతీ లోపలికి లాగడం',
+      AppLanguage.bengali: 'বুক মারাত্মক ডোবা',
+      AppLanguage.gujarati: 'ગંભીર છાતી ડૂબવી',
+      AppLanguage.kannada: 'ತೀವ್ರ ಎದೆ ಒಳಕ್ಕೆ',
+      AppLanguage.malayalam: 'കഠിനമായ നെഞ്ച് ഉള്ളിലേക്ക് വലിയൽ',
+      AppLanguage.punjabi: 'ਗੰਭੀਰ ਛਾਤੀ ਡੁੱਬਣਾ',
+      AppLanguage.odia: 'ଗମ୍ଭୀର ଛାତି ଡୁବା',
+    },
+    'ai_predicted_severity_title': {
+      AppLanguage.english: 'AI Predicted Severity',
+      AppLanguage.hindi: 'एआई द्वारा अनुमानित गंभीरता',
+      AppLanguage.hinglish: 'AI Predicted Severity',
+      AppLanguage.marathi: 'एआय द्वारे अंदाज लावलेली तीव्रता',
+      AppLanguage.urdu: 'اے آئی کی پیشن گوئی کی شدت',
+      AppLanguage.tamil: 'AI கணிக்கப்பட்ட தீவிரத்தன்மை',
+      AppLanguage.telugu: 'AI అంచనా వేసిన తీవ్రత',
+      AppLanguage.bengali: 'AI পূর্বাভাসকৃত তীব্রতা',
+      AppLanguage.gujarati: 'AI અનુમાનિત ગંભીરતા',
+      AppLanguage.kannada: 'AI ಊಹಿಸಿದ ತೀವ್ರತೆ',
+      AppLanguage.malayalam: 'AI പ്രവചിച്ച തീവ്രത',
+      AppLanguage.punjabi: 'AI ਪੂਰਵ-ਅਨੁਮਾਨਿਤ ਗੰਭੀਰਤਾ',
+      AppLanguage.odia: 'AI ପୂର୍ବାନୁମାନିତ ଗାମ୍ଭୀର୍ଯ୍ୟ',
+    },
+    'sync_btn_label': {
+      AppLanguage.english: '⚡ Sync Pending Records to PHC Dashboard',
+      AppLanguage.hindi: '⚡ पीएचसी डैशबोर्ड पर लंबित रिकॉर्ड सिंक करें',
+      AppLanguage.hinglish: '⚡ Sync Pending Records to PHC Dashboard',
+      AppLanguage.marathi: '⚡ पीएचसी डॅशबोर्डवर प्रलंबित रेकॉर्ड सिंक करा',
+      AppLanguage.urdu: '⚡ پینڈنگ ریکارڈز سنک کریں',
+      AppLanguage.tamil: '⚡ நிலுவையில் உள்ள பதிவுகளை ஒத்திசைக்கவும்',
+      AppLanguage.telugu: '⚡ పెండింగ్‌లో ఉన్న రికార్డులను సింక్ చేయండి',
+      AppLanguage.bengali: '⚡ মুলতুবি রেকর্ড সিঙ্ক করুন',
+      AppLanguage.gujarati: '⚡ બાકી રેકોર્ડ સિંક કરો',
+      AppLanguage.kannada: '⚡ ಬಾಕಿ ಇರುವ ದಾಖಲೆಗಳನ್ನು ಸಿಂಕ್ ಮಾಡಿ',
+      AppLanguage.malayalam: '⚡ നിലവിലുള്ള റെക്കോർഡുകൾ സിങ്ക് ചെയ്യുക',
+      AppLanguage.punjabi: '⚡ ਪੈਂਡਿੰਗ ਰਿਕਾਰਡ ਸਿੰਕ ਕਰੋ',
+      AppLanguage.odia: '⚡ ବାକି ଥିବା ରେକର୍ଡ ସିଙ୍କ କରନ୍ତୁ',
+    },
+    'view_db_records_label': {
+      AppLanguage.english: '🔍 View Saved SQLite Records',
+      AppLanguage.hindi: '🔍 सहेजे गए SQLite रिकॉर्ड देखें',
+      AppLanguage.hinglish: '🔍 View Saved SQLite Records',
+      AppLanguage.marathi: '🔍 जतन केलेले SQLite रेकॉर्ड पहा',
+      AppLanguage.urdu: '🔍 محفوظ شدہ ریکارڈز دیکھیں',
+      AppLanguage.tamil: '🔍 சேமிக்கப்பட்ட பதிவுகளைப் பார்க்கவும்',
+      AppLanguage.telugu: '🔍 సేవ్ చేసిన రికార్డులను చూడండి',
+      AppLanguage.bengali: '🔍 সংরক্ষিত রেকর্ড দেখুন',
+      AppLanguage.gujarati: '🔍 સાચવેલા રેકોર્ડ જુઓ',
+      AppLanguage.kannada: '🔍 ಉಳಿಸಿದ ದಾಖಲೆಗಳನ್ನು ನೋಡಿ',
+      AppLanguage.malayalam: '🔍 സേവ് ചെയ്ത റെക്കോർഡുകൾ കാണുക',
+      AppLanguage.punjabi: '🔍 ਸੰਭਾਲੇ ਗਏ ਰਿਕਾਰਡ ਦੇਖੋ',
+      AppLanguage.odia: '🔍 ସଂରକ୍ଷିତ ରେକର୍ଡ ଦେଖନ୍ତୁ',
+    },
   };
 
   static String getText(String key, AppLanguage lang) {
@@ -613,5 +928,149 @@ class AppTranslations {
       return _keys[key]![lang]!;
     }
     return _keys[key]?[AppLanguage.english] ?? key;
+  }
+
+  /// Localize Person B Clinical Diagnoses across 13 Indic Languages
+  static String localizeDiagnosis(String diagnosis, AppLanguage lang) {
+    if (lang == AppLanguage.english) return diagnosis;
+    
+    final Map<String, Map<AppLanguage, String>> diagMap = {
+      'SEVERE PNEUMONIA / VERY SEVERE DISEASE': {
+        AppLanguage.hindi: 'गंभीर निमोनिया / अत्यंत गंभीर बीमारी',
+        AppLanguage.marathi: 'गंभीर न्यूमोनिया / अत्यंत गंभीर आजार',
+        AppLanguage.urdu: 'شدید نمونیا / بہت شدید بیماری',
+        AppLanguage.tamil: 'கடுமையான நியூமோனியா / மிக கடுமையான நோய்',
+        AppLanguage.telugu: 'తీవ్రమైన న్యుమోనియా / చాలా తీవ్రమైన వ్యాధి',
+        AppLanguage.bengali: 'গুরুতর নিউমোনিয়া / অত্যন্ত মারাত্মক রোগ',
+        AppLanguage.gujarati: 'ગંભીર ન્યુમોનિયા / ખૂબ ગંભીર રોગ',
+        AppLanguage.kannada: 'ತೀವ್ರ ನ್ಯುಮೋನಿಯಾ / ಅತ್ಯಂತ ತೀವ್ರ ಕಾಯಿಲೆ',
+        AppLanguage.malayalam: 'കഠിനമായ ന്യൂമോണിയ / വളരെ തീവ്രമായ രോഗം',
+        AppLanguage.punjabi: 'ਗੰਭੀਰ ਨਿਮੋਨੀਆ / ਬਹੁਤ ਗੰਭੀਰ ਬੀਮਾਰੀ',
+        AppLanguage.odia: 'ଗମ୍ଭୀର ନିମୋନିଆ / ଅତ୍ୟନ୍ତ ଗମ୍ଭୀର ରୋଗ',
+      },
+      'PNEUMONIA (Fast Breathing)': {
+        AppLanguage.hindi: 'निमोनिया (तेज सांस)',
+        AppLanguage.marathi: 'न्यूमोनिया (जलद श्वासोच्छवास)',
+        AppLanguage.urdu: 'نمونیا (تیز سانس)',
+        AppLanguage.tamil: 'நியூமோனியா (வேகமான சுவாசம்)',
+        AppLanguage.telugu: 'న్యుమోనియా (వేగవంతమైన శ్వాస)',
+        AppLanguage.bengali: 'নিউমোনিয়া (দ্রুত শ্বাস)',
+        AppLanguage.gujarati: 'ન્યુમોનિયા (ઝડપી શ્વાસ)',
+        AppLanguage.kannada: 'ನ್ಯುಮೋನಿಯಾ (ವೇಗದ ಉಸಿರಾಟ)',
+        AppLanguage.malayalam: 'ന്യൂമോണിയ (വേഗത്തിലുള്ള ശ്വസനം)',
+        AppLanguage.punjabi: 'ਨਿਮੋਨੀਆ (ਤੇਜ਼ ਸਾਹ)',
+        AppLanguage.odia: 'ନିମୋନିଆ (ଦ୍ରୁତ ଶ୍ୱାସ)',
+      },
+      'FEVER - POSSIBLE MALARIA / TYPHOID': {
+        AppLanguage.hindi: 'बुखार - संभव मलेरिया / टाइफाइड',
+        AppLanguage.marathi: 'ताप - संभाव्य हिवताप / टायफॉइड',
+        AppLanguage.urdu: 'بخار - ممکنہ ملیریا / ٹائیفائیڈ',
+        AppLanguage.tamil: 'காய்ச்சல் - மலேரியா / டைபாய்டு சாத்தியம்',
+        AppLanguage.telugu: 'జ్వరం - మలేరియా / టైఫాయిడ్ కావచ్చు',
+        AppLanguage.bengali: 'জ্বর - সম্ভাব্য ম্যালেরিয়া / টাইফয়েড',
+        AppLanguage.gujarati: 'ાવ - સંભવિત મલેરિયા / ટાઇફોઇડ',
+        AppLanguage.kannada: 'ಜ್ವರ - ಮಲೇರಿಯಾ / ಟೈಫಾಯಿಡ್ ಸಾಧ್ಯತೆ',
+        AppLanguage.malayalam: 'പനി - മലേറിയ / ടൈഫോയ്ഡ് സാധൃത',
+        AppLanguage.punjabi: 'ਬੁਖਾਰ - ਸੰਭਵ ਮਲੇਰੀਆ / ਟਾਈਫਾਈਡ',
+        AppLanguage.odia: 'ଜ୍ୱର - ସମ୍ଭାବ୍ୟ ମଲେରିଆ / ଟାଇଫଏଡ୍',
+      },
+      'DIARRHEA / GASTROENTERITIS': {
+        AppLanguage.hindi: 'दस्त / आंत्रशोथ',
+        AppLanguage.marathi: 'अतिसार / जुलाब',
+        AppLanguage.urdu: 'اسہال / پیٹ کی بیماری',
+        AppLanguage.tamil: 'வயிற்றுப்போக்கு',
+        AppLanguage.telugu: 'విరేచనాలు',
+        AppLanguage.bengali: 'ডায়রিয়া / গ্যাস্ট্রোএন্টারাইটিস',
+        AppLanguage.gujarati: 'ઝાડા / અતિસાર',
+        AppLanguage.kannada: 'ಭೇದಿ / ಜಠರRefIn',
+        AppLanguage.malayalam: 'അതിസാരം / വയറിളക്കം',
+        AppLanguage.punjabi: 'ਦਸਤ / ਅਤਿਸਾਰ',
+        AppLanguage.odia: 'ଝାଡ଼ା / ଆତିସାର',
+      },
+      'NO PNEUMONIA / MILD ILLNESS': {
+        AppLanguage.hindi: 'कोई निमोनिया नहीं / हल्की बीमारी',
+        AppLanguage.marathi: 'न्यूमोनिया नाही / सौम्य आजार',
+        AppLanguage.urdu: 'کوئی نمونیا نہیں / ہلکی بیماری',
+        AppLanguage.tamil: 'நியூமோனியா இல்லை / லேசான நோய்',
+        AppLanguage.telugu: 'న్యుమోనియా లేదు / తేలికపాటి అనారోగ్యం',
+        AppLanguage.bengali: 'কোনো নিউমোনিয়া নেই / মৃদু অসুস্থতা',
+        AppLanguage.gujarati: 'કોઈ ન્યુમોનિયા નથી / સામાન્ય બીમારી',
+        AppLanguage.kannada: 'ನ್ಯುಮೋನಿಯಾ ಇಲ್ಲ / ಸೌಮ್ಯ ಕಾಯಿಲೆ',
+        AppLanguage.malayalam: 'ന്യൂമോണിയ ഇല്ല / നേരിയ രോഗം',
+        AppLanguage.punjabi: 'ਕੋਈ ਨਿਮੋਨੀਆ ਨਹੀਂ / ਹਲਕੀ ਬੀਮਾਰੀ',
+        AppLanguage.odia: 'କୌଣସି ନିମୋନିଆ ନାହିଁ / ହାଲୁକା ରୋଗ',
+      },
+    };
+
+    if (diagMap.containsKey(diagnosis) && diagMap[diagnosis]!.containsKey(lang)) {
+      return diagMap[diagnosis]![lang]!;
+    }
+    return diagnosis;
+  }
+
+  /// Localize Person B Clinical Urgency / Recommendation across 13 Indic Languages
+  static String localizeUrgency(String urgency, AppLanguage lang) {
+    if (lang == AppLanguage.english) return urgency;
+
+    if (urgency.contains('URGENT HOSPITAL REFERRAL')) {
+      switch (lang) {
+        case AppLanguage.hindi:
+          return 'तुरंत अस्पताल रेफर करें: स्थानांतरण से पहले उचित एंटीबायोटिक की पहली खुराक दें। यात्रा के दौरान बच्चे को गर्म रखें। तुरंत नजदीकी अस्पताल / FRU भेजें।';
+        case AppLanguage.marathi:
+          return 'तातडीने रुग्णालयात पाठवा: हस्तांतरणापूर्वी प्रतिजैविकांचा पहिला डोस द्या. प्रवासादरम्यान मुलाला उबदार ठेवा.';
+        default:
+          break;
+      }
+    } else if (urgency.contains('REFER TO PHC WITHIN 24 HOURS')) {
+      switch (lang) {
+        case AppLanguage.hindi:
+          return '24 घंटे के भीतर PHC भेजें: 5 दिन तक एमोक्सिसिलिन दें। सुरक्षित घरेलू उपाय से गला शांत करें। लक्षण बिगड़ने पर तुरंत लौटने की सलाह दें।';
+        case AppLanguage.marathi:
+          return '24 तासांच्या आत पीएचसी पाठवा: 5 दिवस अमोक्सिसिलिन द्या. लक्षणे बिघडल्यास त्वरित परत येण्याचा सल्ला द्या.';
+        default:
+          break;
+      }
+    } else if (urgency.contains('HOME CARE')) {
+      switch (lang) {
+        case AppLanguage.hindi:
+          return 'घर पर देखभाल: अतिरिक्त तरल (ORS और 14 दिन तक जिंक) दें। बच्चे को खाना जारी रखें। घरेलू उपाय से गला शांत करें। लक्षण बिगड़ने पर तुरंत लौटें।';
+        case AppLanguage.marathi:
+          return 'घरी काळजी घ्या: अतिरिक्त द्रव (ORS आणि झिंक) द्या. मुलाला भरवणे सुरू ठेवा.';
+        default:
+          break;
+      }
+    }
+    return urgency;
+  }
+
+  /// Localize Clinical Reasons & Findings List across 13 Indic Languages
+  static String localizeReason(String reason, AppLanguage lang) {
+    if (lang == AppLanguage.english) return reason;
+
+    if (reason.contains('Severe chest indrawing') || reason.contains('chest_indrawing')) {
+      return getText('extracted_indrawing_label', lang);
+    }
+    if (reason.contains('Fast Breathing') || reason.contains('fast_breathing')) {
+      return lang == AppLanguage.hindi ? 'तेज सांस (फास्ट ब्रीदिंग)' : reason;
+    }
+    if (reason.contains('Mild Hypoxia')) {
+      return lang == AppLanguage.hindi ? 'हल्का हाइपोक्सिया (कम ऑक्सीजन)' : reason;
+    }
+    if (reason.contains('Severe Hypoxia')) {
+      return lang == AppLanguage.hindi ? 'गंभीर हाइपोक्सिया (अत्यंत कम ऑक्सीजन)' : reason;
+    }
+    if (reason.contains('High/Prolonged Fever') || reason.contains('Fever')) {
+      return lang == AppLanguage.hindi ? 'तेज/लगातार बुखार' : reason;
+    }
+    if (reason.contains('Convulsions')) {
+      return lang == AppLanguage.hindi ? 'दौरे (झटके)' : reason;
+    }
+    if (reason.contains('Vomiting')) {
+      return lang == AppLanguage.hindi ? 'सब उल्टी होना' : reason;
+    }
+    if (reason.contains('Lethargy')) {
+      return lang == AppLanguage.hindi ? 'सुस्ती / बेहोशी' : reason;
+    }
+    return reason;
   }
 }

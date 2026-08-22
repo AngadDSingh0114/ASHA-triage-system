@@ -170,16 +170,12 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppTranslations.getText('audio_screen_title', widget.currentLanguage) == 'audio_screen_title'
-                ? '10-Second Doctor Audio Brief'
-                : AppTranslations.getText('audio_screen_title', widget.currentLanguage),
+            AppTranslations.getText('listen_tts_btn', widget.currentLanguage),
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 6),
           Text(
-            AppTranslations.getText('audio_screen_subtitle', widget.currentLanguage) == 'audio_screen_subtitle'
-                ? 'Synthesized text-to-speech audio summary for fast PHC doctor handoff'
-                : AppTranslations.getText('audio_screen_subtitle', widget.currentLanguage),
+            AppTranslations.getText('audio_page_subtitle', widget.currentLanguage),
             style: const TextStyle(fontSize: 13, color: Colors.grey),
           ),
           const SizedBox(height: 20),
@@ -208,9 +204,9 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              '10s Clinical Audio Note',
-                              style: TextStyle(
+                            Text(
+                              AppTranslations.getText('audio_card_title', widget.currentLanguage),
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 17,
@@ -218,7 +214,7 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'Target: PHC Medical Officer / CHC Referral',
+                              AppTranslations.getText('audio_target_subtitle', widget.currentLanguage),
                               style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 12),
                             ),
                           ],
@@ -290,10 +286,10 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
                   const SizedBox(height: 10),
                   Text(
                     _isPlaying
-                        ? '🔊 Speaking 10s Voice Summary Out Loud...'
+                        ? '🔊 Speaking...'
                         : (_secondsPlayed >= _totalDurationSeconds
-                            ? '✓ Audio Brief Complete (Tap to Replay)'
-                            : 'Tap Play to Hear 10s Audio Summary'),
+                            ? '✓ Audio Brief Complete'
+                            : AppTranslations.getText('audio_play_hint', widget.currentLanguage)),
                     style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w500),
                   ),
                 ],
@@ -303,9 +299,9 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
           const SizedBox(height: 24),
 
           // Classified Symptoms & TTS Script Section
-          const Text(
-            '10-Second Synthesized Doctor Audio Script',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          Text(
+            AppTranslations.getText('audio_script_title', widget.currentLanguage),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
 
@@ -321,9 +317,9 @@ class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
                     children: [
                       const Icon(Icons.psychology, size: 20, color: Color(0xFF0D47A1)),
                       const SizedBox(width: 8),
-                      const Text(
-                        'Classified Symptoms Audio Digest',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF0D47A1)),
+                      Text(
+                        AppTranslations.getText('audio_digest_title', widget.currentLanguage),
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF0D47A1)),
                       ),
                     ],
                   ),
