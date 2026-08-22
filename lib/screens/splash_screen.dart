@@ -155,15 +155,18 @@ class SplashScreen extends StatelessWidget {
               const SizedBox(height: 28),
 
               // Title & Subtitle
-              Text(
-                AppTranslations.getText('splash_title', currentLanguage),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  AppTranslations.getText('splash_title', currentLanguage),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
               Text(
@@ -174,6 +177,7 @@ class SplashScreen extends StatelessWidget {
                   height: 1.4,
                 ),
                 textAlign: TextAlign.center,
+                softWrap: true,
               ),
               const Spacer(),
 
@@ -201,9 +205,12 @@ class SplashScreen extends StatelessWidget {
                 icon: const Icon(Icons.arrow_forward, size: 24),
                 label: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 12.0),
-                  child: Text(
-                    AppTranslations.getText('start_triage_btn', currentLanguage),
-                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      AppTranslations.getText('start_triage_btn', currentLanguage),
+                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
@@ -228,9 +235,12 @@ class SplashScreen extends StatelessWidget {
       children: [
         Icon(icon, color: Colors.white, size: 22),
         const SizedBox(height: 4),
-        Text(
-          text,
-          style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            text,
+            style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500),
+          ),
         ),
       ],
     );

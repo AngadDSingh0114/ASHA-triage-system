@@ -96,14 +96,20 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Title Header
-            Text(
-              AppTranslations.getText('patient_details_title', widget.currentLanguage),
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            // Title Header
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                AppTranslations.getText('patient_details_title', widget.currentLanguage),
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
             ),
             const SizedBox(height: 4),
             Text(
               'Enter patient demographics & illness onset before voice triage screening.',
               style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+              softWrap: true,
             ),
             const SizedBox(height: 20),
 
@@ -117,6 +123,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                     Text(
                       AppTranslations.getText('patient_name_label', widget.currentLanguage),
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      softWrap: true,
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
@@ -148,6 +155,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                     Text(
                       AppTranslations.getText('dob_label', widget.currentLanguage),
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      softWrap: true,
                     ),
                     const SizedBox(height: 10),
                     Row(
@@ -156,10 +164,13 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                           child: OutlinedButton.icon(
                             onPressed: () => _selectBirthdate(context),
                             icon: const Icon(Icons.calendar_month),
-                            label: Text(
-                              widget.patient.birthdate == null
-                                  ? 'Select Birthdate'
-                                  : '${widget.patient.birthdate!.day}/${widget.patient.birthdate!.month}/${widget.patient.birthdate!.year}',
+                            label: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                widget.patient.birthdate == null
+                                    ? 'Select Birthdate'
+                                    : '${widget.patient.birthdate!.day}/${widget.patient.birthdate!.month}/${widget.patient.birthdate!.year}',
+                              ),
                             ),
                           ),
                         ),
@@ -170,11 +181,14 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                             color: const Color(0xFF0D47A1).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Text(
-                            'Age: ${widget.patient.ageDisplay}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF0D47A1),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              'Age: ${widget.patient.ageDisplay}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF0D47A1),
+                              ),
                             ),
                           ),
                         ),
@@ -196,6 +210,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                     Text(
                       AppTranslations.getText('gender_label', widget.currentLanguage),
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      softWrap: true,
                     ),
                     const SizedBox(height: 8),
                     Row(
@@ -229,6 +244,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                     Text(
                       AppTranslations.getText('village_label', widget.currentLanguage),
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      softWrap: true,
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
@@ -260,6 +276,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                     Text(
                       AppTranslations.getText('onset_label', widget.currentLanguage),
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                      softWrap: true,
                     ),
                     const SizedBox(height: 8),
                     Wrap(
@@ -330,6 +347,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                             fontWeight: FontWeight.bold,
                             color: Colors.green.shade900,
                           ),
+                          softWrap: true,
                         ),
                         const SizedBox(height: 2),
                         Text(
@@ -339,6 +357,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
                             fontWeight: FontWeight.bold,
                             color: Colors.black87,
                           ),
+                          softWrap: true,
                         ),
                       ],
                     ),
@@ -352,8 +371,11 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen> {
             ElevatedButton.icon(
               onPressed: _confirmAndProceed,
               icon: const Icon(Icons.arrow_forward, size: 24),
-              label: Text(
-                AppTranslations.getText('proceed_voice_btn', widget.currentLanguage),
+              label: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  AppTranslations.getText('proceed_voice_btn', widget.currentLanguage),
+                ),
               ),
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size.fromHeight(56),
