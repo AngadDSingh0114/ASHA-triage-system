@@ -1164,55 +1164,135 @@
             document.getElementById("sqliteQueueModal").classList.add("hidden");
         }
 
-        // Speech Recognition Setup
-        let recognition = null;
+        // Speech Recognition Setup (IndicASR backend + Web Speech fallback)
+        let asrBackendAvailable = false;
+        let mediaRecorder = null;
+        let audioChunks = [];
         const micStatus = document.getElementById("micStatus");
-        if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-            const SpeechReg = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechReg();
-            recognition.continuous = false;
-            recognition.interimResults = true;
-            recognition.lang = document.getElementById("langSelect").value;
 
-            recognition.onresult = (event) => {
-                let transcript = '';
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    transcript += event.results[i][0].transcript;
-                }
-                document.getElementById("transcriptInput").value = transcript;
-                classifyTriage();
-                micStatus.innerText = "Heard: " + transcript;
-            };
+        async function checkASRBackend() {
+            try {
+                const res = await fetch("/api/asr", { method: "OPTIONS" });
+                asrBackendAvailable = res.ok;
+            } catch (e) {
+                asrBackendAvailable = false;
+            }
+        }
 
-            recognition.onerror = (event) => {
-                micStatus.innerText = "Mic error (" + event.error + "). Allow mic permission and use http://localhost in Chrome/Edge.";
-            };
+        async function startRecording() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert("Microphone not available in this browser.");
+                return;
+            }
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+                audioChunks = [];
 
-            recognition.onend = () => {
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) audioChunks.push(e.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const blob = new Blob(audioChunks, { type: "audio/webm" });
+                    const reader = new FileReader();
+                    reader.onloadend = async () => {
+                        const base64Audio = btoa(String.fromCharCode(...new Uint8Array(reader.result)));
+                        const language = document.getElementById("langSelect").value;
+
+                        if (asrBackendAvailable) {
+                            micStatus.innerText = "Transcribing via IndicASR backend...";
+                            try {
+                                const res = await fetch("/api/asr", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ audio: base64Audio, language: language, decoding: "ctc" })
+                                });
+                                const data = await res.json();
+                                if (data.success && data.data.text) {
+                                    document.getElementById("transcriptInput").value = data.data.text;
+                                    classifyTriage();
+                                    micStatus.innerText = "IndicASR: " + data.data.text;
+                                } else {
+                                    micStatus.innerText = "ASR failed: " + (data.data && data.data.error || "unknown");
+                                    fallbackWebSpeech();
+                                }
+                            } catch (err) {
+                                micStatus.innerText = "ASR backend error, falling back...";
+                                fallbackWebSpeech();
+                            }
+                        } else {
+                            fallbackWebSpeech();
+                        }
+                    };
+                    reader.readAsArrayBuffer(blob);
+                    stream.getTracks().forEach(t => t.stop());
+                };
+
+                mediaRecorder.start();
+                document.getElementById("micBtn").classList.remove("bg-indigo-600");
+                document.getElementById("micBtn").classList.add("bg-red-600");
+                document.getElementById("micBtn").innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Recording...';
+                micStatus.innerText = "Listening in " + document.getElementById("langSelect").value + "...";
+            } catch (err) {
+                micStatus.innerText = "Mic error: " + err.message;
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== "inactive") {
+                mediaRecorder.stop();
+            }
+        }
+
+        function fallbackWebSpeech() {
+            if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+                const SpeechReg = window.SpeechRecognition || window.webkitSpeechRecognition;
+                const recognition = new SpeechReg();
+                recognition.continuous = false;
+                recognition.interimResults = true;
+                recognition.lang = document.getElementById("langSelect").value;
+
+                recognition.onresult = (event) => {
+                    let transcript = '';
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        transcript += event.results[i][0].transcript;
+                    }
+                    document.getElementById("transcriptInput").value = transcript;
+                    classifyTriage();
+                    micStatus.innerText = "Web Speech: " + transcript;
+                };
+                recognition.onerror = (event) => {
+                    micStatus.innerText = "Mic error (" + event.error + ").";
+                };
+                recognition.onend = () => {
+                    document.getElementById("micBtn").classList.remove("bg-red-600");
+                    document.getElementById("micBtn").classList.add("bg-indigo-600");
+                    document.getElementById("micBtn").innerHTML = '<i class="fa-solid fa-microphone mr-2"></i> Start Speaking';
+                };
+                recognition.start();
+            } else {
+                micStatus.innerText = "No speech engine available. Please type or use presets.";
                 document.getElementById("micBtn").classList.remove("bg-red-600");
                 document.getElementById("micBtn").classList.add("bg-indigo-600");
                 document.getElementById("micBtn").innerHTML = '<i class="fa-solid fa-microphone mr-2"></i> Start Speaking';
-            };
-        } else {
-            micStatus.innerText = "Speech recognition NOT available here. Use Chrome/Edge served over http://localhost (not file://). You can still type or use presets.";
-        }
-
-        function setMicLang() {
-            if (recognition) recognition.lang = document.getElementById("langSelect").value;
+            }
         }
 
         function toggleSpeech() {
-            if (!recognition) {
-                alert("Speech recognition API not supported in this browser. Open via http://localhost in Chrome/Edge, or just type the transcript.");
+            if (mediaRecorder && mediaRecorder.state === "recording") {
+                stopRecording();
                 return;
             }
-            document.getElementById("micBtn").classList.remove("bg-indigo-600");
-            document.getElementById("micBtn").classList.add("bg-red-600");
-            document.getElementById("micBtn").innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Listening...';
-            micStatus.innerText = "Listening in " + document.getElementById("langSelect").value + "...";
-            try { recognition.start(); }
-            catch (e) { recognition.onend(); }
+            startRecording();
         }
+
+        function setMicLang() {
+            // Language is passed per-request; no global state needed
+        }
+
+        // Initialize
+        checkASRBackend();
 
         // Initialize default view & doctor profile
         fetchDoctorProfile();

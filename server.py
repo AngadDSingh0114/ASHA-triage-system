@@ -16,9 +16,19 @@ from datetime import datetime
 from typing import Dict, Any, List, Optional
 
 try:
+    from flask import Flask, request, jsonify, send_from_directory
+except ImportError:
+    Flask = None
+
+try:
     from asha_extractor import parse_asha_transcript
 except ImportError:
     parse_asha_transcript = None
+
+try:
+    from asr_service import get_asr_service
+except ImportError:
+    get_asr_service = None
 
 from seed_data import (
     GROUNDING_STATS, 
@@ -657,6 +667,27 @@ class TriageRequestHandler(http.server.SimpleHTTPRequestHandler):
             success = central_db.acknowledge_record(assessment_id, doctor_notes)
             redis_gateway.invalidate_cache()
             self._send_json(200, {"success": success, "assessment_id": assessment_id})
+
+        elif path == "/api/asr":
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length)
+            try:
+                data = json.loads(body.decode('utf-8'))
+                audio_b64 = data.get("audio", "")
+                language = data.get("language", "hi-IN")
+                decoding = data.get("decoding", "ctc")
+
+                import base64
+                audio_bytes = base64.b64decode(audio_b64) if audio_b64 else b""
+
+                if get_asr_service is not None:
+                    service = get_asr_service()
+                    result = service.transcribe_bytes(audio_bytes, language=language)
+                    self._send_json(200, {"success": True, "data": result})
+                else:
+                    self._send_json(500, {"success": False, "error": "ASR service not loaded"})
+            except Exception as e:
+                self._send_json(400, {"success": False, "error": str(e)})
         else:
             self._send_json(404, {"error": "Endpoint not found"})
 
@@ -678,6 +709,162 @@ class SilentTCPServer(socketserver.TCPServer):
         if exc_type in (ConnectionAbortedError, ConnectionResetError, BrokenPipeError):
             return
         super().handle_error(request, client_address)
+
+
+if Flask is not None:
+    flask_app = Flask(__name__, static_folder=".")
+
+    @flask_app.route("/")
+    def index():
+        return send_from_directory(".", "index.html")
+
+    @flask_app.route("/<path:path>")
+    def static_files(path):
+        return send_from_directory(".", path)
+
+    @flask_app.route("/api/parse", methods=["POST"])
+    def api_parse():
+        try:
+            data = request.get_json(force=True)
+            transcript = data.get("transcript", "")
+            patient_id = data.get("patient_id", "P-101")
+            if parse_asha_transcript is not None:
+                result = parse_asha_transcript(transcript, patient_id=patient_id)
+                return jsonify({"success": True, "data": result})
+            return jsonify({"success": False, "error": "Extractor module not loaded"}), 500
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 400
+
+    @flask_app.route("/api/asr", methods=["POST"])
+    def api_asr():
+        try:
+            data = request.get_json(force=True)
+            audio_b64 = data.get("audio", "")
+            language = data.get("language", "hi-IN")
+            decoding = data.get("decoding", "ctc")
+            import base64
+            audio_bytes = base64.b64decode(audio_b64) if audio_b64 else b""
+            if get_asr_service is not None:
+                service = get_asr_service()
+                result = service.transcribe_bytes(audio_bytes, language=language)
+                return jsonify({"success": True, "data": result})
+            return jsonify({"success": False, "error": "ASR service not loaded"}), 500
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 400
+
+    @flask_app.route("/api/records", methods=["GET"])
+    def api_records():
+        color = request.args.get("color")
+        records = central_db.get_triage_records(color_filter=color)
+        return jsonify({"success": True, "count": len(records), "records": records})
+
+    @flask_app.route("/api/stats", methods=["GET"])
+    def api_stats():
+        stats = central_db.get_stats()
+        return jsonify({"success": True, "stats": stats})
+
+    @flask_app.route("/api/doctor", methods=["GET"])
+    def api_doctor_get():
+        doc = central_db.get_doctor_profile()
+        return jsonify({"success": True, "doctor": doc})
+
+    @flask_app.route("/api/doctor", methods=["POST"])
+    def api_doctor_post():
+        try:
+            data = request.get_json(force=True)
+            doc = central_db.update_doctor_profile(data)
+            return jsonify({"success": True, "doctor": doc})
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 400
+
+    @flask_app.route("/api/doctor/login", methods=["POST"])
+    def api_doctor_login():
+        try:
+            data = request.get_json(force=True)
+            auth_res = central_db.authenticate_doctor(data.get("username", ""), data.get("password", ""))
+            if auth_res:
+                return jsonify({
+                    "success": True,
+                    "token": auth_res["token"],
+                    "doctor": auth_res,
+                    "message": f"Welcome, {auth_res['full_name']}. Access granted to PHC Tele-Triage Ingestion Console."
+                })
+            return jsonify({"success": False, "error": "Authentication failed. Invalid Medical Officer Username or Password / PIN."}), 401
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 400
+
+    @flask_app.route("/api/doctor/logout", methods=["POST"])
+    def api_doctor_logout():
+        return jsonify({"success": True, "message": "Doctor logged out successfully."})
+
+    @flask_app.route("/api/seed", methods=["POST"])
+    def api_seed():
+        benchmark_records = generate_benchmark_sync_payloads()
+        batch_payload = {
+            "asha_id": "ASHA-MH-PUNE-012",
+            "records": benchmark_records
+        }
+        redis_gateway.push_ingestion_queue(batch_payload)
+        synced_ids = central_db.ingest_batch(batch_payload)
+        redis_gateway.invalidate_cache()
+        return jsonify({
+            "success": True,
+            "count": len(synced_ids),
+            "message": f"Successfully seeded {len(synced_ids)} WHO IMCI clinical benchmark cases via Redis Ingestion Queue."
+        })
+
+    @flask_app.route("/api/records/<assessment_id>/acknowledge", methods=["POST"])
+    def api_acknowledge(assessment_id):
+        doctor_notes = ""
+        try:
+            data = request.get_json(force=True) or {}
+            doctor_notes = data.get("doctor_notes", "")
+        except Exception:
+            pass
+        success = central_db.acknowledge_record(assessment_id, doctor_notes)
+        redis_gateway.invalidate_cache()
+        return jsonify({"success": success, "assessment_id": assessment_id})
+
+    @flask_app.route("/api/sync/batch", methods=["POST"])
+    def api_sync_batch():
+        try:
+            payload = request.get_json(force=True)
+            q_depth = redis_gateway.push_ingestion_queue(payload)
+            synced_ids = central_db.ingest_batch(payload)
+            records = payload.get("records", [])
+            for r in records:
+                t_color = r.get("assessment", {}).get("triage_color") or r.get("triage_color")
+                if t_color in ["RED", "YELLOW"]:
+                    redis_gateway.publish_emergency_alert(r)
+            redis_gateway.invalidate_cache()
+            return jsonify({
+                "success": True,
+                "synced_count": len(synced_ids),
+                "synced_ids": synced_ids,
+                "redis_queue_depth": q_depth,
+                "server_time": datetime.utcnow().isoformat() + "Z"
+            })
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)}), 400
+
+    @flask_app.route("/api/grounding-stats", methods=["GET"])
+    def api_grounding_stats():
+        return jsonify({"success": True, "grounding": GROUNDING_STATS})
+
+    @flask_app.route("/api/health", methods=["GET"])
+    def api_health():
+        return jsonify({
+            "status": "online",
+            "redis_status": redis_gateway.get_telemetry()["connection_status"],
+            "timestamp": datetime.utcnow().isoformat() + "Z"
+        })
+
+    def create_app():
+        return flask_app
+
+else:
+    def create_app():
+        raise RuntimeError("Flask is not installed. Install with: pip install flask")
 
 
 def run_server(port: int = PORT):
